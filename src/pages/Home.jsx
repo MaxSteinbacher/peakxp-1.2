@@ -1,15 +1,9 @@
 import { Link } from "react-router-dom";
-import { Ticket, Wrench, GraduationCap, Hotel, MapPin, Navigation, BarChart3, ArrowRight } from "lucide-react";
+import { Ticket, Navigation, BarChart3, ArrowRight } from "lucide-react";
+import DayTrips from "../components/DayTrips";
 import SearchBar from "../components/SearchBar";
 import ResortCard from "../components/ResortCard";
 import { resorts, trendingCards } from "../lib/data";
-
-const planTiles = [
-  { icon: Ticket, label: "Lift Passes", desc: "Pre-book and skip the queue" },
-  { icon: Wrench, label: "Equipment Rental", desc: "Premium gear delivered" },
-  { icon: GraduationCap, label: "Ski School", desc: "AI-matched instructors" },
-  { icon: Hotel, label: "Accommodation", desc: "Slope-side stays" },
-];
 
 const pillars = [
   { icon: Ticket, label: "Smart booking", desc: "One cart for everything" },
@@ -90,24 +84,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Plan your trip */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-8">Plan your trip</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {planTiles.map((tile) => (
-            <div
-              key={tile.label}
-              className="group bg-peak-card border border-white/5 rounded-xl p-6 hover:border-peak-blue/30 transition-all duration-300 cursor-pointer hover:-translate-y-1"
-            >
-              <div className="w-12 h-12 rounded-xl bg-peak-blue/10 flex items-center justify-center mb-4 group-hover:bg-peak-blue/20 transition-colors">
-                <tile.icon className="h-6 w-6 text-peak-blue" />
-              </div>
-              <h3 className="font-display font-bold text-peak-text text-lg mb-1">{tile.label}</h3>
-              <p className="text-peak-text-secondary text-sm">{tile.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <DayTrips />
 
       {/* Trending this week */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
