@@ -4,6 +4,10 @@ import ResortsTab from "../components/trip/ResortsTab";
 import AccommodationTab from "../components/trip/AccommodationTab";
 import PlaceholderTab from "../components/trip/PlaceholderTab";
 import EquipmentRentalTab from "../components/trip/EquipmentRentalTab";
+import SkiSchoolTab from "../components/trip/SkiSchoolTab";
+import FlightsTab from "../components/trip/FlightsTab";
+import TrainTab from "../components/trip/TrainTab";
+import CarRentalTab from "../components/trip/CarRentalTab";
 
 const tabs = [
   { key: "resorts", label: "All Resorts", icon: Mountain },
@@ -39,6 +43,10 @@ export default function TripPlanning() {
     if (activeTab === "resorts") return <ResortsTab />;
     if (activeTab === "accommodation") return <AccommodationTab />;
     if (activeTab === "equipment") return <EquipmentRentalTab />;
+    if (activeTab === "ski-school") return <SkiSchoolTab />;
+    if (activeTab === "flights") return <FlightsTab />;
+    if (activeTab === "train") return <TrainTab />;
+    if (activeTab === "car-rental") return <CarRentalTab />;
     const info = placeholderInfo[activeTab];
     return <PlaceholderTab title={info.title} description={info.description} icon={active?.icon} />;
   }
