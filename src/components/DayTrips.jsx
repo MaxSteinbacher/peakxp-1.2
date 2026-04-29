@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { MapPin, Clock, Mountain, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MapPin, Clock } from "lucide-react";
 
 const dayTripResorts = [
   {
@@ -65,17 +65,36 @@ const dayTripResorts = [
 ];
 
 export default function DayTrips() {
+  const [city, setCity] = useState("Munich");
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`
+        );
+        const data = await res.json();
+        const detected =
+          data.address?.city ||
+          data.address?.town ||
+          data.address?.village ||
+          data.address?.county;
+        if (detected) setCity(detected);
+      },
+      () => {} // silently fall back to Munich
+    );
+  }, []);
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <MapPin className="h-4 w-4 text-peak-blue" />
-            <span className="text-peak-blue text-xs font-semibold uppercase tracking-widest">Based on your location</span>
-          </div>
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">Day trips from Munich</h2>
-          <p className="text-peak-text-secondary text-sm mt-1">Resorts within 2 hours — perfect for a day on the slopes</p>
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-1">
+          <MapPin className="h-4 w-4 text-peak-blue" />
+          <span className="text-peak-blue text-xs font-semibold uppercase tracking-widest">Based on your location</span>
         </div>
+        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">Day trips from {city}</h2>
+        <p className="text-peak-text-secondary text-sm mt-1">Resorts within 2 hours — perfect for a day on the slopes</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
