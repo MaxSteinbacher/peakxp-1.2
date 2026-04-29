@@ -36,7 +36,7 @@ export default function SearchBar() {
   };
 
   const handleSearch = () => {
-    navigate("/search" + (destination ? `?q=${encodeURIComponent(destination)}` : ""));
+    navigate("/trip-planning" + (destination ? `?q=${encodeURIComponent(destination)}` : ""));
   };
 
   return (

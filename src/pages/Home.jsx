@@ -73,7 +73,7 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">Featured Resorts</h2>
-          <Link to="/search" className="flex items-center gap-1 text-peak-blue text-sm font-medium hover:underline">
+          <Link to="/trip-planning" className="flex items-center gap-1 text-peak-blue text-sm font-medium hover:underline">
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
