@@ -43,22 +43,20 @@ export default function SearchBar() {
     <div className="w-full max-w-4xl mx-auto">
       {/* Main search bar */}
       <div className="relative flex flex-col sm:flex-row items-stretch bg-peak-card border border-white/10 rounded-xl overflow-visible shadow-2xl">
+
         {/* Destination */}
         <div className="relative flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10">
-          <MapPin className="h-4 w-4 text-peak-blue mr-3 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-peak-text-secondary text-[10px] uppercase tracking-widest mb-0.5">Destination</p>
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) => { setDestination(e.target.value); setShowSuggestions(true); }}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder="Where are you going?"
-              className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/50 outline-none text-sm font-medium"
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-          </div>
+          <MapPin className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
+          <input
+            type="text"
+            value={destination}
+            onChange={(e) => { setDestination(e.target.value); setShowSuggestions(true); }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            placeholder="Where are you going?"
+            className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          />
           {/* Autocomplete */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-peak-card border border-white/10 rounded-xl overflow-hidden shadow-2xl">
@@ -85,32 +83,26 @@ export default function SearchBar() {
 
         {/* When */}
         <div className="flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10">
-          <Calendar className="h-4 w-4 text-peak-blue mr-3 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-peak-text-secondary text-[10px] uppercase tracking-widest mb-0.5">When</p>
-            <input
-              type="text"
-              value={when}
-              onChange={(e) => setWhen(e.target.value)}
-              placeholder="Add dates"
-              className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/50 outline-none text-sm font-medium"
-            />
-          </div>
+          <Calendar className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
+          <input
+            type="text"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+            placeholder="Add dates"
+            className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
+          />
         </div>
 
         {/* Who */}
         <div className="flex-1 flex items-center px-5 py-4">
-          <Users className="h-4 w-4 text-peak-blue mr-3 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-peak-text-secondary text-[10px] uppercase tracking-widest mb-0.5">Who</p>
-            <input
-              type="text"
-              value={who}
-              onChange={(e) => setWho(e.target.value)}
-              placeholder="Add guests"
-              className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/50 outline-none text-sm font-medium"
-            />
-          </div>
+          <Users className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
+          <input
+            type="text"
+            value={who}
+            onChange={(e) => setWho(e.target.value)}
+            placeholder="Add guests"
+            className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
+          />
         </div>
 
         {/* Search button */}
@@ -133,14 +125,11 @@ export default function SearchBar() {
               onClick={() => toggleAddOn(addon.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
                 isSelected
-                  ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue"
+                  ? "bg-peak-red/20 border-peak-red/50 text-peak-red"
                   : "bg-white/5 border-white/10 text-peak-text-secondary hover:border-white/25 hover:text-peak-text"
               }`}
             >
-              {isSelected
-                ? <Check className="h-3 w-3" />
-                : <Plus className="h-3 w-3" />
-              }
+              {isSelected ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
               {addon.label}
             </button>
           );
