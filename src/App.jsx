@@ -11,6 +11,8 @@ import Search from './pages/Search';
 import ResortDetail from './pages/ResortDetail';
 import Booking from './pages/Booking';
 import Dashboard from './pages/Dashboard';
+import TripPlanning from './pages/TripPlanning';
+import ExpertAgents from './pages/ExpertAgents';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -44,6 +46,8 @@ const AuthenticatedApp = () => {
         <Route path="/resort/:id" element={<ResortDetail />} />
         <Route path="/book" element={<Booking />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/trip-planning" element={<TripPlanning />} />
+        <Route path="/agents" element={<ExpertAgents />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>

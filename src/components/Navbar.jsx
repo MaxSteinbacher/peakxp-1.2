@@ -1,16 +1,28 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Bell, User, Mountain } from "lucide-react";
+import { Menu, X, Bell, User, Mountain, Globe } from "lucide-react";
 
 const navLinks = [
-  { label: "Discover", path: "/" },
+  { label: "Discovery", path: "/" },
+  { label: "Trip Planning", path: "/trip-planning" },
+  { label: "Expert Agents", path: "/agents" },
   { label: "My Trips", path: "/book" },
-  { label: "Community", path: "/search" },
   { label: "Dashboard", path: "/dashboard" },
+  { label: "Community", path: "/search" },
+];
+
+const languages = [
+  { code: "en", label: "EN", name: "English" },
+  { code: "de", label: "DE", name: "Deutsch" },
+  { code: "fr", label: "FR", name: "Français" },
+  { code: "it", label: "IT", name: "Italiano" },
+  { code: "ja", label: "JA", name: "日本語" },
 ];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(languages[0]);
   const location = useLocation();
 
   return (
@@ -50,6 +62,33 @@ export default function Navbar() {
             <button className="p-2 text-peak-text-secondary hover:text-peak-text transition-colors rounded-lg hover:bg-white/5">
               <User className="h-5 w-5" />
             </button>
+            {/* Language selector */}
+            <div className="relative">
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-peak-text-secondary hover:text-peak-text border border-white/10 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <Globe className="h-4 w-4" />
+                {selectedLang.label}
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-peak-card border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { setSelectedLang(lang); setLangOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        selectedLang.code === lang.code
+                          ? "text-peak-blue bg-peak-blue/10"
+                          : "text-peak-text-secondary hover:text-peak-text hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="font-semibold mr-2">{lang.label}</span>{lang.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="px-4 py-2 text-sm font-medium text-peak-blue border border-peak-blue/30 rounded-lg hover:bg-peak-blue/10 transition-colors">
               Sign in
             </button>
