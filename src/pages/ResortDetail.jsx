@@ -1,12 +1,23 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Mountain, ArrowLeft, Heart, Share2, Star, ChevronLeft, ChevronRight, Minus, Plus, MapPin } from "lucide-react";
-import { getResortById } from "../lib/data";
-import WeatherWidget from "../components/WeatherWidget";
+import { Mountain, ArrowLeft, Heart, Share2, ChevronLeft, ChevronRight, MapPin, Snowflake, Thermometer, Car } from "lucide-react";
+import { getResortById, SEASON_PASSES } from "../lib/data";
 import ReviewCard from "../components/ReviewCard";
 import InstructorCard from "../components/InstructorCard";
+import OverviewTab from "../components/resort/OverviewTab";
+import ConditionsTab from "../components/resort/ConditionsTab";
+import LiftPassesTab from "../components/resort/LiftPassesTab";
+import FacilitiesTab from "../components/resort/FacilitiesTab";
+import SurroundingsTab from "../components/resort/SurroundingsTab";
+import EventsTab from "../components/resort/EventsTab";
 
-const tabs = ["Overview", "Lift Passes", "Ski School", "Rentals", "Accommodation", "Reviews"];
+const TABS = ["Overview", "Conditions", "Lift Passes", "Facilities", "Surroundings", "Events", "Ski School", "Reviews"];
+
+const OPEN_STATUS = {
+  "Open": "bg-peak-green/20 text-peak-green border-peak-green/30",
+  "Partially open": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  "Closed": "bg-red-900/20 text-peak-red border-peak-red/30",
+};
 
 export default function ResortDetail() {
   const { id } = useParams();
@@ -15,73 +26,44 @@ export default function ResortDetail() {
   const [imageIdx, setImageIdx] = useState(0);
   const [saved, setSaved] = useState(false);
 
-  // Lift pass state
-  const [selectedPass, setSelectedPass] = useState(1);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [seniors, setSeniors] = useState(0);
-
   if (!resort) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <p className="text-peak-text-secondary text-lg">Resort not found.</p>
-        <Link to="/search" className="text-peak-blue text-sm hover:underline mt-4 inline-block">
-          Back to search
-        </Link>
+        <Link to="/search" className="text-peak-blue text-sm hover:underline mt-4 inline-block">Back to search</Link>
       </div>
     );
   }
 
-  const pass = resort.liftPasses[selectedPass];
-  const totalPrice = pass.adult * adults + pass.child * children + pass.senior * seniors;
+  const openStatus = resort.openStatus || "Open";
+  const validPasses = (resort.seasonPasses || []).map(id => SEASON_PASSES[id]).filter(Boolean);
+  const countries = resort.countries?.length ? resort.countries : [resort.country];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Breadcrumb */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
       <Link to="/search" className="inline-flex items-center gap-1.5 text-peak-text-secondary text-sm hover:text-peak-text mb-6 transition-colors">
-        <ArrowLeft className="h-4 w-4" />
-        Back to results
+        <ArrowLeft className="h-4 w-4" /> Back to results
       </Link>
 
       {/* Image carousel */}
-      <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 lg:h-96 mb-8 group">
-        <img
-          src={resort.images[imageIdx]}
-          alt={resort.name}
-          className="w-full h-full object-cover transition-all duration-500"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-peak-bg/60 to-transparent" />
-
-        <button
-          onClick={() => setImageIdx((p) => (p === 0 ? resort.images.length - 1 : p - 1))}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80"
-        >
+      <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 lg:h-[420px] mb-8 group">
+        <img src={resort.images[imageIdx]} alt={resort.name} className="w-full h-full object-cover transition-all duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-peak-bg/70 to-transparent" />
+        <button onClick={() => setImageIdx(p => p === 0 ? resort.images.length - 1 : p - 1)}
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <button
-          onClick={() => setImageIdx((p) => (p === resort.images.length - 1 ? 0 : p + 1))}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80"
-        >
+        <button onClick={() => setImageIdx(p => p === resort.images.length - 1 ? 0 : p + 1)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80">
           <ChevronRight className="h-5 w-5" />
         </button>
-
-        {/* Image dots */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
           {resort.images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setImageIdx(i)}
-              className={`w-2 h-2 rounded-full transition-colors ${i === imageIdx ? "bg-white" : "bg-white/40"}`}
-            />
+            <button key={i} onClick={() => setImageIdx(i)} className={`w-2 h-2 rounded-full transition-colors ${i === imageIdx ? "bg-white" : "bg-white/40"}`} />
           ))}
         </div>
-
-        {/* Actions overlay */}
         <div className="absolute top-4 right-4 flex gap-2">
-          <button
-            onClick={() => setSaved(!saved)}
-            className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors"
-          >
+          <button onClick={() => setSaved(!saved)} className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
             <Heart className={`h-5 w-5 ${saved ? "fill-peak-red text-peak-red" : ""}`} />
           </button>
           <button className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
@@ -91,203 +73,133 @@ export default function ResortDetail() {
       </div>
 
       {/* Resort header */}
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-8">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
+        {/* Left: name, country, status */}
+        <div className="flex-1">
+          <div className="flex items-center gap-3 flex-wrap mb-2">
             <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text">{resort.name}</h1>
             <span className="bg-peak-blue text-white text-sm font-bold px-3 py-1 rounded-lg">{resort.rating}</span>
             <span className="text-peak-text-secondary text-sm">{resort.ratingLabel}</span>
           </div>
-          <p className="text-peak-text-secondary flex items-center gap-1.5">
-            <MapPin className="h-4 w-4" />
-            {resort.flag} {resort.country}
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="h-4 w-4 text-peak-text-secondary" />
+            <span className="text-peak-text-secondary text-sm">
+              {countries.map((c, i) => (
+                <span key={c}>{i > 0 && <span className="mx-1 text-peak-text-secondary">/</span>}{resort.flag} {c}</span>
+              ))}
+            </span>
+            {resort.region && <span className="text-peak-text-secondary text-sm">· {resort.region}</span>}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${OPEN_STATUS[openStatus] || OPEN_STATUS["Open"]}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${openStatus === "Open" ? "bg-peak-green" : openStatus === "Partially open" ? "bg-yellow-400" : "bg-peak-red"}`} />
+              {openStatus}
+            </span>
+            {resort.seasonDates && (
+              <span className="text-peak-text-secondary text-xs">Season: {resort.seasonDates}</span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="bg-peak-blue/10 text-peak-blue px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5">
-            <Mountain className="h-4 w-4" />
-            {resort.minAltitude}–{resort.maxAltitude}m
-          </span>
+
+        {/* Right: status chips + season passes */}
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-peak-blue/10 text-peak-blue px-3 py-1.5 rounded-lg text-xs font-semibold">
+              <Snowflake className="h-3.5 w-3.5" />
+              {resort.snowDepthTop || resort.weather.snowDepth || 180}cm base
+            </div>
+            <div className="flex items-center gap-1.5 bg-peak-blue/10 text-peak-blue px-3 py-1.5 rounded-lg text-xs font-semibold">
+              <Thermometer className="h-3.5 w-3.5" />
+              {resort.weather.temp}°C
+            </div>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${resort.roadStatus === "clear" ? "bg-peak-green/10 text-peak-green" : resort.roadStatus === "chains" ? "bg-yellow-500/10 text-yellow-400" : "bg-peak-red/10 text-peak-red"}`}>
+              <Car className="h-3.5 w-3.5" />
+              {resort.roadStatus === "clear" ? "Roads clear" : resort.roadStatus === "chains" ? "Chains recommended" : "Road closed"}
+            </div>
+          </div>
+          {/* Season pass badges */}
+          {validPasses.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+              {validPasses.map(p => (
+                <div key={p.name} className="flex items-center gap-2 bg-peak-card border border-white/10 rounded-xl px-3 py-2 flex-shrink-0">
+                  <div className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: p.color }}>
+                    {p.name.split(" ").map(w => w[0]).join("").slice(0, 2)}
+                  </div>
+                  <span className="text-peak-text text-xs font-medium whitespace-nowrap">{p.name}</span>
+                  <span className="text-peak-green text-xs">✓</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
         {[
           { label: "Altitude", value: `${resort.minAltitude}–${resort.maxAltitude}m` },
           { label: "Runs", value: resort.runs },
           { label: "Pistes", value: `${resort.pisteKm}km` },
-          { label: "Lifts", value: resort.lifts },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-peak-card border border-white/5 rounded-xl p-4 text-center">
+          { label: "Lifts", value: resort.lifts, sub: resort.gondolas ? `${resort.gondolas}G / ${resort.chairlifts}C / ${resort.dragLifts}D` : null },
+          { label: "Vertical", value: `${resort.verticalDrop || resort.maxAltitude - resort.minAltitude}m` },
+          { label: "Longest run", value: `${resort.longestRun || "—"}km` },
+          { label: "Snow guns", value: resort.snowCannons || "—" },
+          { label: "Difficulty", value: null, special: "diff" },
+        ].map(stat => (
+          <div key={stat.label} className="bg-peak-card border border-white/5 rounded-xl p-3 text-center">
             <p className="text-peak-blue text-xs font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
-            <p className="font-display font-bold text-peak-text text-xl">{stat.value}</p>
+            {stat.special === "diff" ? (
+              <div>
+                <div className="flex h-2 rounded-full overflow-hidden mb-1">
+                  <div className="bg-blue-400" style={{ width: `${resort.difficultyBlue || 35}%` }} />
+                  <div className="bg-peak-red" style={{ width: `${resort.difficultyRed || 40}%` }} />
+                  <div className="bg-gray-900" style={{ width: `${resort.difficultyBlack || 25}%` }} />
+                </div>
+                <p className="text-peak-text-secondary text-xs">{resort.difficultyBlue || 35}% · {resort.difficultyRed || 40}% · {resort.difficultyBlack || 25}%</p>
+              </div>
+            ) : (
+              <>
+                <p className="font-display font-bold text-peak-text text-lg leading-tight">{stat.value}</p>
+                {stat.sub && <p className="text-peak-text-secondary text-xs mt-0.5">{stat.sub}</p>}
+              </>
+            )}
           </div>
         ))}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto hide-scrollbar border-b border-white/5 mb-8">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-5 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              activeTab === tab
-                ? "border-peak-red text-peak-text"
-                : "border-transparent text-peak-text-secondary hover:text-peak-text"
-            }`}
-          >
+        {TABS.map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === tab ? "border-peak-red text-peak-text" : "border-transparent text-peak-text-secondary hover:text-peak-text"}`}>
             {tab}
           </button>
         ))}
       </div>
 
       {/* Tab content */}
-      {activeTab === "Overview" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <p className="text-peak-text-secondary leading-relaxed mb-8">{resort.description}</p>
-            <div className="bg-peak-card border border-white/5 rounded-xl p-5 h-64 flex items-center justify-center">
-              <p className="text-peak-text-secondary text-sm">Trail map placeholder</p>
-            </div>
-          </div>
-          <div>
-            <WeatherWidget weather={resort.weather} />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "Lift Passes" && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <h3 className="font-display font-bold text-peak-text text-xl mb-6">Select your pass</h3>
-            <div className="space-y-3 mb-8">
-              {resort.liftPasses.map((lp, i) => (
-                <button
-                  key={lp.type}
-                  onClick={() => setSelectedPass(i)}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                    selectedPass === i
-                      ? "bg-peak-card border-peak-red/40"
-                      : "bg-peak-surface border-white/5 hover:border-white/10"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      selectedPass === i ? "border-peak-red" : "border-peak-text-secondary"
-                    }`}>
-                      {selectedPass === i && <div className="w-2 h-2 rounded-full bg-peak-red" />}
-                    </div>
-                    <span className="text-peak-text font-medium">{lp.type}</span>
-                    {lp.badge && (
-                      <span className="bg-peak-green/20 text-peak-green text-xs font-semibold px-2 py-0.5 rounded-full">
-                        {lp.badge}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-peak-text font-bold">€{lp.adult}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Quantity selectors */}
-            <h3 className="font-display font-bold text-peak-text text-xl mb-4">Guests</h3>
-            {[
-              { label: "Adults", value: adults, set: setAdults, min: 1 },
-              { label: "Children (6-15)", value: children, set: setChildren, min: 0 },
-              { label: "Seniors (65+)", value: seniors, set: setSeniors, min: 0 },
-            ].map((g) => (
-              <div key={g.label} className="flex items-center justify-between py-3 border-b border-white/5">
-                <span className="text-peak-text text-sm">{g.label}</span>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => g.set(Math.max(g.min, g.value - 1))}
-                    className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-peak-text-secondary hover:text-peak-text hover:border-white/20 transition-colors"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="text-peak-text font-semibold w-6 text-center">{g.value}</span>
-                  <button
-                    onClick={() => g.set(g.value + 1)}
-                    className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center text-peak-text-secondary hover:text-peak-text hover:border-white/20 transition-colors"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Price summary */}
-          <div className="bg-peak-card border border-white/5 rounded-xl p-6 h-fit lg:sticky lg:top-24">
-            <h3 className="font-display font-bold text-peak-text text-lg mb-4">Price summary</h3>
-            <div className="space-y-2 text-sm mb-6">
-              {adults > 0 && (
-                <div className="flex justify-between text-peak-text-secondary">
-                  <span>Adult × {adults}</span>
-                  <span>€{pass.adult * adults}</span>
-                </div>
-              )}
-              {children > 0 && (
-                <div className="flex justify-between text-peak-text-secondary">
-                  <span>Child × {children}</span>
-                  <span>€{pass.child * children}</span>
-                </div>
-              )}
-              {seniors > 0 && (
-                <div className="flex justify-between text-peak-text-secondary">
-                  <span>Senior × {seniors}</span>
-                  <span>€{pass.senior * seniors}</span>
-                </div>
-              )}
-              <div className="pt-3 border-t border-white/5 flex justify-between text-peak-text font-bold text-lg">
-                <span>Total</span>
-                <span>€{totalPrice}</span>
-              </div>
-            </div>
-            <Link
-              to={`/book?resort=${resort.id}&pass=${selectedPass}&adults=${adults}&children=${children}&seniors=${seniors}`}
-              className="block w-full py-3 bg-peak-red hover:bg-peak-red-hover text-white text-center font-semibold rounded-lg transition-colors"
-            >
-              Add to cart
-            </Link>
-          </div>
-        </div>
-      )}
+      {activeTab === "Overview" && <OverviewTab resort={resort} />}
+      {activeTab === "Conditions" && <ConditionsTab resort={resort} />}
+      {activeTab === "Lift Passes" && <LiftPassesTab resort={resort} />}
+      {activeTab === "Facilities" && <FacilitiesTab resort={resort} />}
+      {activeTab === "Surroundings" && <SurroundingsTab resort={resort} />}
+      {activeTab === "Events" && <EventsTab resort={resort} />}
 
       {activeTab === "Ski School" && (
         <div>
           <h3 className="font-display font-bold text-peak-text text-xl mb-6">Instructors</h3>
-          {resort.instructors.length > 0 ? (
+          {resort.instructors && resort.instructors.length > 0 ? (
             <div className="space-y-4">
-              {resort.instructors.map((inst) => (
-                <InstructorCard key={inst.id} instructor={inst} />
-              ))}
+              {resort.instructors.map(inst => <InstructorCard key={inst.id} instructor={inst} />)}
             </div>
           ) : (
-            <p className="text-peak-text-secondary">Instructor information coming soon for this resort.</p>
+            <div className="text-center py-16 text-peak-text-secondary">Instructor information coming soon for this resort.</div>
           )}
-        </div>
-      )}
-
-      {activeTab === "Rentals" && (
-        <div className="text-center py-20">
-          <Wrench className="h-12 w-12 text-peak-text-secondary mx-auto mb-4" />
-          <p className="text-peak-text-secondary">Equipment rental booking coming soon.</p>
-        </div>
-      )}
-
-      {activeTab === "Accommodation" && (
-        <div className="text-center py-20">
-          <Hotel className="h-12 w-12 text-peak-text-secondary mx-auto mb-4" />
-          <p className="text-peak-text-secondary">Accommodation booking coming soon.</p>
         </div>
       )}
 
       {activeTab === "Reviews" && (
         <div>
-          {/* Score header */}
           <div className="flex flex-col sm:flex-row gap-8 mb-8">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-2xl bg-peak-blue flex items-center justify-center">
@@ -301,7 +213,7 @@ export default function ResortDetail() {
             <div className="flex-1 space-y-2">
               {Object.entries(resort.reviews.breakdown).map(([key, val]) => (
                 <div key={key} className="flex items-center gap-3">
-                  <span className="text-peak-text-secondary text-xs w-20 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                  <span className="text-peak-text-secondary text-xs w-24 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
                   <div className="flex-1 h-2 bg-peak-surface rounded-full overflow-hidden">
                     <div className="h-full bg-peak-blue rounded-full" style={{ width: `${val * 10}%` }} />
                   </div>
@@ -310,40 +222,12 @@ export default function ResortDetail() {
               ))}
             </div>
           </div>
-
-          {/* Review cards */}
-          {resort.reviews.items.length > 0 ? (
-            <div className="space-y-4">
-              {resort.reviews.items.map((r) => (
-                <ReviewCard key={r.id} review={r} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-peak-text-secondary">No reviews available yet for this resort.</p>
-          )}
+          {resort.reviews.items.length > 0
+            ? <div className="space-y-4">{resort.reviews.items.map(r => <ReviewCard key={r.id} review={r} />)}</div>
+            : <p className="text-peak-text-secondary">No reviews yet.</p>
+          }
         </div>
       )}
     </div>
-  );
-}
-
-// Icons for placeholder tabs
-function Wrench(props) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-    </svg>
-  );
-}
-
-function Hotel(props) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" />
-      <path d="m9 16 .348-.24c1.465-1.013 3.84-1.013 5.304 0L15 16" />
-      <path d="M8 7h.01" /><path d="M16 7h.01" /><path d="M12 7h.01" />
-      <path d="M12 11h.01" /><path d="M16 11h.01" /><path d="M8 11h.01" />
-      <path d="M10 22v-6.5m4 0V22" />
-    </svg>
   );
 }

@@ -485,6 +485,189 @@ export const dashboardData = {
   ]
 };
 
+// Extended data merged into resort objects
+const extendedData = {
+  verbier: {
+    lat: 46.0967, lng: 7.2282,
+    countries: ["Switzerland"],
+    region: "Valais, Switzerland",
+    openStatus: "Open",
+    seasonDates: "29 Nov 2025 – 27 Apr 2026",
+    snowDepthBase: 95, snowDepthMid: 155, snowDepthTop: 210,
+    snowType: "Packed powder",
+    liftsOpen: 32, liftsTotal: 38,
+    pistesOpen: 81, pistesTotal: 94,
+    snowCannons: 180, snowCannonKm: 40,
+    longestRun: 12, verticalDrop: 1830,
+    gondolas: 8, chairlifts: 18, dragLifts: 12,
+    difficultyBlue: 36, difficultyRed: 42, difficultyBlack: 22,
+    roadStatus: "clear",
+    seasonPasses: ["magic-pass", "ikon-pass"],
+    ecoRating: 4,
+    ecoRenewable: 82,
+    ecoCertifications: ["ISO 14001", "Flocon Vert"],
+    ecoInitiatives: ["Electric snowcat fleet", "Wildlife corridor zones", "Recycled water snowmaking", "EV charging at base stations", "Zero single-use plastics on mountain"],
+    ecoOffsetProgram: true,
+    webcams: [
+      { name: "Summit — 3330m", seed: "webcam1" },
+      { name: "Mid-station — 2200m", seed: "webcam2" },
+      { name: "Village centre", seed: "webcam3" },
+    ],
+    airports: [
+      { airport: "Geneva", iata: "GVA", driveTime: "2h" },
+      { airport: "Zurich", iata: "ZRH", driveTime: "3h" },
+      { airport: "Turin", iata: "TRN", driveTime: "3h 30m" },
+    ],
+    trainStation: "Le Châble (cable car link) · Martigny (20min bus)",
+    shuttle: true, shuttleDesc: "Direct shuttle from Geneva airport · Daily departures",
+    parking: { capacity: 4500, pricePerDay: 15, includedInPass: false },
+    resortTypes: ["Alpine", "Freeride", "Après-ski", "Luxury"],
+    surroundings: {
+      description: "Verbier sits at the heart of the Val de Bagnes, a stunning Alpine valley in the Swiss canton of Valais. The surrounding area is characterised by traditional mountain villages, artisan cheese producers, and dramatic high-Alpine scenery stretching to Mont Blanc.",
+      nearbyTowns: [
+        { name: "Martigny", distance: "30km", desc: "Gateway city with Roman ruins and art museums" },
+        { name: "Le Châble", distance: "10km", desc: "Charming valley village with cable car link" },
+        { name: "Sion", distance: "50km", desc: "Historic cantonal capital with medieval chateau" },
+      ],
+      activities: ["Snowshoeing", "Ice skating", "Spa & wellness", "Paragliding", "Dog sledding", "Winter hiking", "Museum", "Wine & gastronomy"],
+      touristBoard: "Verbier-St-Bernard Tourism",
+      touristBoardUrl: "https://www.verbier.ch",
+      emergency: "112",
+      hospital: "Hôpital du Valais — Martigny (35km)",
+    },
+    events: [
+      { date: "15 Mar 2026", name: "Verbier Freeride Open", type: "Competition", desc: "Elite freeride competition on the iconic Bec des Rosses face" },
+      { date: "22 Mar 2026", name: "Verbier Festival Winter Edition", type: "Concert", desc: "Classical music performances in an Alpine setting" },
+      { date: "5 Apr 2026", name: "Easter Family Weekend", type: "Family", desc: "Special kids' activities, egg hunts on the slopes" },
+    ],
+    promotions: [
+      { headline: "Spring skiing from €49/day", validity: "1 Apr – 27 Apr", discount: "20% off", code: "SPRING26", image: "https://picsum.photos/seed/promo1/400/200" },
+      { headline: "Stay & Ski package — 5 nights from €690", validity: "Feb 2026", discount: "Bundle deal", code: null, image: "https://picsum.photos/seed/promo2/400/200" },
+    ],
+    facilities: {
+      restaurants: [
+        { name: "Le Rouge", zone: "Summit — 3000m", cuisine: "Alpine", price: "€€€" },
+        { name: "Chez Dany", zone: "Mid-mountain — 2200m", cuisine: "Swiss", price: "€€" },
+        { name: "Chalet Carlsberg", zone: "Village", cuisine: "International", price: "€€" },
+      ],
+      skiSchools: 5, groupLessonFrom: 45, privateLessonFrom: 120,
+      languages: ["🇫🇷", "🇬🇧", "🇩🇪", "🇮🇹"],
+      creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 65,
+      kidsGarden: true, kidsGardenAge: "3–12",
+      babysitting: true,
+      lockerCount: 800, lockerSizes: ["S", "M", "L", "XL"],
+      skiStorage: true, skiStorageFrom: 8, bootDryers: true,
+      rentalShops: 12, rentalBrands: ["Atomic", "Rossignol", "Salomon", "Dynastar"],
+      skiTuning: true, clothingShop: true, supermarket: true,
+      medicalCentre: true, medicalLocation: "Médran base station",
+      pharmacy: true, atm: true, atmCount: 6,
+    },
+    seasonCalendar: [
+      { month: "Nov", status: "partial" }, { month: "Dec", status: "open" },
+      { month: "Jan", status: "open" }, { month: "Feb", status: "open" },
+      { month: "Mar", status: "open" }, { month: "Apr", status: "partial" },
+      { month: "May", status: "closed" }, { month: "Jun", status: "closed" },
+      { month: "Jul", status: "closed" }, { month: "Aug", status: "closed" },
+      { month: "Sep", status: "closed" }, { month: "Oct", status: "closed" },
+    ],
+  },
+};
+
+const defaultExtended = {
+  lat: 46.5, lng: 8.0,
+  countries: [],
+  region: "",
+  openStatus: "Open",
+  seasonDates: "Dec 2025 – Apr 2026",
+  snowDepthBase: 80, snowDepthMid: 140, snowDepthTop: 190,
+  snowType: "Packed powder",
+  liftsOpen: 0, liftsTotal: 0,
+  pistesOpen: 0, pistesTotal: 0,
+  snowCannons: 80, snowCannonKm: 20,
+  longestRun: 8, verticalDrop: 1000,
+  gondolas: 5, chairlifts: 15, dragLifts: 10,
+  difficultyBlue: 35, difficultyRed: 40, difficultyBlack: 25,
+  roadStatus: "clear",
+  seasonPasses: ["ikon-pass"],
+  ecoRating: 3,
+  ecoRenewable: 65,
+  ecoCertifications: ["ISO 14001"],
+  ecoInitiatives: ["LED lighting on all lifts", "Electric shuttles at base"],
+  ecoOffsetProgram: false,
+  webcams: [
+    { name: "Summit view", seed: "wcam1" },
+    { name: "Base station", seed: "wcam2" },
+  ],
+  airports: [
+    { airport: "Geneva", iata: "GVA", driveTime: "2–3h" },
+    { airport: "Zurich", iata: "ZRH", driveTime: "3h" },
+  ],
+  trainStation: "Nearest station — transfer by bus",
+  shuttle: true, shuttleDesc: "Shuttle service available from main train station",
+  parking: { capacity: 2000, pricePerDay: 12, includedInPass: false },
+  resortTypes: ["Alpine"],
+  surroundings: {
+    description: "A scenic Alpine region with traditional mountain culture and year-round outdoor activities.",
+    nearbyTowns: [
+      { name: "Valley Town", distance: "15km", desc: "Traditional market town with local shops" },
+    ],
+    activities: ["Snowshoeing", "Ice skating", "Spa & wellness", "Winter hiking"],
+    touristBoard: "Regional Tourism Office",
+    touristBoardUrl: "#",
+    emergency: "112",
+    hospital: "Regional hospital (30km)",
+  },
+  events: [
+    { date: "15 Feb 2026", name: "Ski Race Weekend", type: "Competition", desc: "Annual resort race series" },
+    { date: "20 Mar 2026", name: "Spring Festival", type: "Festival", desc: "End of season celebrations" },
+  ],
+  promotions: [
+    { headline: "Early booking discount — 15% off", validity: "Valid through Feb 2026", discount: "15% off", code: "EARLY15", image: "https://picsum.photos/seed/promoa/400/200" },
+  ],
+  facilities: {
+    restaurants: [
+      { name: "Mountain Restaurant", zone: "Mid-mountain", cuisine: "Alpine", price: "€€" },
+      { name: "Village Café", zone: "Base", cuisine: "International", price: "€" },
+    ],
+    skiSchools: 3, groupLessonFrom: 40, privateLessonFrom: 100,
+    languages: ["🇫🇷", "🇬🇧", "🇩🇪"],
+    creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 55,
+    kidsGarden: true, kidsGardenAge: "3–12",
+    babysitting: false,
+    lockerCount: 400, lockerSizes: ["S", "M", "L"],
+    skiStorage: true, skiStorageFrom: 7, bootDryers: true,
+    rentalShops: 6, rentalBrands: ["Atomic", "Rossignol", "Salomon"],
+    skiTuning: true, clothingShop: true, supermarket: true,
+    medicalCentre: true, medicalLocation: "Base station",
+    pharmacy: false, atm: true, atmCount: 3,
+  },
+  seasonCalendar: [
+    { month: "Nov", status: "partial" }, { month: "Dec", status: "open" },
+    { month: "Jan", status: "open" }, { month: "Feb", status: "open" },
+    { month: "Mar", status: "open" }, { month: "Apr", status: "partial" },
+    { month: "May", status: "closed" }, { month: "Jun", status: "closed" },
+    { month: "Jul", status: "closed" }, { month: "Aug", status: "closed" },
+    { month: "Sep", status: "closed" }, { month: "Oct", status: "closed" },
+  ],
+};
+
+export const SEASON_PASSES = {
+  "magic-pass": { name: "Magic Pass", color: "#8B5CF6", regions: 120, priceFrom: 499 },
+  "ikon-pass": { name: "Ikon Pass", color: "#1E40AF", regions: 50, priceFrom: 949 },
+  "epic-pass": { name: "Epic Pass", color: "#065F46", regions: 40, priceFrom: 849 },
+  "snowcard-tirol": { name: "Snowcard Tirol", color: "#0891B2", regions: 14, priceFrom: 699 },
+  "superski": { name: "SuperSki Card", color: "#EA580C", regions: 28, priceFrom: 589 },
+};
+
 export function getResortById(id) {
-  return resorts.find(r => r.id === id);
+  const resort = resorts.find(r => r.id === id);
+  if (!resort) return null;
+  const ext = extendedData[id] || defaultExtended;
+  // Fill liftsOpen/pistesOpen with resort data if not set
+  if (!ext.liftsOpen) ext.liftsOpen = Math.round(resort.lifts * 0.85);
+  if (!ext.liftsTotal) ext.liftsTotal = resort.lifts;
+  if (!ext.pistesOpen) ext.pistesOpen = Math.round(resort.runs * 0.85);
+  if (!ext.pistesTotal) ext.pistesTotal = resort.runs;
+  if (!ext.countries.length) ext.countries = [resort.country];
+  return { ...resort, ...ext };
 }
