@@ -13,6 +13,7 @@ import Booking from './pages/Booking';
 import Dashboard from './pages/Dashboard';
 import TripPlanning from './pages/TripPlanning';
 import ExpertAgents from './pages/ExpertAgents';
+import Community from './pages/Community';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trip-planning" element={<TripPlanning />} />
         <Route path="/agents" element={<ExpertAgents />} />
+        <Route path="/community" element={<Community />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
