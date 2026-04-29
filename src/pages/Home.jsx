@@ -83,8 +83,8 @@ export default function Home() {
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-4">
-          {resorts.map((resort) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+          {resorts.slice(0, 4).map((resort) => (
             <ResortCard key={resort.id} resort={resort} compact />
           ))}
         </div>
