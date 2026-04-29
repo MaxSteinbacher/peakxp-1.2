@@ -20,42 +20,6 @@ const pillars = [
 export default function Home() {
   return (
     <div className="min-h-screen">
-      {/* Video Hero */}
-      <section className="relative w-full h-[70vh] overflow-hidden flex items-end">
-        {/* Video placeholder */}
-        <div className="absolute inset-0 bg-peak-bg">
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-peak-surface via-peak-bg to-black">
-            {/* Replace this div with an actual <video> tag when you have the video source */}
-            <div className="text-center">
-              <div className="w-20 h-20 rounded-full border-2 border-white/20 flex items-center justify-center mx-auto mb-4">
-                <div className="w-0 h-0 border-t-[14px] border-t-transparent border-b-[14px] border-b-transparent border-l-[24px] border-l-white/50 ml-2" />
-              </div>
-              <p className="text-peak-text-secondary text-sm tracking-widest uppercase">Video background</p>
-            </div>
-          </div>
-          {/* Simulated cinematic overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-peak-bg" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
-        </div>
-
-        {/* Bottom label */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="flex items-end justify-between">
-            <div>
-              <span className="inline-block text-peak-text-secondary text-xs tracking-[0.3em] uppercase mb-2">Season 2025–2026</span>
-              <h2 className="font-display font-extrabold text-4xl sm:text-5xl text-peak-text leading-tight">
-                The Alps.<br />
-                <span className="text-peak-blue">Unfiltered.</span>
-              </h2>
-            </div>
-            <div className="hidden sm:flex flex-col items-end gap-1 text-peak-text-secondary text-xs">
-              <span className="tracking-widest uppercase">Scroll to explore</span>
-              <div className="w-px h-10 bg-white/20 self-center mt-1" />
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
@@ -77,6 +41,37 @@ export default function Home() {
             Find, book, and experience every ski resort in the Alps — in one place.
           </p>
           <SearchBar />
+        </div>
+      </section>
+
+      {/* Video Hero */}
+      <section className="relative w-full h-[70vh] overflow-hidden flex items-end">
+        <div className="absolute inset-0 bg-peak-bg">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-peak-surface via-peak-bg to-black">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full border-2 border-white/20 flex items-center justify-center mx-auto mb-4">
+                <div className="w-0 h-0 border-t-[14px] border-t-transparent border-b-[14px] border-b-transparent border-l-[24px] border-l-white/50 ml-2" />
+              </div>
+              <p className="text-peak-text-secondary text-sm tracking-widest uppercase">Video background</p>
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-peak-bg" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+        </div>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+          <div className="flex items-end justify-between">
+            <div>
+              <span className="inline-block text-peak-text-secondary text-xs tracking-[0.3em] uppercase mb-2">Season 2025–2026</span>
+              <h2 className="font-display font-extrabold text-4xl sm:text-5xl text-peak-text leading-tight">
+                The Alps.<br />
+                <span className="text-peak-blue">Unfiltered.</span>
+              </h2>
+            </div>
+            <div className="hidden sm:flex flex-col items-end gap-1 text-peak-text-secondary text-xs">
+              <span className="tracking-widest uppercase">Scroll to explore</span>
+              <div className="w-px h-10 bg-white/20 self-center mt-1" />
+            </div>
+          </div>
         </div>
       </section>
 
