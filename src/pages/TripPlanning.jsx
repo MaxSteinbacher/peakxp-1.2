@@ -3,6 +3,7 @@ import { Mountain, Building2, Wrench, GraduationCap, Plane, Train, Car, Package,
 import ResortsTab from "../components/trip/ResortsTab";
 import AccommodationTab from "../components/trip/AccommodationTab";
 import PlaceholderTab from "../components/trip/PlaceholderTab";
+import EquipmentRentalTab from "../components/trip/EquipmentRentalTab";
 
 const tabs = [
   { key: "resorts", label: "All Resorts", icon: Mountain },
@@ -37,6 +38,7 @@ export default function TripPlanning() {
   function renderContent() {
     if (activeTab === "resorts") return <ResortsTab />;
     if (activeTab === "accommodation") return <AccommodationTab />;
+    if (activeTab === "equipment") return <EquipmentRentalTab />;
     const info = placeholderInfo[activeTab];
     return <PlaceholderTab title={info.title} description={info.description} icon={active?.icon} />;
   }
