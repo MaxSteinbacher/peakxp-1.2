@@ -2,6 +2,7 @@ import { austrianResorts } from './austrianResorts.js';
 import { austrianResorts2 } from './austrianResorts2.js';
 import { austrianResorts3 } from './austrianResorts3.js';
 import { austrianResorts4 } from './austrianResorts4.js';
+import { austrianResorts5 } from './austrianResorts5.js';
 
 export const resorts = [...[
   {
@@ -349,7 +350,7 @@ export const resorts = [...[
     ],
     instructors: []
   }
-], ...austrianResorts, ...austrianResorts2, ...austrianResorts3, ...austrianResorts4];
+], ...austrianResorts, ...austrianResorts2, ...austrianResorts3, ...austrianResorts4, ...austrianResorts5];
 
 export const trendingCards = [
   { id: "zermatt", resort: "Zermatt", tag: "Best powder in the Alps", image: "https://picsum.photos/seed/trending1/600/400" },
