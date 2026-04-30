@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Mountain, ExternalLink, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
 import WeatherWidget from "../WeatherWidget";
+import ResortMap3D from "../ResortMap3D";
 
 function LeafRating({ rating }) {
   return (
@@ -103,14 +104,17 @@ export default function OverviewTab({ resort }) {
             </p>
           </div>
 
-          {/* Virtual trail map */}
-          <div className="bg-peak-surface border border-white/10 rounded-xl h-64 flex flex-col items-center justify-center gap-3">
-            <Mountain className="h-12 w-12 text-peak-text-secondary/40" />
-            <p className="text-peak-text font-semibold text-sm">Interactive 3D trail map</p>
-            <p className="text-peak-text-secondary text-xs">Powered by Fatmap / Outdooractive — integration coming soon</p>
-            <a href={osmUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-peak-blue text-xs hover:underline">
-              <ExternalLink className="h-3 w-3" /> View on OpenStreetMap
-            </a>
+          {/* Interactive 3D Map */}
+          <div className="mb-8">
+            <h2 className="font-display font-bold text-peak-text text-xl mb-2">Interactive Resort Map</h2>
+            <p className="text-peak-text-secondary text-sm mb-4">Explore slopes, lifts and terrain in 3D. Pan, tilt and zoom freely.</p>
+            <ResortMap3D resort={resort} />
+            <div className="mt-3 flex items-center gap-2 text-peak-text-secondary text-xs">
+              <span>Slope data: OpenStreetMap contributors</span>
+              <span>·</span>
+              <span>Terrain: MapTiler</span>
+              <a href={`/resort/${resort.id}/map`} className="ml-auto text-peak-blue hover:underline font-medium">Open Route Planner →</a>
+            </div>
           </div>
 
           {/* Webcams */}
