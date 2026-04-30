@@ -1,4 +1,5 @@
 import { austrianResorts } from './austrianResorts.js';
+import { austrianResorts2 } from './austrianResorts2.js';
 
 export const resorts = [...[
   {
@@ -346,7 +347,7 @@ export const resorts = [...[
     ],
     instructors: []
   }
-], ...austrianResorts];
+], ...austrianResorts, ...austrianResorts2];
 
 export const trendingCards = [
   { id: "zermatt", resort: "Zermatt", tag: "Best powder in the Alps", image: "https://picsum.photos/seed/trending1/600/400" },
