@@ -7,6 +7,8 @@ import { swissResorts } from './swissResorts.js';
 import { swissResorts2 } from './swissResorts2.js';
 import { swissResorts3 } from './swissResorts3.js';
 import { italianResorts } from './italianResorts.js';
+import { italianResorts2 } from './italianResorts2.js';
+import { italianResorts3 } from './italianResorts3.js';
 
 export const resorts = [...[
   {
@@ -354,7 +356,7 @@ export const resorts = [...[
     ],
     instructors: []
   }
-], ...austrianResorts, ...austrianResorts2, ...austrianResorts3, ...austrianResorts4, ...austrianResorts5, ...swissResorts, ...swissResorts2, ...swissResorts3, ...italianResorts];
+], ...austrianResorts, ...austrianResorts2, ...austrianResorts3, ...austrianResorts4, ...austrianResorts5, ...swissResorts, ...swissResorts2, ...swissResorts3, ...italianResorts, ...italianResorts2, ...italianResorts3];
 
 export const trendingCards = [
   { id: "zermatt", resort: "Zermatt", tag: "Best powder in the Alps", image: "https://picsum.photos/seed/trending1/600/400" },
