@@ -11,7 +11,7 @@ export const austrianResorts5 = [
     minAltitude: 2000, maxAltitude: 2520,
     verticalDrop: 520,
     pisteKm: 44, runs: 18, lifts: 12,
-    gondolas: 3, chairlifts: 6, dragLifts: 3,
+    gondolas: 3, chairlifts: 7, dragLifts: 2,
     longestRun: 7,
     difficultyBlue: 28, difficultyRed: 50, difficultyBlack: 22,
     snowCannons: 35, snowCannonKm: 14,
@@ -20,19 +20,19 @@ export const austrianResorts5 = [
     rating: 8.4, ratingLabel: "Excellent", priceFrom: 46,
     seasonDates: "23 Nov 2024 - 27 Apr 2025",
     seasonPasses: ["snowcard-tirol"],
-    resortTypes: ["Alpine", "High altitude"],
+    resortTypes: ["Alpine", "High-altitude"],
     description: "Austrias highest village resort at 2000m guaranteeing excellent snow from November through April. Small and intimate, popular with day visitors from Innsbruck seeking uncrowded slopes at genuine high altitude.",
     image: "https://picsum.photos/seed/kuehtai/800/500",
     images: ["https://picsum.photos/seed/kuehtai-1/1200/700", "https://picsum.photos/seed/kuehtai-2/1200/700", "https://picsum.photos/seed/kuehtai-3/1200/700"],
-    weather: { temp: -8, snowDepth: 190, condition: "Sunny", forecast: [
-      { day: "Today", high: -6, low: -12, condition: "clear" },
-      { day: "Tomorrow", high: -7, low: -13, condition: "clear" },
-      { day: "Thu", high: -9, low: -15, condition: "snow" }
+    weather: { temp: -7, snowDepth: 160, condition: "Sunny", forecast: [
+      { day: "Today", high: -5, low: -11, condition: "clear" },
+      { day: "Tomorrow", high: -6, low: -12, condition: "clear" },
+      { day: "Thu", high: -8, low: -14, condition: "snow" }
     ]},
-    snowDepthBase: 110, snowDepthMid: 160, snowDepthTop: 205, snowType: "Packed powder",
+    snowDepthBase: 100, snowDepthMid: 145, snowDepthTop: 185, snowType: "Packed powder",
     liftsOpen: 11, liftsTotal: 12, pistesOpen: 16, pistesTotal: 18,
     ecoRating: 3, ecoRenewable: 44, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["44% renewable electricity", "High altitude natural snow advantage"],
+    ecoInitiatives: ["44% renewable electricity", "High-altitude snowpack preservation"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Innsbruck", iata: "INN", driveTime: "45m" },
@@ -43,14 +43,14 @@ export const austrianResorts5 = [
     parking: { capacity: 900, pricePerDay: 10, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Dortmunder Hutte", zone: "2230m", cuisine: "Austrian", price: "€€" },
-        { name: "Kuehtai Alm", zone: "Village 2000m", cuisine: "Alpine", price: "€€" }
+        { name: "Kuehtai Restaurant", zone: "Village 2000m", cuisine: "Austrian", price: "€€" },
+        { name: "Dortmunder Hutte", zone: "Mid-mountain 2300m", cuisine: "Alpine", price: "€€" }
       ],
       skiSchools: 1, groupLessonFrom: 40, privateLessonFrom: 100,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
       creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 50,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
-      lockerCount: 160, lockerSizes: ["S", "M", "L"],
+      lockerCount: 180, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 7, bootDryers: true,
       rentalShops: 2, rentalBrands: ["Atomic", "Rossignol"],
       skiTuning: true, clothingShop: false, supermarket: false,
@@ -58,23 +58,23 @@ export const austrianResorts5 = [
       pharmacy: false, atm: true, atmCount: 1
     },
     surroundings: {
-      description: "Kuehtai sits in a high plateau in the Stubai Alps just 30 minutes from Innsbruck. The surrounding terrain is excellent for winter walks and snowshoeing.",
+      description: "Kuehtai is Austrias highest resort village, sitting in a high glacial basin in the Otztal Alps. The panoramic views extend to the Stubai and Ortler Alps.",
       nearbyTowns: [
-        { name: "Innsbruck", distance: "30km", desc: "Tyrolean capital with rail connections" },
-        { name: "Oetz", distance: "15km", desc: "Inn valley village at the foot of the Oetztal" }
+        { name: "Innsbruck", distance: "30km", desc: "Tyrolean capital with cultural attractions" },
+        { name: "Oetz", distance: "20km", desc: "Gateway village to the Otztal" }
       ],
-      activities: ["Snowshoeing", "Winter hiking"],
+      activities: ["Snowshoeing", "Winter hiking", "Cross-country skiing"],
       touristBoard: "Kuehtai Tourismus",
       touristBoardUrl: "https://www.kuehtai.info",
       emergency: "112",
-      hospital: "Innsbruck University Hospital (45m drive)"
+      hospital: "Innsbruck University Hospital (30km)"
     },
     webcams: [
-      { name: "Gaiskogel 2520m", seed: "kuehtai-cam1" },
-      { name: "Village 2000m", seed: "kuehtai-cam2" }
+      { name: "Kuehtai village 2000m", seed: "kuehtai-cam1" },
+      { name: "Hochoetz summit 2520m", seed: "kuehtai-cam2" }
     ],
     events: [
-      { date: "Dec 2024", name: "Kuehtai Night Race", type: "Competition", desc: "Annual night slalom event" }
+      { date: "Jan 2025", name: "Kuehtai Nocturne", type: "Competition", desc: "Night slalom race under floodlights" }
     ],
     promotions: [],
     liftPasses: [
@@ -86,7 +86,7 @@ export const austrianResorts5 = [
     instructors: [],
     reviews: {
       overall: 8.4,
-      breakdown: { pistes: 8.4, lifts: 8.3, apresSki: 7.8, value: 9.2, beginners: 8.8 },
+      breakdown: { pistes: 8.5, lifts: 8.3, apresSki: 7.8, value: 9.2, beginners: 8.8 },
       items: []
     },
     seasonCalendar: [
@@ -111,8 +111,8 @@ export const austrianResorts5 = [
     verticalDrop: 1136,
     pisteKm: 40, runs: 22, lifts: 10,
     gondolas: 3, chairlifts: 5, dragLifts: 2,
-    longestRun: 7,
-    difficultyBlue: 28, difficultyRed: 52, difficultyBlack: 20,
+    longestRun: 8,
+    difficultyBlue: 30, difficultyRed: 52, difficultyBlack: 18,
     snowCannons: 45, snowCannonKm: 18,
     seasonStart: "2024-12-14", seasonEnd: "2025-04-06",
     openStatus: "Open", roadStatus: "open",
@@ -128,10 +128,10 @@ export const austrianResorts5 = [
       { day: "Tomorrow", high: -3, low: -9, condition: "partly_cloudy" },
       { day: "Thu", high: -5, low: -11, condition: "snow" }
     ]},
-    snowDepthBase: 55, snowDepthMid: 105, snowDepthTop: 150, snowType: "Packed powder",
+    snowDepthBase: 55, snowDepthMid: 100, snowDepthTop: 145, snowType: "Packed powder",
     liftsOpen: 9, liftsTotal: 10, pistesOpen: 20, pistesTotal: 22,
     ecoRating: 3, ecoRenewable: 50, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["50% renewable electricity", "Stubaital bus integration"],
+    ecoInitiatives: ["50% renewable electricity", "Stubaital valley bus integration"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Innsbruck", iata: "INN", driveTime: "35m" },
@@ -139,17 +139,17 @@ export const austrianResorts5 = [
     ],
     trainStation: "Innsbruck Hauptbahnhof - 28km Stubai valley bus",
     shuttle: false, shuttleDesc: "Stubai valley bus from Innsbruck",
-    parking: { capacity: 1000, pricePerDay: 9, includedInPass: false },
+    parking: { capacity: 1200, pricePerDay: 9, includedInPass: false },
     facilities: {
       restaurants: [
         { name: "Kreuzjoch Restaurant", zone: "Summit 2136m", cuisine: "Austrian", price: "€€" },
-        { name: "Starkenburger Hutte", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
+        { name: "Froneben Alm", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
       ],
-      skiSchools: 2, groupLessonFrom: 37, privateLessonFrom: 93,
+      skiSchools: 2, groupLessonFrom: 38, privateLessonFrom: 95,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
-      creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 45,
+      creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 46,
       kidsGarden: true, kidsGardenAge: "3-12", babysitting: false,
-      lockerCount: 250, lockerSizes: ["S", "M", "L"],
+      lockerCount: 280, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 6, bootDryers: true,
       rentalShops: 3, rentalBrands: ["Atomic", "Rossignol", "Head"],
       skiTuning: true, clothingShop: true, supermarket: false,
@@ -157,36 +157,36 @@ export const austrianResorts5 = [
       pharmacy: false, atm: true, atmCount: 2
     },
     surroundings: {
-      description: "Fulpmes is the main village in the lower Stubai valley with a long metalworking tradition. The Stubai glacier is visible from the upper slopes.",
+      description: "Fulpmes is a traditional village in the Stubaital with a strong crafts tradition. The valley leads up to the Stubai Glacier at its head and has excellent bus connections to Innsbruck.",
       nearbyTowns: [
-        { name: "Fulpmes", distance: "2km", desc: "Traditional Stubai valley craftsman village" },
-        { name: "Neustift im Stubaital", distance: "8km", desc: "Main Stubaital village near the glacier" },
-        { name: "Innsbruck", distance: "28km", desc: "Tyrolean capital" }
+        { name: "Fulpmes", distance: "2km", desc: "Traditional Stubaital village" },
+        { name: "Innsbruck", distance: "28km", desc: "Tyrolean capital" },
+        { name: "Neustift", distance: "8km", desc: "Village at the foot of the Stubai Glacier" }
       ],
       activities: ["Snowshoeing", "Winter hiking", "Ice skating"],
-      touristBoard: "Stubai Tourismus",
+      touristBoard: "Stubaital Tourismus",
       touristBoardUrl: "https://www.stubai.at",
       emergency: "112",
-      hospital: "Innsbruck University Hospital (35m drive)"
+      hospital: "Innsbruck University Hospital (28km)"
     },
     webcams: [
       { name: "Kreuzjoch 2136m", seed: "schlick-cam1" },
       { name: "Fulpmes base", seed: "schlick-cam2" }
     ],
     events: [
-      { date: "Jan 2025", name: "Schlick Family Race", type: "Competition", desc: "Annual family fun race" }
+      { date: "Feb 2025", name: "Schlick Family Race", type: "Competition", desc: "Annual family giant slalom race" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 43, child: 22, senior: 34, badge: null },
       { type: "3-day", adult: 118, child: 59, senior: 94, badge: null },
-      { type: "6-day", adult: 221, child: 111, senior: 177, badge: "Best value" },
+      { type: "6-day", adult: 220, child: 110, senior: 176, badge: "Best value" },
       { type: "Season", adult: 990, child: 495, senior: 792, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 8.2,
-      breakdown: { pistes: 8.2, lifts: 8.1, apresSki: 7.9, value: 9.4, beginners: 9.3 },
+      breakdown: { pistes: 8.2, lifts: 8.1, apresSki: 8.0, value: 9.4, beginners: 9.3 },
       items: []
     },
     seasonCalendar: [
@@ -211,41 +211,41 @@ export const austrianResorts5 = [
     verticalDrop: 458,
     pisteKm: 22, runs: 12, lifts: 6,
     gondolas: 2, chairlifts: 3, dragLifts: 1,
-    longestRun: 5,
+    longestRun: 6,
     difficultyBlue: 25, difficultyRed: 50, difficultyBlack: 25,
-    snowCannons: 25, snowCannonKm: 11,
+    snowCannons: 25, snowCannonKm: 12,
     seasonStart: "2024-12-21", seasonEnd: "2025-03-16",
     openStatus: "Open", roadStatus: "chains",
     rating: 7.8, ratingLabel: "Very good", priceFrom: 38,
     seasonDates: "21 Dec 2024 - 16 Mar 2025",
     seasonPasses: ["superski"],
-    resortTypes: ["Alpine", "Day trip"],
+    resortTypes: ["Alpine", "Family resort"],
     description: "The main ski resort of Lower Austria and a favourite day trip from Vienna. Compact layout and efficient lifts mean excellent time on snow for day trippers and the area is accessible for less experienced skiers.",
     image: "https://picsum.photos/seed/hochkar/800/500",
     images: ["https://picsum.photos/seed/hochkar-1/1200/700", "https://picsum.photos/seed/hochkar-2/1200/700", "https://picsum.photos/seed/hochkar-3/1200/700"],
-    weather: { temp: -3, snowDepth: 100, condition: "Partly cloudy", forecast: [
-      { day: "Today", high: -1, low: -7, condition: "partly_cloudy" },
-      { day: "Tomorrow", high: -2, low: -8, condition: "clear" },
+    weather: { temp: -3, snowDepth: 100, condition: "Clear", forecast: [
+      { day: "Today", high: -1, low: -7, condition: "clear" },
+      { day: "Tomorrow", high: -2, low: -8, condition: "partly_cloudy" },
       { day: "Thu", high: -4, low: -10, condition: "snow" }
     ]},
-    snowDepthBase: 55, snowDepthMid: 80, snowDepthTop: 110, snowType: "Machine-groomed",
+    snowDepthBase: 65, snowDepthMid: 90, snowDepthTop: 120, snowType: "Machine-groomed",
     liftsOpen: 6, liftsTotal: 6, pistesOpen: 11, pistesTotal: 12,
     ecoRating: 3, ecoRenewable: 48, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["48% renewable electricity", "70% snowmaking coverage"],
+    ecoInitiatives: ["48% renewable electricity", "Otscher nature park stewardship"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Vienna", iata: "VIE", driveTime: "2h" },
-      { airport: "Graz", iata: "GRZ", driveTime: "2h 30m" }
+      { airport: "Linz", iata: "LNZ", driveTime: "1h 30m" }
     ],
-    trainStation: "Goestling - 8km bus",
-    shuttle: false, shuttleDesc: "Bus from Goestling",
-    parking: { capacity: 1200, pricePerDay: 8, includedInPass: false },
+    trainStation: "Gostling - 8km bus",
+    shuttle: false, shuttleDesc: "Bus from Gostling",
+    parking: { capacity: 800, pricePerDay: 8, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Hochkar Gipfelrestaurant", zone: "Summit 1808m", cuisine: "Austrian", price: "€€" },
-        { name: "Hochkar Bergrestaurant", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
+        { name: "Hochkar Restaurant", zone: "Summit 1808m", cuisine: "Austrian", price: "€€" },
+        { name: "Berghutte Hochkar", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
       ],
-      skiSchools: 1, groupLessonFrom: 34, privateLessonFrom: 85,
+      skiSchools: 1, groupLessonFrom: 35, privateLessonFrom: 90,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
       creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 42,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
@@ -257,36 +257,35 @@ export const austrianResorts5 = [
       pharmacy: false, atm: true, atmCount: 1
     },
     surroundings: {
-      description: "Hochkar is in the Otscher-Tormauer nature park in Lower Austria, popular as an easy day trip destination from Vienna. The Otscher peak is a recognisable landmark.",
+      description: "Hochkar sits above the Otscher massif in Lower Austria, a short drive from the Erlauf valley. Vienna day trippers make up a large share of visitors at weekends.",
       nearbyTowns: [
-        { name: "Goestling an der Ybbs", distance: "8km", desc: "Small Lower Austrian market town" },
-        { name: "Gaming", distance: "20km", desc: "Historic Carthusian monastery town" },
-        { name: "Wien", distance: "160km", desc: "Austrian capital" }
+        { name: "Gostling an der Ybbs", distance: "8km", desc: "Small Lower Austrian market village" },
+        { name: "Gaming", distance: "20km", desc: "Monastery town in the Otscher region" }
       ],
       activities: ["Snowshoeing", "Winter hiking", "Tobogganing"],
       touristBoard: "Hochkar Tourismus",
       touristBoardUrl: "https://www.hochkar.at",
       emergency: "112",
-      hospital: "LKH Amstetten (40km)"
+      hospital: "Scheibbs hospital (25km)"
     },
     webcams: [
-      { name: "Hochkar 1808m", seed: "hochkar-cam1" },
-      { name: "Base station", seed: "hochkar-cam2" }
+      { name: "Hochkar summit 1808m", seed: "hochkar-cam1" },
+      { name: "Hochkar base 1350m", seed: "hochkar-cam2" }
     ],
     events: [
-      { date: "Jan 2025", name: "Hochkar Night Race", type: "Competition", desc: "Illuminated night slalom" }
+      { date: "Feb 2025", name: "Hochkar Sprungschanzen", type: "Competition", desc: "Lower Austria ski jumping event" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 38, child: 19, senior: 30, badge: null },
       { type: "3-day", adult: 104, child: 52, senior: 83, badge: null },
-      { type: "6-day", adult: 194, child: 97, senior: 155, badge: "Best value" },
+      { type: "6-day", adult: 195, child: 98, senior: 156, badge: "Best value" },
       { type: "Season", adult: 870, child: 435, senior: 696, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 7.8,
-      breakdown: { pistes: 7.8, lifts: 7.7, apresSki: 7.5, value: 9.4, beginners: 9.2 },
+      breakdown: { pistes: 7.8, lifts: 7.9, apresSki: 7.5, value: 9.5, beginners: 9.4 },
       items: []
     },
     seasonCalendar: [
@@ -310,9 +309,9 @@ export const austrianResorts5 = [
     minAltitude: 950, maxAltitude: 1870,
     verticalDrop: 920,
     pisteKm: 32, runs: 15, lifts: 7,
-    gondolas: 2, chairlifts: 3, dragLifts: 2,
+    gondolas: 2, chairlifts: 4, dragLifts: 1,
     longestRun: 7,
-    difficultyBlue: 26, difficultyRed: 54, difficultyBlack: 20,
+    difficultyBlue: 28, difficultyRed: 52, difficultyBlack: 20,
     snowCannons: 35, snowCannonKm: 14,
     seasonStart: "2024-12-21", seasonEnd: "2025-03-23",
     openStatus: "Open", roadStatus: "open",
@@ -323,15 +322,15 @@ export const austrianResorts5 = [
     description: "A quieter alternative to nearby Hinterstoder with 32km of family-friendly slopes above Spital am Pyhrn. Good value lift passes and a relaxed local atmosphere popular in Upper Austria.",
     image: "https://picsum.photos/seed/wurzeralm/800/500",
     images: ["https://picsum.photos/seed/wurzeralm-1/1200/700", "https://picsum.photos/seed/wurzeralm-2/1200/700", "https://picsum.photos/seed/wurzeralm-3/1200/700"],
-    weather: { temp: -3, snowDepth: 105, condition: "Clear", forecast: [
-      { day: "Today", high: -1, low: -7, condition: "clear" },
-      { day: "Tomorrow", high: -2, low: -8, condition: "partly_cloudy" },
-      { day: "Thu", high: -4, low: -10, condition: "snow" }
+    weather: { temp: -4, snowDepth: 120, condition: "Clear", forecast: [
+      { day: "Today", high: -2, low: -8, condition: "clear" },
+      { day: "Tomorrow", high: -3, low: -9, condition: "partly_cloudy" },
+      { day: "Thu", high: -5, low: -11, condition: "snow" }
     ]},
-    snowDepthBase: 45, snowDepthMid: 85, snowDepthTop: 125, snowType: "Machine-groomed",
-    liftsOpen: 7, liftsTotal: 7, pistesOpen: 14, pistesTotal: 15,
+    snowDepthBase: 55, snowDepthMid: 95, snowDepthTop: 135, snowType: "Machine-groomed",
+    liftsOpen: 7, liftsTotal: 7, pistesOpen: 13, pistesTotal: 15,
     ecoRating: 3, ecoRenewable: 46, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["46% renewable electricity", "Pyhrn-Priel natural park stewardship"],
+    ecoInitiatives: ["46% renewable electricity", "Pyhrn-Priel nature park awareness"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Salzburg", iata: "SZG", driveTime: "1h 30m" },
@@ -342,50 +341,50 @@ export const austrianResorts5 = [
     parking: { capacity: 900, pricePerDay: 8, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Wurzeralm Gipfelrestaurant", zone: "Summit 1870m", cuisine: "Austrian", price: "€€" },
-        { name: "Mitterstationshutte", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
+        { name: "Wurzeralm Restaurant", zone: "Summit 1870m", cuisine: "Austrian", price: "€€" },
+        { name: "Mittelstation Alm", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
       ],
-      skiSchools: 1, groupLessonFrom: 35, privateLessonFrom: 88,
+      skiSchools: 1, groupLessonFrom: 36, privateLessonFrom: 92,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
       creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 44,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
-      lockerCount: 160, lockerSizes: ["S", "M", "L"],
+      lockerCount: 200, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 6, bootDryers: true,
       rentalShops: 2, rentalBrands: ["Atomic", "Rossignol"],
       skiTuning: true, clothingShop: false, supermarket: false,
-      medicalCentre: false, medicalLocation: "Spital am Pyhrn (5km)",
+      medicalCentre: true, medicalLocation: "Spital am Pyhrn (5km)",
       pharmacy: false, atm: true, atmCount: 1
     },
     surroundings: {
-      description: "The Wurzeralm is in the Pyhrn-Priel region of Upper Austria, a protected natural landscape of high limestone plateaus and forested valleys.",
+      description: "The Wurzeralm rises above Spital am Pyhrn in the Totes Gebirge foothills. The Pyhrn-Priel nature park surrounds the ski area with pristine limestone scenery.",
       nearbyTowns: [
-        { name: "Spital am Pyhrn", distance: "5km", desc: "Small Upper Austrian village on the Pyhrn pass route" },
-        { name: "Kirchdorf an der Krems", distance: "30km", desc: "Upper Austrian market town with train station" }
+        { name: "Spital am Pyhrn", distance: "5km", desc: "Small Upper Austrian town with baroque church" },
+        { name: "Windischgarsten", distance: "10km", desc: "Traditional spa and market village" }
       ],
       activities: ["Snowshoeing", "Winter hiking", "Cross-country skiing"],
       touristBoard: "Pyhrn-Priel Tourismus",
       touristBoardUrl: "https://www.pyhrn-priel.net",
       emergency: "112",
-      hospital: "LKH Kirchdorf (30km)"
+      hospital: "Kirchdorf hospital (20km)"
     },
     webcams: [
       { name: "Wurzeralm 1870m", seed: "wurzeralm-cam1" },
-      { name: "Base station", seed: "wurzeralm-cam2" }
+      { name: "Spital am Pyhrn base", seed: "wurzeralm-cam2" }
     ],
     events: [
-      { date: "Feb 2025", name: "Wurzeralm Family Day", type: "Festival", desc: "Ski carnival and family activities" }
+      { date: "Feb 2025", name: "Wurzeralm Snowboard Cup", type: "Competition", desc: "Regional snowboard competition" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 40, child: 20, senior: 32, badge: null },
       { type: "3-day", adult: 110, child: 55, senior: 88, badge: null },
-      { type: "6-day", adult: 205, child: 103, senior: 164, badge: "Best value" },
+      { type: "6-day", adult: 206, child: 103, senior: 165, badge: "Best value" },
       { type: "Season", adult: 920, child: 460, senior: 736, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 7.9,
-      breakdown: { pistes: 8.0, lifts: 7.9, apresSki: 7.5, value: 9.5, beginners: 9.3 },
+      breakdown: { pistes: 8.0, lifts: 7.8, apresSki: 7.6, value: 9.4, beginners: 9.3 },
       items: []
     },
     seasonCalendar: [
@@ -410,15 +409,15 @@ export const austrianResorts5 = [
     verticalDrop: 968,
     pisteKm: 40, runs: 20, lifts: 9,
     gondolas: 2, chairlifts: 5, dragLifts: 2,
-    longestRun: 8,
-    difficultyBlue: 30, difficultyRed: 50, difficultyBlack: 20,
+    longestRun: 9,
+    difficultyBlue: 32, difficultyRed: 48, difficultyBlack: 20,
     snowCannons: 35, snowCannonKm: 14,
     seasonStart: "2024-12-14", seasonEnd: "2025-03-30",
     openStatus: "Open", roadStatus: "open",
     rating: 8.0, ratingLabel: "Very good", priceFrom: 40,
     seasonDates: "14 Dec 2024 - 30 Mar 2025",
     seasonPasses: ["superski"],
-    resortTypes: ["Alpine", "Family resort", "Nordic"],
+    resortTypes: ["Alpine", "Family resort"],
     description: "Gentle slopes with a charming lakeside setting in the Styrian Salzkammergut. Also famous for its cross-country skiing network and the Tauplitzalm plateau offers easy scenic touring terrain.",
     image: "https://picsum.photos/seed/tauplitz/800/500",
     images: ["https://picsum.photos/seed/tauplitz-1/1200/700", "https://picsum.photos/seed/tauplitz-2/1200/700", "https://picsum.photos/seed/tauplitz-3/1200/700"],
@@ -427,10 +426,10 @@ export const austrianResorts5 = [
       { day: "Tomorrow", high: -2, low: -8, condition: "clear" },
       { day: "Thu", high: -4, low: -10, condition: "snow" }
     ]},
-    snowDepthBase: 50, snowDepthMid: 90, snowDepthTop: 130, snowType: "Machine-groomed",
+    snowDepthBase: 50, snowDepthMid: 90, snowDepthTop: 130, snowType: "Packed powder",
     liftsOpen: 8, liftsTotal: 9, pistesOpen: 18, pistesTotal: 20,
     ecoRating: 3, ecoRenewable: 50, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["50% renewable electricity", "Salzkammergut lake ecosystem protection"],
+    ecoInitiatives: ["50% renewable electricity", "Salzkammergut lake protection"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Salzburg", iata: "SZG", driveTime: "1h 30m" },
@@ -441,51 +440,51 @@ export const austrianResorts5 = [
     parking: { capacity: 1000, pricePerDay: 8, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Tauplitzalm Restaurant", zone: "Plateau 1640m", cuisine: "Austrian", price: "€€" },
-        { name: "Loserseehutte", zone: "1380m", cuisine: "Alpine", price: "€" }
+        { name: "Tauplitzalm Restaurant", zone: "1650m plateau", cuisine: "Austrian", price: "€€" },
+        { name: "Stoderzinken Hutte", zone: "Summit area", cuisine: "Alpine", price: "€€" }
       ],
-      skiSchools: 1, groupLessonFrom: 36, privateLessonFrom: 90,
+      skiSchools: 1, groupLessonFrom: 36, privateLessonFrom: 92,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
       creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 44,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
-      lockerCount: 180, lockerSizes: ["S", "M", "L"],
+      lockerCount: 220, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 6, bootDryers: true,
       rentalShops: 2, rentalBrands: ["Atomic", "Rossignol"],
       skiTuning: true, clothingShop: false, supermarket: false,
-      medicalCentre: false, medicalLocation: "Bad Mitterndorf (6km)",
+      medicalCentre: true, medicalLocation: "Bad Mitterndorf (6km)",
       pharmacy: false, atm: true, atmCount: 1
     },
     surroundings: {
-      description: "Tauplitz sits in the Styrian Salzkammergut lake district surrounded by the Dead Mountains limestone range. Bad Mitterndorf is a traditional spa village.",
+      description: "The Tauplitzalm is a wide alpine plateau in the Styrian Salzkammergut with frozen lakes and forest scenery. Bad Mitterndorf is a traditional spa town in the valley.",
       nearbyTowns: [
-        { name: "Bad Mitterndorf", distance: "6km", desc: "Traditional Styrian spa and cross-country ski village" },
+        { name: "Bad Mitterndorf", distance: "6km", desc: "Traditional Styrian spa town" },
         { name: "Bad Aussee", distance: "15km", desc: "Salzkammergut market town" },
-        { name: "Bad Ischl", distance: "40km", desc: "Former Habsburg summer residence" }
+        { name: "Schladming", distance: "30km", desc: "Major Styrian ski resort town" }
       ],
-      activities: ["Cross-country skiing", "Snowshoeing", "Winter hiking", "Spa & wellness"],
-      touristBoard: "Tauplitz Tourismus",
-      touristBoardUrl: "https://www.tauplitz.at",
+      activities: ["Cross-country skiing", "Snowshoeing", "Winter hiking", "Ice skating"],
+      touristBoard: "Ausseerland-Salzkammergut Tourismus",
+      touristBoardUrl: "https://www.ausseerland.at",
       emergency: "112",
-      hospital: "LKH Bad Aussee (15km)"
+      hospital: "Schladming hospital (30km)"
     },
     webcams: [
-      { name: "Lawinenstein 1868m", seed: "tauplitz-cam1" },
+      { name: "Tauplitz summit 1868m", seed: "tauplitz-cam1" },
       { name: "Tauplitzalm plateau", seed: "tauplitz-cam2" }
     ],
     events: [
-      { date: "Jan 2025", name: "Tauplitz Nordic Weekend", type: "Festival", desc: "Cross-country ski festival on the plateau" }
+      { date: "Jan 2025", name: "Tauplitz Cross-Country Classic", type: "Competition", desc: "Traditional cross-country race on the plateau" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 40, child: 20, senior: 32, badge: null },
       { type: "3-day", adult: 110, child: 55, senior: 88, badge: null },
-      { type: "6-day", adult: 205, child: 103, senior: 164, badge: "Best value" },
+      { type: "6-day", adult: 206, child: 103, senior: 165, badge: "Best value" },
       { type: "Season", adult: 920, child: 460, senior: 736, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 8.0,
-      breakdown: { pistes: 8.0, lifts: 7.9, apresSki: 7.8, value: 9.4, beginners: 9.4 },
+      breakdown: { pistes: 8.0, lifts: 7.9, apresSki: 8.0, value: 9.4, beginners: 9.4 },
       items: []
     },
     seasonCalendar: [
@@ -509,9 +508,9 @@ export const austrianResorts5 = [
     minAltitude: 800, maxAltitude: 2020,
     verticalDrop: 1220,
     pisteKm: 43, runs: 24, lifts: 14,
-    gondolas: 4, chairlifts: 7, dragLifts: 3,
-    longestRun: 8,
-    difficultyBlue: 24, difficultyRed: 52, difficultyBlack: 24,
+    gondolas: 4, chairlifts: 8, dragLifts: 2,
+    longestRun: 9,
+    difficultyBlue: 24, difficultyRed: 50, difficultyBlack: 26,
     snowCannons: 40, snowCannonKm: 16,
     seasonStart: "2024-12-07", seasonEnd: "2025-04-06",
     openStatus: "Open", roadStatus: "open",
@@ -522,28 +521,28 @@ export const austrianResorts5 = [
     description: "An authentic Tyrolean village with a world-famous freeride scene hosting the Freeride World Tour. Connected to the Skicircus Saalbach via the Reckmoos gondola forming part of one of Austrias largest ski areas.",
     image: "https://picsum.photos/seed/fieberbrunn/800/500",
     images: ["https://picsum.photos/seed/fieberbrunn-1/1200/700", "https://picsum.photos/seed/fieberbrunn-2/1200/700", "https://picsum.photos/seed/fieberbrunn-3/1200/700"],
-    weather: { temp: -4, snowDepth: 140, condition: "Clear", forecast: [
-      { day: "Today", high: -2, low: -8, condition: "clear" },
+    weather: { temp: -4, snowDepth: 140, condition: "Snowy", forecast: [
+      { day: "Today", high: -2, low: -8, condition: "snow" },
       { day: "Tomorrow", high: -3, low: -9, condition: "partly_cloudy" },
-      { day: "Thu", high: -5, low: -11, condition: "snow" }
+      { day: "Thu", high: -5, low: -11, condition: "clear" }
     ]},
-    snowDepthBase: 55, snowDepthMid: 110, snowDepthTop: 155, snowType: "Packed powder",
+    snowDepthBase: 60, snowDepthMid: 110, snowDepthTop: 155, snowType: "Powder",
     liftsOpen: 13, liftsTotal: 14, pistesOpen: 22, pistesTotal: 24,
     ecoRating: 3, ecoRenewable: 52, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["52% renewable electricity", "Train access promotion"],
+    ecoInitiatives: ["52% renewable electricity", "Freeride zone management program"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Salzburg", iata: "SZG", driveTime: "1h" },
       { airport: "Innsbruck", iata: "INN", driveTime: "1h" },
-      { airport: "Munich", iata: "MUC", driveTime: "2h" }
+      { airport: "Munich", iata: "MUC", driveTime: "1h 45m" }
     ],
-    trainStation: "Fieberbrunn - 1km, Salzburg-Innsbruck line",
+    trainStation: "Fieberbrunn - 1km, trains on the Salzburg-Innsbruck line",
     shuttle: true, shuttleDesc: "Trains on the Salzburg-Innsbruck line stop at Fieberbrunn",
     parking: { capacity: 1500, pricePerDay: 9, includedInPass: false },
     facilities: {
       restaurants: [
         { name: "Lärchfilzkogel Restaurant", zone: "Summit 2020m", cuisine: "Austrian", price: "€€" },
-        { name: "Doischberg Alm", zone: "Mid-mountain", cuisine: "Alpine", price: "€€" }
+        { name: "Streuböden Hutte", zone: "Mid-mountain", cuisine: "Alpine", price: "€€" }
       ],
       skiSchools: 2, groupLessonFrom: 40, privateLessonFrom: 100,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
@@ -551,19 +550,19 @@ export const austrianResorts5 = [
       kidsGarden: true, kidsGardenAge: "3-12", babysitting: false,
       lockerCount: 300, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 7, bootDryers: true,
-      rentalShops: 4, rentalBrands: ["Atomic", "Rossignol", "Head"],
+      rentalShops: 4, rentalBrands: ["Atomic", "Rossignol", "Head", "Salomon"],
       skiTuning: true, clothingShop: true, supermarket: true,
-      medicalCentre: true, medicalLocation: "Village centre",
+      medicalCentre: true, medicalLocation: "Fieberbrunn village",
       pharmacy: true, atm: true, atmCount: 3
     },
     surroundings: {
-      description: "Fieberbrunn is a genuine Tyrolean farming village in the Pillersee valley that hosts the annual Freeride World Tour stop at the Wildseeloder face.",
+      description: "Fieberbrunn is an authentic Tyrolean farming village in the Pillersee valley between Kitzbuehel and St. Johann. The Wildseeloder freeride face is world-famous.",
       nearbyTowns: [
-        { name: "Fieberbrunn", distance: "0km", desc: "Authentic Tyrolean village with freeride heritage" },
-        { name: "Kitzbuehel", distance: "20km", desc: "World-famous luxury ski resort" },
-        { name: "St. Johann in Tirol", distance: "10km", desc: "Lively market town" }
+        { name: "Fieberbrunn", distance: "0km", desc: "Traditional Tyrolean village with train station" },
+        { name: "Kitzbuehel", distance: "20km", desc: "World-famous ski resort" },
+        { name: "St. Johann in Tirol", distance: "10km", desc: "Market town in the Kitzbueheler Alps" }
       ],
-      activities: ["Snowshoeing", "Winter hiking", "Ice skating", "Freeride tours"],
+      activities: ["Snowshoeing", "Ice skating", "Freeride tours", "Winter hiking"],
       touristBoard: "Fieberbrunn Tourismus",
       touristBoardUrl: "https://www.fieberbrunn.com",
       emergency: "112",
@@ -574,7 +573,7 @@ export const austrianResorts5 = [
       { name: "Fieberbrunn village", seed: "fieberbrunn-cam2" }
     ],
     events: [
-      { date: "Jan 2025", name: "Freeride World Tour Fieberbrunn", type: "Competition", desc: "Annual Freeride World Tour stop on the Wildseeloder" }
+      { date: "Jan 2025", name: "Freeride World Tour Fieberbrunn", type: "Competition", desc: "Elite freeride competition on the Wildseeloder face" }
     ],
     promotions: [],
     liftPasses: [
@@ -586,7 +585,7 @@ export const austrianResorts5 = [
     instructors: [],
     reviews: {
       overall: 8.3,
-      breakdown: { pistes: 8.3, lifts: 8.2, apresSki: 8.3, value: 9.0, beginners: 8.8 },
+      breakdown: { pistes: 8.3, lifts: 8.2, apresSki: 8.4, value: 9.0, beginners: 8.6 },
       items: []
     },
     seasonCalendar: [
@@ -611,70 +610,70 @@ export const austrianResorts5 = [
     verticalDrop: 870,
     pisteKm: 25, runs: 16, lifts: 10,
     gondolas: 3, chairlifts: 5, dragLifts: 2,
-    longestRun: 6,
-    difficultyBlue: 40, difficultyRed: 45, difficultyBlack: 15,
+    longestRun: 7,
+    difficultyBlue: 44, difficultyRed: 44, difficultyBlack: 12,
     snowCannons: 20, snowCannonKm: 9,
     seasonStart: "2024-12-07", seasonEnd: "2025-03-30",
     openStatus: "Open", roadStatus: "open",
     rating: 8.1, ratingLabel: "Excellent", priceFrom: 39,
     seasonDates: "7 Dec 2024 - 30 Mar 2025",
     seasonPasses: ["superski"],
-    resortTypes: ["Alpine", "Nordic", "Family resort"],
+    resortTypes: ["Alpine", "Family resort", "Nordic"],
     description: "Internationally renowned for 200km of cross-country ski trails under the dramatic Dachstein glacier hosting regular World Cup events. The alpine ski area offers gentle family terrain with the glacier as a stunning backdrop.",
     image: "https://picsum.photos/seed/ramsau-dachstein/800/500",
     images: ["https://picsum.photos/seed/ramsau-dachstein-1/1200/700", "https://picsum.photos/seed/ramsau-dachstein-2/1200/700", "https://picsum.photos/seed/ramsau-dachstein-3/1200/700"],
-    weather: { temp: -3, snowDepth: 110, condition: "Sunny", forecast: [
+    weather: { temp: -3, snowDepth: 120, condition: "Sunny", forecast: [
       { day: "Today", high: -1, low: -7, condition: "clear" },
       { day: "Tomorrow", high: -2, low: -8, condition: "clear" },
       { day: "Thu", high: -4, low: -10, condition: "partly_cloudy" }
     ]},
-    snowDepthBase: 50, snowDepthMid: 85, snowDepthTop: 120, snowType: "Machine-groomed",
+    snowDepthBase: 55, snowDepthMid: 90, snowDepthTop: 130, snowType: "Packed powder",
     liftsOpen: 9, liftsTotal: 10, pistesOpen: 14, pistesTotal: 16,
     ecoRating: 4, ecoRenewable: 55, ecoCertifications: ["ISO 14001", "Green Globe"],
-    ecoInitiatives: ["55% renewable electricity", "Green Globe certified", "Cross-country trails protect biodiversity"],
+    ecoInitiatives: ["55% renewable electricity", "Green Globe certified ski area", "UNESCO Hallstatt-Dachstein protection"],
     ecoOffsetProgram: false,
     airports: [
-      { airport: "Salzburg", iata: "SZG", driveTime: "1h 30m" },
+      { airport: "Salzburg", iata: "SZG", driveTime: "1h" },
       { airport: "Graz", iata: "GRZ", driveTime: "2h" }
     ],
     trainStation: "Schladming - 12km bus",
     shuttle: false, shuttleDesc: "Bus from Schladming",
-    parking: { capacity: 1200, pricePerDay: 7, includedInPass: false },
+    parking: { capacity: 1200, pricePerDay: 8, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Dachstein Restaurant", zone: "1870m", cuisine: "Austrian", price: "€€" },
-        { name: "Ramsau Alm", zone: "Village plateau", cuisine: "Alpine", price: "€" }
+        { name: "Dachstein Panorama Restaurant", zone: "1870m", cuisine: "Austrian", price: "€€" },
+        { name: "Alpengasthof Ramsau", zone: "Village", cuisine: "Styrian", price: "€€" }
       ],
-      skiSchools: 1, groupLessonFrom: 34, privateLessonFrom: 86,
+      skiSchools: 1, groupLessonFrom: 36, privateLessonFrom: 90,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
-      creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 42,
+      creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 44,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
-      lockerCount: 180, lockerSizes: ["S", "M", "L"],
+      lockerCount: 220, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 6, bootDryers: true,
-      rentalShops: 2, rentalBrands: ["Atomic", "Rossignol", "Fischer"],
+      rentalShops: 3, rentalBrands: ["Atomic", "Rossignol", "Fischer"],
       skiTuning: true, clothingShop: false, supermarket: false,
-      medicalCentre: false, medicalLocation: "Schladming (12km)",
+      medicalCentre: true, medicalLocation: "Ramsau village",
       pharmacy: false, atm: true, atmCount: 1
     },
     surroundings: {
-      description: "Ramsau am Dachstein is a high plateau village beneath the Dachstein massif offering outstanding Nordic skiing and views across the Enns valley.",
+      description: "Ramsau am Dachstein is a high alpine plateau village in the UNESCO Hallstatt-Dachstein World Heritage region. The cross-country network is the most prestigious in Austria.",
       nearbyTowns: [
-        { name: "Ramsau am Dachstein", distance: "0km", desc: "World Cup cross-country skiing village" },
-        { name: "Schladming", distance: "12km", desc: "Major Styrian ski resort with World Cup downhill" },
-        { name: "Filzmoos", distance: "15km", desc: "Quiet family resort with balloon festival" }
+        { name: "Ramsau am Dachstein", distance: "0km", desc: "Famous cross-country village on the Dachstein plateau" },
+        { name: "Schladming", distance: "12km", desc: "Major alpine ski resort town" },
+        { name: "Hallstatt", distance: "25km", desc: "UNESCO World Heritage salt mining village" }
       ],
-      activities: ["Cross-country skiing", "Snowshoeing", "Winter hiking", "Dachstein glacier tours"],
+      activities: ["Cross-country skiing", "Snowshoeing", "Winter hiking", "Glacier tours"],
       touristBoard: "Ramsau am Dachstein Tourismus",
       touristBoardUrl: "https://www.ramsau.com",
       emergency: "112",
-      hospital: "LKH Schladming (12km)"
+      hospital: "Schladming hospital (12km)"
     },
     webcams: [
-      { name: "Dachstein 1870m", seed: "ramsau-cam1" },
-      { name: "Ramsau plateau", seed: "ramsau-cam2" }
+      { name: "Dachstein plateau 1870m", seed: "ramsau-cam1" },
+      { name: "Ramsau village", seed: "ramsau-cam2" }
     ],
     events: [
-      { date: "Jan 2025", name: "Ramsau Nordic World Cup", type: "Competition", desc: "FIS Cross-Country World Cup event" }
+      { date: "Jan 2025", name: "Ramsau Nordic World Cup", type: "Competition", desc: "FIS cross-country World Cup sprint races" }
     ],
     promotions: [],
     liftPasses: [
@@ -686,7 +685,7 @@ export const austrianResorts5 = [
     instructors: [],
     reviews: {
       overall: 8.1,
-      breakdown: { pistes: 8.0, lifts: 8.0, apresSki: 7.9, value: 9.5, beginners: 9.5 },
+      breakdown: { pistes: 8.0, lifts: 8.0, apresSki: 7.9, value: 9.3, beginners: 9.4 },
       items: []
     },
     seasonCalendar: [
@@ -711,7 +710,7 @@ export const austrianResorts5 = [
     verticalDrop: 1038,
     pisteKm: 22, runs: 14, lifts: 7,
     gondolas: 2, chairlifts: 4, dragLifts: 1,
-    longestRun: 6,
+    longestRun: 7,
     difficultyBlue: 30, difficultyRed: 48, difficultyBlack: 22,
     snowCannons: 20, snowCannonKm: 9,
     seasonStart: "2024-12-21", seasonEnd: "2025-03-23",
@@ -723,70 +722,70 @@ export const austrianResorts5 = [
     description: "A compact family ski area above the famous Altaussee salt lake in the Salzkammergut. Stunning lake views and relaxed atmosphere make it a favourite weekend escape for visitors from Salzburg and Graz.",
     image: "https://picsum.photos/seed/loser-altaussee/800/500",
     images: ["https://picsum.photos/seed/loser-altaussee-1/1200/700", "https://picsum.photos/seed/loser-altaussee-2/1200/700", "https://picsum.photos/seed/loser-altaussee-3/1200/700"],
-    weather: { temp: -2, snowDepth: 90, condition: "Clear", forecast: [
-      { day: "Today", high: 0, low: -6, condition: "clear" },
-      { day: "Tomorrow", high: -1, low: -7, condition: "partly_cloudy" },
-      { day: "Thu", high: -3, low: -9, condition: "snow" }
+    weather: { temp: -3, snowDepth: 110, condition: "Clear", forecast: [
+      { day: "Today", high: -1, low: -7, condition: "clear" },
+      { day: "Tomorrow", high: -2, low: -8, condition: "partly_cloudy" },
+      { day: "Thu", high: -4, low: -10, condition: "snow" }
     ]},
-    snowDepthBase: 40, snowDepthMid: 75, snowDepthTop: 110, snowType: "Machine-groomed",
+    snowDepthBase: 50, snowDepthMid: 85, snowDepthTop: 120, snowType: "Packed powder",
     liftsOpen: 6, liftsTotal: 7, pistesOpen: 12, pistesTotal: 14,
     ecoRating: 3, ecoRenewable: 50, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["50% renewable electricity", "Altaussee lake water quality protection"],
+    ecoInitiatives: ["50% renewable electricity", "Altaussee lake watershed protection"],
     ecoOffsetProgram: false,
     airports: [
-      { airport: "Salzburg", iata: "SZG", driveTime: "1h 30m" },
+      { airport: "Salzburg", iata: "SZG", driveTime: "1h 15m" },
       { airport: "Graz", iata: "GRZ", driveTime: "2h" }
     ],
     trainStation: "Bad Aussee - 8km bus",
     shuttle: false, shuttleDesc: "Bus from Bad Aussee station",
-    parking: { capacity: 800, pricePerDay: 7, includedInPass: false },
+    parking: { capacity: 700, pricePerDay: 7, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Loser Panoramarestaurant", zone: "Summit 1838m", cuisine: "Austrian", price: "€€" },
-        { name: "Loserhof", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
+        { name: "Loser Panorama Restaurant", zone: "1838m", cuisine: "Austrian", price: "€€" },
+        { name: "Seewirt Altaussee", zone: "Lake level", cuisine: "Styrian", price: "€€" }
       ],
-      skiSchools: 1, groupLessonFrom: 33, privateLessonFrom: 83,
+      skiSchools: 1, groupLessonFrom: 34, privateLessonFrom: 88,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
-      creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 40,
+      creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 42,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
-      lockerCount: 150, lockerSizes: ["S", "M", "L"],
-      skiStorage: true, skiStorageFrom: 6, bootDryers: true,
+      lockerCount: 160, lockerSizes: ["S", "M", "L"],
+      skiStorage: true, skiStorageFrom: 5, bootDryers: true,
       rentalShops: 2, rentalBrands: ["Atomic", "Rossignol"],
       skiTuning: true, clothingShop: false, supermarket: false,
       medicalCentre: false, medicalLocation: "Bad Aussee (8km)",
       pharmacy: false, atm: true, atmCount: 1
     },
     surroundings: {
-      description: "The Altaussee lake is one of the most beautiful in the Salzkammergut and is visible from the upper slopes of the Loser. The village is famous for its salt mine history.",
+      description: "Altaussee is a historic salt-mining village on the shores of the emerald-green Altaussee lake in the Styrian Salzkammergut. The area gained notoriety as a Nazi art repository during World War II.",
       nearbyTowns: [
-        { name: "Altaussee", distance: "3km", desc: "Famous salt lake village with historic mine" },
-        { name: "Bad Aussee", distance: "8km", desc: "Salzkammergut market town" },
-        { name: "Bad Ischl", distance: "30km", desc: "Former Habsburg summer residence" }
+        { name: "Altaussee", distance: "3km", desc: "Historic salt-mining village on the lake" },
+        { name: "Bad Aussee", distance: "8km", desc: "Salzkammergut spa town with train station" },
+        { name: "Grundlsee", distance: "10km", desc: "Scenic lake village" }
       ],
-      activities: ["Snowshoeing", "Winter hiking", "Salt mine tours", "Cross-country skiing"],
-      touristBoard: "Altaussee Tourismus",
-      touristBoardUrl: "https://www.altaussee.at",
+      activities: ["Snowshoeing", "Winter hiking", "Ice skating", "Salt mine tours"],
+      touristBoard: "Ausseerland-Salzkammergut Tourismus",
+      touristBoardUrl: "https://www.ausseerland.at",
       emergency: "112",
-      hospital: "LKH Bad Aussee (8km)"
+      hospital: "Bad Aussee hospital (8km)"
     },
     webcams: [
       { name: "Loser summit 1838m", seed: "loser-cam1" },
       { name: "Altaussee lake view", seed: "loser-cam2" }
     ],
     events: [
-      { date: "Feb 2025", name: "Loser Family Winter Day", type: "Festival", desc: "Family ski carnival with prizes" }
+      { date: "Feb 2025", name: "Loser Family Ski Weekend", type: "Festival", desc: "Family fun races and activities" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 37, child: 19, senior: 30, badge: null },
-      { type: "3-day", adult: 101, child: 51, senior: 81, badge: null },
-      { type: "6-day", adult: 189, child: 95, senior: 151, badge: "Best value" },
-      { type: "Season", adult: 850, child: 425, senior: 680, badge: null }
+      { type: "3-day", adult: 102, child: 51, senior: 82, badge: null },
+      { type: "6-day", adult: 190, child: 95, senior: 152, badge: "Best value" },
+      { type: "Season", adult: 855, child: 428, senior: 684, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 7.9,
-      breakdown: { pistes: 7.9, lifts: 7.8, apresSki: 7.7, value: 9.5, beginners: 9.4 },
+      breakdown: { pistes: 7.9, lifts: 7.8, apresSki: 7.7, value: 9.5, beginners: 9.5 },
       items: []
     },
     seasonCalendar: [
@@ -812,7 +811,7 @@ export const austrianResorts5 = [
     pisteKm: 26, runs: 13, lifts: 6,
     gondolas: 2, chairlifts: 3, dragLifts: 1,
     longestRun: 9,
-    difficultyBlue: 12, difficultyRed: 57, difficultyBlack: 31,
+    difficultyBlue: 15, difficultyRed: 54, difficultyBlack: 31,
     snowCannons: 20, snowCannonKm: 7,
     seasonStart: "2024-12-14", seasonEnd: "2025-04-13",
     openStatus: "Open", roadStatus: "open",
@@ -823,27 +822,27 @@ export const austrianResorts5 = [
     description: "One of the most pristine and uncrowded ski areas in Austria accessible via the Tauernbahn railway through the mountain tunnel. Long descents from 2638m and lack of crowds make it a hidden gem for experienced skiers.",
     image: "https://picsum.photos/seed/ankogel/800/500",
     images: ["https://picsum.photos/seed/ankogel-1/1200/700", "https://picsum.photos/seed/ankogel-2/1200/700", "https://picsum.photos/seed/ankogel-3/1200/700"],
-    weather: { temp: -7, snowDepth: 165, condition: "Sunny", forecast: [
-      { day: "Today", high: -5, low: -11, condition: "clear" },
-      { day: "Tomorrow", high: -6, low: -12, condition: "clear" },
-      { day: "Thu", high: -8, low: -14, condition: "snow" }
+    weather: { temp: -8, snowDepth: 180, condition: "Sunny", forecast: [
+      { day: "Today", high: -6, low: -12, condition: "clear" },
+      { day: "Tomorrow", high: -7, low: -13, condition: "clear" },
+      { day: "Thu", high: -9, low: -15, condition: "snow" }
     ]},
-    snowDepthBase: 70, snowDepthMid: 130, snowDepthTop: 195, snowType: "Powder",
-    liftsOpen: 6, liftsTotal: 6, pistesOpen: 12, pistesTotal: 13,
+    snowDepthBase: 80, snowDepthMid: 150, snowDepthTop: 210, snowType: "Powder",
+    liftsOpen: 5, liftsTotal: 6, pistesOpen: 11, pistesTotal: 13,
     ecoRating: 3, ecoRenewable: 42, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["42% renewable electricity", "Hohe Tauern national park buffer zone"],
+    ecoInitiatives: ["42% renewable electricity", "Hohe Tauern national park stewardship"],
     ecoOffsetProgram: false,
     airports: [
-      { airport: "Klagenfurt", iata: "KLU", driveTime: "2h" },
+      { airport: "Klagenfurt", iata: "KLU", driveTime: "1h 30m" },
       { airport: "Salzburg", iata: "SZG", driveTime: "2h" }
     ],
-    trainStation: "Mallnitz - 2km, Tauernbahn through mountain tunnel",
+    trainStation: "Mallnitz - 2km, accessible only by train through the Tauern tunnel",
     shuttle: true, shuttleDesc: "Tauernbahn trains stop at Mallnitz which is accessible only by train through the tunnel",
-    parking: { capacity: 400, pricePerDay: 9, includedInPass: false },
+    parking: { capacity: 400, pricePerDay: 8, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Ankogel Gipfelrestaurant", zone: "2300m", cuisine: "Austrian", price: "€€" },
-        { name: "Mallnitz Bergrestaurant", zone: "1600m", cuisine: "Alpine", price: "€" }
+        { name: "Ankogel Gipfelrestaurant", zone: "2636m", cuisine: "Austrian", price: "€€€" },
+        { name: "Mallnitz Bergrestaurant", zone: "Mid-mountain", cuisine: "Alpine", price: "€€" }
       ],
       skiSchools: 1, groupLessonFrom: 38, privateLessonFrom: 95,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
@@ -857,35 +856,35 @@ export const austrianResorts5 = [
       pharmacy: false, atm: false, atmCount: 0
     },
     surroundings: {
-      description: "Mallnitz is one of the few car-free villages in Austria accessible only by the historic Tauernbahn railway tunnel. The Hohe Tauern national park surrounds the village.",
+      description: "Mallnitz is a unique car-free-accessible village in the Hohe Tauern national park, reached only by the Tauernbahn railway through the mountain. The setting is extraordinarily pristine.",
       nearbyTowns: [
-        { name: "Mallnitz", distance: "0km", desc: "Car-free national park village on Tauernbahn" },
-        { name: "Spittal an der Drau", distance: "40km", desc: "Carinthian town with broader rail connections" }
+        { name: "Mallnitz", distance: "0km", desc: "Car-free-accessible village in the Hohe Tauern park" },
+        { name: "Obervellach", distance: "10km", desc: "Mölltal valley village" }
       ],
-      activities: ["Snowshoeing", "Freeride tours", "National park winter walks"],
+      activities: ["Snowshoeing", "Winter hiking", "Freeride tours", "Wildlife watching"],
       touristBoard: "Mallnitz Tourismus",
       touristBoardUrl: "https://www.mallnitz.at",
       emergency: "112",
-      hospital: "LKH Spittal an der Drau (40km)"
+      hospital: "LKH Spittal an der Drau (45km)"
     },
     webcams: [
       { name: "Ankogel 2638m", seed: "ankogel-cam1" },
-      { name: "Mallnitz village 1190m", seed: "ankogel-cam2" }
+      { name: "Mallnitz valley", seed: "ankogel-cam2" }
     ],
     events: [
-      { date: "Feb 2025", name: "Ankogel Powder Weekend", type: "Festival", desc: "Freeride and powder skiing celebration" }
+      { date: "Feb 2025", name: "Ankogel Hidden Gem Descent", type: "Festival", desc: "Freeride celebration at the hidden gem resort" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 40, child: 20, senior: 32, badge: null },
       { type: "3-day", adult: 110, child: 55, senior: 88, badge: null },
-      { type: "6-day", adult: 205, child: 103, senior: 164, badge: "Best value" },
+      { type: "6-day", adult: 206, child: 103, senior: 165, badge: "Best value" },
       { type: "Season", adult: 920, child: 460, senior: 736, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 8.0,
-      breakdown: { pistes: 8.2, lifts: 7.9, apresSki: 7.2, value: 9.3, beginners: 7.5 },
+      breakdown: { pistes: 8.2, lifts: 7.9, apresSki: 7.2, value: 9.4, beginners: 7.0 },
       items: []
     },
     seasonCalendar: [
@@ -899,7 +898,7 @@ export const austrianResorts5 = [
   },
   {
     id: "mariazell",
-    name: "Mariazeller Bürgeralpe",
+    name: "Mariazeller Buergeralpe",
     countries: ["Austria"],
     countryCode: "AT",
     region: "Styria, Austria",
@@ -909,83 +908,83 @@ export const austrianResorts5 = [
     minAltitude: 870, maxAltitude: 1267,
     verticalDrop: 397,
     pisteKm: 25, runs: 12, lifts: 7,
-    gondolas: 2, chairlifts: 3, dragLifts: 2,
+    gondolas: 2, chairlifts: 4, dragLifts: 1,
     longestRun: 5,
-    difficultyBlue: 36, difficultyRed: 50, difficultyBlack: 14,
+    difficultyBlue: 40, difficultyRed: 44, difficultyBlack: 16,
     snowCannons: 30, snowCannonKm: 14,
     seasonStart: "2024-12-21", seasonEnd: "2025-03-16",
     openStatus: "Open", roadStatus: "open",
     rating: 7.6, ratingLabel: "Very good", priceFrom: 35,
     seasonDates: "21 Dec 2024 - 16 Mar 2025",
     seasonPasses: ["superski"],
-    resortTypes: ["Alpine", "Family resort", "Day trip"],
-    description: "The Bürgeralpe above the famous pilgrimage town of Mariazell offers gentle family skiing with excellent snowmaking. Easily reached by the famous Mariazellerbahn heritage railway from St. Polten, it is an ideal introduction to skiing for beginners from Vienna.",
+    resortTypes: ["Alpine", "Family resort"],
+    description: "The Buergeralpe above the famous pilgrimage town of Mariazell offers gentle family skiing with excellent snowmaking. Easily reached by the famous Mariazellerbahn heritage railway from St. Poelten, it is an ideal introduction to skiing for beginners from Vienna.",
     image: "https://picsum.photos/seed/mariazell/800/500",
     images: ["https://picsum.photos/seed/mariazell-1/1200/700", "https://picsum.photos/seed/mariazell-2/1200/700", "https://picsum.photos/seed/mariazell-3/1200/700"],
-    weather: { temp: -2, snowDepth: 80, condition: "Clear", forecast: [
+    weather: { temp: -2, snowDepth: 85, condition: "Clear", forecast: [
       { day: "Today", high: 0, low: -6, condition: "clear" },
       { day: "Tomorrow", high: -1, low: -7, condition: "partly_cloudy" },
       { day: "Thu", high: -3, low: -9, condition: "snow" }
     ]},
-    snowDepthBase: 40, snowDepthMid: 65, snowDepthTop: 90, snowType: "Machine-groomed",
+    snowDepthBase: 45, snowDepthMid: 70, snowDepthTop: 95, snowType: "Machine-groomed",
     liftsOpen: 7, liftsTotal: 7, pistesOpen: 11, pistesTotal: 12,
     ecoRating: 3, ecoRenewable: 52, ecoCertifications: ["ISO 14001"],
-    ecoInitiatives: ["52% renewable electricity", "Mariazellerbahn heritage train promotion"],
+    ecoInitiatives: ["52% renewable electricity", "Mariazellerbahn heritage railway integration"],
     ecoOffsetProgram: false,
     airports: [
       { airport: "Vienna", iata: "VIE", driveTime: "2h" },
       { airport: "Graz", iata: "GRZ", driveTime: "2h" }
     ],
-    trainStation: "Mariazell - 2km, Mariazellerbahn narrow gauge from St. Polten",
-    shuttle: true, shuttleDesc: "Mariazellerbahn narrow gauge railway connects St. Polten to Mariazell",
-    parking: { capacity: 1000, pricePerDay: 7, includedInPass: false },
+    trainStation: "Mariazell - 2km, Mariazellerbahn narrow gauge from St. Poelten",
+    shuttle: true, shuttleDesc: "Mariazellerbahn narrow gauge railway connects St. Poelten to Mariazell",
+    parking: { capacity: 900, pricePerDay: 7, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Bürgeralpe Restaurant", zone: "Summit 1267m", cuisine: "Austrian", price: "€€" },
-        { name: "Mariazell Bergcafe", zone: "Mid-mountain", cuisine: "Alpine", price: "€" }
+        { name: "Buergeralpe Restaurant", zone: "Summit 1267m", cuisine: "Austrian", price: "€€" },
+        { name: "Erlaufsee Gasthaus", zone: "Lake level", cuisine: "Styrian", price: "€" }
       ],
-      skiSchools: 1, groupLessonFrom: 30, privateLessonFrom: 76,
+      skiSchools: 1, groupLessonFrom: 32, privateLessonFrom: 85,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
-      creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 38,
+      creche: true, crecheAgeMin: 4, crecheAgeMax: 6, crecheFrom: 40,
       kidsGarden: true, kidsGardenAge: "4-12", babysitting: false,
-      lockerCount: 170, lockerSizes: ["S", "M", "L"],
+      lockerCount: 180, lockerSizes: ["S", "M", "L"],
       skiStorage: true, skiStorageFrom: 5, bootDryers: true,
       rentalShops: 2, rentalBrands: ["Atomic", "Rossignol"],
       skiTuning: true, clothingShop: false, supermarket: false,
-      medicalCentre: false, medicalLocation: "Mariazell town (2km)",
+      medicalCentre: true, medicalLocation: "Mariazell town",
       pharmacy: true, atm: true, atmCount: 2
     },
     surroundings: {
-      description: "Mariazell is the most important pilgrimage town in Austria, visited by over one million pilgrims annually. The baroque basilica dominates the town centre.",
+      description: "Mariazell is Austrias most important pilgrimage site, attracting over one million visitors annually to its famous Marian basilica. The Erlaufsee lake is frozen in winter and ideal for ice skating.",
       nearbyTowns: [
-        { name: "Mariazell", distance: "0km", desc: "Austrias most important pilgrimage town with baroque basilica" },
-        { name: "St. Polten", distance: "80km", desc: "Lower Austrian capital with Mariazellerbahn terminus" },
-        { name: "Vienna", distance: "130km", desc: "Austrian capital" }
+        { name: "Mariazell", distance: "0km", desc: "Famous pilgrimage town with baroque basilica" },
+        { name: "St. Sebastián", distance: "5km", desc: "Quiet village near the Erlaufsee" },
+        { name: "St. Poelten", distance: "85km", desc: "Lower Austrian capital with train connections" }
       ],
-      activities: ["Snowshoeing", "Pilgrimage basilica visit", "Winter hiking", "Ice skating"],
+      activities: ["Ice skating", "Pilgrimage visits", "Winter hiking", "Cultural tours"],
       touristBoard: "Mariazell Tourismus",
       touristBoardUrl: "https://www.mariazell.at",
       emergency: "112",
-      hospital: "LKH Lilienfeld (40km)"
+      hospital: "Scheibbs hospital (35km)"
     },
     webcams: [
-      { name: "Bürgeralpe 1267m", seed: "mariazell-cam1" },
-      { name: "Mariazell town", seed: "mariazell-cam2" }
+      { name: "Buergeralpe 1267m", seed: "mariazell-cam1" },
+      { name: "Mariazell basilica view", seed: "mariazell-cam2" }
     ],
     events: [
-      { date: "Dec 2024", name: "Mariazell Christmas Market", type: "Festival", desc: "Traditional advent market in the pilgrim town" }
+      { date: "Dec 2024", name: "Mariazell Advent Market", type: "Festival", desc: "Traditional Christmas market at the pilgrimage basilica" }
     ],
     promotions: [],
     liftPasses: [
       { type: "1-day", adult: 35, child: 18, senior: 28, badge: null },
       { type: "3-day", adult: 96, child: 48, senior: 77, badge: null },
-      { type: "6-day", adult: 179, child: 90, senior: 143, badge: "Best value" },
-      { type: "Season", adult: 800, child: 400, senior: 640, badge: null }
+      { type: "6-day", adult: 180, child: 90, senior: 144, badge: "Best value" },
+      { type: "Season", adult: 810, child: 405, senior: 648, badge: null }
     ],
     instructors: [],
     reviews: {
       overall: 7.6,
-      breakdown: { pistes: 7.6, lifts: 7.6, apresSki: 7.8, value: 9.6, beginners: 9.7 },
+      breakdown: { pistes: 7.6, lifts: 7.7, apresSki: 7.8, value: 9.5, beginners: 9.6 },
       items: []
     },
     seasonCalendar: [
