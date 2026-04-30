@@ -16,7 +16,7 @@ export const hotels = [
     website: "www.hotel-kitzhof.com",
     description: "Hotel Kitzhof Mountain Design Resort is a 4 Sterne Superior hotel located directly on the city park of Kitzbühel, with panoramic views of the Kitzbüheler Horn and the legendary Hahnenkamm. Just a few minutes walk from the picturesque centre of this famous Tyrolean resort, the hotel combines stylish alpine design with genuine Tyrolean warmth. The design concept by Munich interior designer Ursula Schelle-Müller blends generous use of glass and natural daylight with mountain larch wood floors, reclaimed timber panelling, modern furniture upholstered in grey and red loden, open fireplaces, antler decorations and designer lighting. The result redefines Tyrolean Gemütlichkeit for the contemporary traveller. Member of Preferred Hotels and Resorts L.V.X. Collection.",
     shortDescription: "4-star superior mountain design resort in Kitzbühel — steps from the Hahnenkamm, walk to the lifts.",
-    logo: "https://media.base44.com/images/public/69f1c737747c83c0b091a543/1e82d25fe_Bildschirmfoto_30-4-2026_205344_.jpg",
+    logo: "https://media.base44.com/images/public/69f1c737747c83c0b091a543/1d289c8f4_Bildschirmfoto_30-4-2026_205344_.jpg",
     images: [
       "https://media.base44.com/images/public/69f1c737747c83c0b091a543/18c29298b_AuenansichtfrontHotelKitzhof.jpg",
       "https://media.base44.com/images/public/69f1c737747c83c0b091a543/0bd8137f1_AuenansichtGartenHotelKitzhof.jpg",

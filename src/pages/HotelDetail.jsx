@@ -170,11 +170,13 @@ export default function HotelDetail() {
           {/* Left */}
           <div className="flex items-start gap-4">
             {/* Logo */}
-            <div className="w-16 h-16 rounded-xl bg-peak-surface border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-white border border-white/20 overflow-hidden flex-shrink-0 flex items-center justify-center">
               {hotel.logo ? (
-                <img src={hotel.logo} alt={hotel.name + " logo"} className="w-full h-full object-contain p-1" />
+                <img src={hotel.logo} alt={hotel.name + " logo"} className="w-full h-full object-contain p-1.5" />
               ) : (
-                <span className="text-peak-text font-bold text-2xl">{hotel.name[0]}</span>
+                <svg viewBox="0 0 100 100" className="w-10 h-10 text-gray-300" fill="currentColor">
+                  <path d="M55 20 Q60 10 70 15 Q65 25 60 28 L65 50 Q70 55 68 65 L60 60 L58 70 L50 65 L48 70 L40 65 L38 60 L30 65 Q28 55 33 50 L38 28 Q33 25 28 15 Q38 10 43 20 Z" />
+                </svg>
               )}
             </div>
             <div>
