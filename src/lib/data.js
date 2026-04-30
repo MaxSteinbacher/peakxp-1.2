@@ -1,4 +1,6 @@
-export const resorts = [
+import { austrianResorts } from './austrianResorts.js';
+
+export const resorts = [...[
   {
     id: "verbier",
     name: "Verbier",
@@ -455,7 +457,7 @@ export const resorts = [
     ],
     instructors: []
   }
-];
+], ...austrianResorts];
 
 export const trendingCards = [
   { id: "zermatt", resort: "Zermatt", tag: "Best powder in the Alps", image: "https://picsum.photos/seed/trending1/600/400" },
@@ -662,8 +664,15 @@ export const SEASON_PASSES = {
 export function getResortById(id) {
   const resort = resorts.find(r => r.id === id);
   if (!resort) return null;
+  // Austrian resorts already have all extended fields inline
+  if (resort.lat !== undefined && resort.countries !== undefined && resort.openStatus !== undefined) {
+    if (!resort.liftsOpen) resort.liftsOpen = Math.round(resort.lifts * 0.85);
+    if (!resort.liftsTotal) resort.liftsTotal = resort.lifts;
+    if (!resort.pistesOpen) resort.pistesOpen = Math.round(resort.runs * 0.85);
+    if (!resort.pistesTotal) resort.pistesTotal = resort.runs;
+    return resort;
+  }
   const ext = extendedData[id] || defaultExtended;
-  // Fill liftsOpen/pistesOpen with resort data if not set
   if (!ext.liftsOpen) ext.liftsOpen = Math.round(resort.lifts * 0.85);
   if (!ext.liftsTotal) ext.liftsTotal = resort.lifts;
   if (!ext.pistesOpen) ext.pistesOpen = Math.round(resort.runs * 0.85);
