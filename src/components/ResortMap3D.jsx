@@ -66,40 +66,52 @@ const DIFFICULTY_COLORS = {
 
 export default function ResortMap3D({ resort }) {
   const mapRef = useRef(null);
-  const mapInstance = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const mapLoadedRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [noCoords, setNoCoords] = useState(false);
-  const [noSlopeData, setNoSlopeData] = useState(false);
   const [slopeToast, setSlopeToast] = useState(false);
+  const [overpassLoading, setOverpassLoading] = useState(true);
   const [layers, setLayers] = useState({ slopes: true, lifts: true, liftStatus: true, terrain: true });
 
   const lat = resort.lat;
   const lng = resort.lng;
 
   useEffect(() => {
-    if (!lat || !lng || (lat === 0 && lng === 0)) { setNoCoords(true); setLoading(false); return; }
+    if (!lat || !lng || (lat === 0 && lng === 0)) { setNoCoords(true); setLoading(false); setOverpassLoading(false); return; }
 
-    let map = null;
     let unmounted = false;
+
+    // Fix 1: bounding box
+    const buffer = 0.12;
+    const bounds = [
+      [lng - buffer, lat - buffer],
+      [lng + buffer, lat + buffer],
+    ];
 
     loadSDK().then(sdk => {
       if (unmounted || !mapRef.current) return;
       sdk.config.apiKey = MAPTILER_KEY;
 
-      map = new sdk.Map({
+      const map = new sdk.Map({
         container: mapRef.current,
         style: STYLE_URL,
         center: [lng, lat],
         zoom: 13,
         pitch: 62,
         bearing: -15,
-        terrain: true,
-        terrainExaggeration: 1.5,
         scrollZoom: true,
         dragRotate: true,
         touchZoomRotate: true,
         keyboard: true,
         attributionControl: false,
+        // Fix 1: bounds + performance options
+        maxBounds: bounds,
+        maxZoom: 16,
+        minZoom: 11,
+        fadeDuration: 0,
+        optimizeForTerrain: true,
+        maxTileCacheSize: 50,
       });
 
       map.addControl(new sdk.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "bottom-right");
@@ -109,11 +121,40 @@ export default function ResortMap3D({ resort }) {
       map.on("load", async () => {
         if (unmounted) return;
 
-        map.flyTo({ center: [lng, lat], zoom: 13.5, pitch: 65, bearing: 20, duration: 2500, essential: true });
+        // Fix 3: remove built-in piste/ski/slope layers from base style
+        const styleLayers = map.getStyle().layers || [];
+        styleLayers.forEach(layer => {
+          const id = layer.id.toLowerCase();
+          if (id.includes("piste") || id.includes("ski") || id.includes("slope")) {
+            if (map.getLayer(layer.id)) map.removeLayer(layer.id);
+          }
+        });
 
-        // Overpass fetch
-        const pad = 0.08;
-        const S = lat - pad, N = lat + pad, W = lng - pad, E = lng + pad;
+        // Fix 4: add DEM terrain source explicitly
+        if (!map.getSource("maptiler-dem")) {
+          map.addSource("maptiler-dem", {
+            type: "raster-dem",
+            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`,
+            tileSize: 256,
+          });
+        }
+        map.setTerrain({ source: "maptiler-dem", exaggeration: 1.5 });
+
+        mapLoadedRef.current = true;
+        if (!unmounted) setLoading(false);
+
+        // Fix 6: flyTo after idle
+        map.once("idle", () => {
+          if (unmounted) return;
+          map.flyTo({ center: [lng, lat], zoom: 13.5, pitch: 65, bearing: 20, duration: 2000, essential: true });
+        });
+
+        // Fix 8: find first symbol layer for beforeId
+        const firstSymbolId = map.getStyle().layers.find(l => l.type === "symbol")?.id;
+
+        // Fix 7: use buffer = 0.12 for Overpass query
+        const delta = 0.12;
+        const S = lat - delta, N = lat + delta, W = lng - delta, E = lng + delta;
         const query = `[out:json][timeout:30];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E});relation["piste:type"="downhill"](${S},${W},${N},${E}););out body;>;out skel qt;`;
         const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
 
@@ -124,18 +165,21 @@ export default function ResortMap3D({ resort }) {
           if (unmounted) return;
           geojson = overpassToGeoJSON(data);
         } catch {
-          if (!unmounted) setSlopeToast(true);
+          if (!unmounted) { setSlopeToast(true); setOverpassLoading(false); }
+          return;
         }
+
+        // Fix 5: done loading overpass
+        if (!unmounted) setOverpassLoading(false);
 
         if (!geojson || geojson.features.length === 0) {
           setSlopeToast(true);
-          setLoading(false);
           return;
         }
 
         map.addSource("openski-data", { type: "geojson", data: geojson });
 
-        // Piste layers
+        // Fix 8: piste line layers with beforeId (above terrain, below text labels)
         const pisteFilters = [
           { id: "pistes-black", difficulty: "expert", color: "#1a1a2e", width: 3.5 },
           { id: "pistes-red", difficulty: "advanced", color: "#e63946", width: 3 },
@@ -147,9 +191,13 @@ export default function ResortMap3D({ resort }) {
           const filter = Array.isArray(difficulty)
             ? ["in", ["get", "piste:difficulty"], ["literal", difficulty]]
             : ["==", ["get", "piste:difficulty"], difficulty];
-          map.addLayer({ id, type: "line", source: "openski-data", filter, paint: { "line-color": color, "line-width": width, "line-opacity": 0.9 } });
+          map.addLayer(
+            { id, type: "line", source: "openski-data", filter, paint: { "line-color": color, "line-width": width, "line-opacity": 0.9 } },
+            firstSymbolId
+          );
         });
 
+        // Piste labels — no beforeId, render above everything
         map.addLayer({
           id: "piste-labels",
           type: "symbol",
@@ -159,15 +207,19 @@ export default function ResortMap3D({ resort }) {
           paint: { "text-color": "#ffffff", "text-halo-color": "#1a1a2e", "text-halo-width": 1.5 },
         });
 
-        // Lift layers
-        map.addLayer({
-          id: "lifts-line",
-          type: "line",
-          source: "openski-data",
-          filter: ["has", "aerialway"],
-          paint: { "line-color": "#FB343D", "line-width": 2, "line-opacity": 0.85, "line-dasharray": [2, 1] },
-        });
+        // Lift line with beforeId
+        map.addLayer(
+          {
+            id: "lifts-line",
+            type: "line",
+            source: "openski-data",
+            filter: ["has", "aerialway"],
+            paint: { "line-color": "#FB343D", "line-width": 2, "line-opacity": 0.85, "line-dasharray": [2, 1] },
+          },
+          firstSymbolId
+        );
 
+        // Lift label — no beforeId
         map.addLayer({
           id: "lifts-label",
           type: "symbol",
@@ -181,16 +233,14 @@ export default function ResortMap3D({ resort }) {
         geojson.features.forEach(f => {
           if (!f.properties.aerialway) return;
           const coords = f.geometry.coordinates;
-          const midIdx = Math.floor(coords.length / 2);
-          const midCoord = coords[midIdx];
+          const midCoord = coords[Math.floor(coords.length / 2)];
           if (!midCoord) return;
           const el = document.createElement("div");
           el.style.cssText = "width:10px;height:10px;border-radius:50%;background:#6B7490;border:2px solid rgba(255,255,255,0.5);cursor:pointer;";
-          el.setAttribute("data-lift-id", f.properties._id);
           new sdk.Marker({ element: el }).setLngLat(midCoord).addTo(map);
         });
 
-        // Click on piste
+        // Click: piste popup
         ["pistes-black", "pistes-red", "pistes-blue", "pistes-green"].forEach(layerId => {
           map.on("click", layerId, e => {
             const f = e.features[0];
@@ -200,24 +250,16 @@ export default function ResortMap3D({ resort }) {
             const diffLabel = diff ? diff.charAt(0).toUpperCase() + diff.slice(1) : "Unknown";
             const name = props.name || "Unnamed piste";
             const length = props["piste:length"] ? `${Math.round(props["piste:length"])}m` : null;
-
             new sdk.Popup({ className: "peak-popup", closeButton: true, maxWidth: "260px" })
               .setLngLat(e.lngLat)
-              .setHTML(`
-                <div style="background:#141A32;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#ECF4FA;font-size:14px;">
-                  <div style="font-weight:700;margin-bottom:6px;">${name}</div>
-                  <span style="background:${color};color:white;font-size:11px;padding:2px 8px;border-radius:999px;display:inline-block;margin-bottom:6px;">${diffLabel}</span>
-                  ${length ? `<div style="color:#6B7490;font-size:12px;margin-bottom:6px;">Length: ${length}</div>` : ""}
-                  <button onclick="window.dispatchEvent(new CustomEvent('addToRoute',{detail:${JSON.stringify(props)}}))" style="background:#FB343D;color:white;font-size:12px;padding:4px 12px;border-radius:8px;border:none;cursor:pointer;margin-top:4px;">Add to route</button>
-                </div>
-              `)
+              .setHTML(`<div style="background:#141A32;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#ECF4FA;font-size:14px;"><div style="font-weight:700;margin-bottom:6px;">${name}</div><span style="background:${color};color:white;font-size:11px;padding:2px 8px;border-radius:999px;display:inline-block;margin-bottom:6px;">${diffLabel}</span>${length ? `<div style="color:#6B7490;font-size:12px;margin-bottom:6px;">Length: ${length}</div>` : ""}<button onclick="window.dispatchEvent(new CustomEvent('addToRoute',{detail:${JSON.stringify(props)}}))" style="background:#FB343D;color:white;font-size:12px;padding:4px 12px;border-radius:8px;border:none;cursor:pointer;margin-top:4px;">Add to route</button></div>`)
               .addTo(map);
           });
           map.on("mouseenter", layerId, () => { map.getCanvas().style.cursor = "pointer"; });
           map.on("mouseleave", layerId, () => { map.getCanvas().style.cursor = ""; });
         });
 
-        // Click on lift
+        // Click: lift popup
         map.on("click", "lifts-line", e => {
           const f = e.features[0];
           const props = f.properties;
@@ -225,40 +267,32 @@ export default function ResortMap3D({ resort }) {
           const liftType = props.aerialway || "lift";
           const typeLabel = liftType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
           const capacity = props.capacity || props["aerialway:capacity"] || null;
-
           new sdk.Popup({ className: "peak-popup", closeButton: true, maxWidth: "240px" })
             .setLngLat(e.lngLat)
-            .setHTML(`
-              <div style="background:#141A32;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#ECF4FA;font-size:14px;">
-                <div style="font-weight:700;margin-bottom:6px;">${name}</div>
-                <div style="color:#6B7490;font-size:12px;margin-bottom:4px;">${typeLabel}</div>
-                <span style="background:#6B7490;color:white;font-size:11px;padding:2px 8px;border-radius:999px;display:inline-block;">Unknown status</span>
-                ${capacity ? `<div style="color:#6B7490;font-size:12px;margin-top:6px;">Capacity: ${capacity}/hr</div>` : ""}
-              </div>
-            `)
+            .setHTML(`<div style="background:#141A32;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:#ECF4FA;font-size:14px;"><div style="font-weight:700;margin-bottom:6px;">${name}</div><div style="color:#6B7490;font-size:12px;margin-bottom:4px;">${typeLabel}</div><span style="background:#6B7490;color:white;font-size:11px;padding:2px 8px;border-radius:999px;display:inline-block;">Unknown status</span>${capacity ? `<div style="color:#6B7490;font-size:12px;margin-top:6px;">Capacity: ${capacity}/hr</div>` : ""}</div>`)
             .addTo(map);
         });
         map.on("mouseenter", "lifts-line", () => { map.getCanvas().style.cursor = "pointer"; });
         map.on("mouseleave", "lifts-line", () => { map.getCanvas().style.cursor = ""; });
-
-        if (!unmounted) setLoading(false);
       });
 
-      mapInstance.current = map;
+      // Fix 9: store in ref
+      mapInstanceRef.current = map;
     }).catch(() => {
-      if (!unmounted) setLoading(false);
+      if (!unmounted) { setLoading(false); setOverpassLoading(false); }
     });
 
     return () => {
       unmounted = true;
-      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
+      mapLoadedRef.current = false;
+      if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
     };
   }, [lat, lng]);
 
-  // Layer toggle handler
+  // Fix 9: layer toggle handlers using mapInstanceRef
   useEffect(() => {
-    const map = mapInstance.current;
-    if (!map || loading) return;
+    if (!mapLoadedRef.current || !mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
     const pisteIds = ["pistes-black", "pistes-red", "pistes-blue", "pistes-green", "piste-labels"];
     const liftIds = ["lifts-line", "lifts-label"];
     pisteIds.forEach(id => {
@@ -267,12 +301,11 @@ export default function ResortMap3D({ resort }) {
     liftIds.forEach(id => {
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", layers.lifts ? "visible" : "none");
     });
-    if (map.getTerrain) {
-      try {
-        map.setTerrain(layers.terrain ? { exaggeration: 1.5 } : { exaggeration: 0 });
-      } catch {}
-    }
-  }, [layers, loading]);
+    // Fix 4: terrain toggle references maptiler-dem source
+    try {
+      map.setTerrain(layers.terrain ? { source: "maptiler-dem", exaggeration: 1.5 } : null);
+    } catch {}
+  }, [layers]);
 
   if (noCoords) {
     return (
@@ -301,13 +334,21 @@ export default function ResortMap3D({ resort }) {
   return (
     <div className="relative w-full h-72 sm:h-[480px] rounded-2xl overflow-hidden border border-white/10">
       {loading && (
-        <div className="absolute inset-0 z-30 bg-peak-surface flex flex-col items-center justify-center gap-3 animate-pulse rounded-2xl">
-          <Mountain className="h-12 w-12 text-peak-text-secondary/40" />
+        <div className="absolute inset-0 z-30 bg-peak-surface flex flex-col items-center justify-center gap-3 rounded-2xl">
+          <Mountain className="h-12 w-12 text-peak-text-secondary/40 animate-pulse" />
           <p className="text-peak-text-secondary text-sm">Loading 3D terrain...</p>
         </div>
       )}
 
       <div ref={mapRef} className="w-full h-full" />
+
+      {/* Fix 5: Overpass loading pill */}
+      {!loading && overpassLoading && (
+        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-30 bg-peak-surface/90 backdrop-blur-sm text-peak-text-secondary text-xs px-4 py-2 rounded-full border border-white/10 flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full border-2 border-peak-blue border-t-transparent animate-spin flex-shrink-0" />
+          Loading slope data...
+        </div>
+      )}
 
       {/* Layer controls */}
       {!loading && (
