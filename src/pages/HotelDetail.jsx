@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import DateRangePicker from "../components/shared/DateRangePicker";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, CheckCircle, Shield, ChevronLeft, ChevronRight, Users, Minus, Plus, Calendar } from "lucide-react";
 import { getHotelById } from "../lib/hotels";
@@ -60,9 +61,9 @@ export default function HotelDetail() {
   const [activeTab, setActiveTab] = useState("overview");
   const [imgIdx, setImgIdx] = useState(0);
   const [adults, setAdults] = useState(2);
+  const [checkIn, setCheckIn] = useState(null);
+  const [checkOut, setCheckOut] = useState(null);
   const [children, setChildren] = useState(0);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
   const [hovering, setHovering] = useState(false);
   const tabsRef = useRef(null);
 
@@ -124,14 +125,14 @@ export default function HotelDetail() {
               <span>{hotel.city}, {hotel.country} {hotel.flag}</span>
             </div>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-peak-surface border border-white/10 rounded-lg px-3 py-2">
-                <Calendar className="h-4 w-4 text-peak-text-secondary" />
-                <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} className="bg-transparent text-peak-text text-sm outline-none w-32" placeholder="Check-in" />
-              </div>
-              <div className="flex items-center gap-1.5 bg-peak-surface border border-white/10 rounded-lg px-3 py-2">
-                <Calendar className="h-4 w-4 text-peak-text-secondary" />
-                <input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} className="bg-transparent text-peak-text text-sm outline-none w-32" placeholder="Check-out" />
-              </div>
+              <DateRangePicker
+                startDate={checkIn} endDate={checkOut}
+                onStartChange={setCheckIn} onEndChange={setCheckOut}
+                context="hotel" minStay={1}
+                placeholder={{ start: "Check-in", end: "Check-out" }}
+                unavailableDates={hotel.unavailableDates || []}
+                unavailableRanges={hotel.unavailableRanges || []}
+              />
               <GuestSelector adults={adults} children={children} onAdults={setAdults} onChildren={setChildren} />
               <button className="bg-peak-red hover:bg-peak-red-hover text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors">
                 Check availability

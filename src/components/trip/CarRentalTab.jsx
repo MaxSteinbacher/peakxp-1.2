@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { ArrowUpDown, X } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
@@ -167,20 +168,25 @@ export default function CarRentalTab() {
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue disabled:opacity-50" />
               </div>
             </div>
+            <div>
+              <label className="block text-xs text-peak-text-secondary mb-1">Pick-up + return dates</label>
+              <DateRangePicker
+                startDate={searchForm.pickupDate} endDate={searchForm.returnDate}
+                onStartChange={v => sf("pickupDate", v)} onEndChange={v => sf("returnDate", v)}
+                context="car" minStay={1}
+                placeholder={{ start: "Pick-up date", end: "Return date" }}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Pick-up date</label>
-                <input type="date" value={searchForm.pickupDate} onChange={e => sf("pickupDate", e.target.value)}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue mb-2" />
+                <label className="block text-xs text-peak-text-secondary mb-1">Pick-up time</label>
                 <select value={searchForm.pickupTime} onChange={e => sf("pickupTime", e.target.value)}
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2 text-sm text-peak-text outline-none focus:border-peak-blue">
                   {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Return date</label>
-                <input type="date" value={searchForm.returnDate} onChange={e => sf("returnDate", e.target.value)}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue mb-2" />
+                <label className="block text-xs text-peak-text-secondary mb-1">Return time</label>
                 <select value={searchForm.returnTime} onChange={e => sf("returnTime", e.target.value)}
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2 text-sm text-peak-text outline-none focus:border-peak-blue">
                   {TIME_OPTIONS.map(t => <option key={t}>{t}</option>)}
@@ -319,8 +325,8 @@ export default function CarRentalTab() {
             summary={[
               { label: "Vehicle", value: selectedCar?.name },
               { label: "Category", value: selectedCar?.category },
-              { label: "Pick-up", value: `${searchForm.pickupDate || "TBD"} ${searchForm.pickupTime}` },
-              { label: "Return", value: `${searchForm.returnDate || "TBD"} ${searchForm.returnTime}` },
+              { label: "Pick-up", value: `${fmtDate(searchForm.pickupDate) || "TBD"} ${searchForm.pickupTime}` },
+              { label: "Return", value: `${fmtDate(searchForm.returnDate) || "TBD"} ${searchForm.returnTime}` },
               { label: "Rental days", value: pickupDays },
               { label: "Location", value: selectedCar?.location },
               { label: "Included", value: selectedCar?.included.join(", ") },

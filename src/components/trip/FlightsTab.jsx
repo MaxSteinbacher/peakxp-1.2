@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { Plane, Leaf, ArrowUpDown, SlidersHorizontal, Plus, X } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
@@ -38,7 +39,7 @@ export default function FlightsTab() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [tripType, setTripType] = useState("Round trip");
-  const [searchForm, setSearchForm] = useState({ from: "", to: "", depDate: "", retDate: "", adults: 1, children: 0, infants: 0, cabin: "Economy" });
+  const [searchForm, setSearchForm] = useState({ from: "", to: "", depDate: null, retDate: null, adults: 1, children: 0, infants: 0, cabin: "Economy" });
   const [filters, setFilters] = useState({ directOnly: false, flexible: false, nearbyAirports: false, carbon: false });
   const [sortBy, setSortBy] = useState("Cheapest");
   const [priceRange, setPriceRange] = useState([0, 500]);
@@ -149,19 +150,15 @@ export default function FlightsTab() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Departure date</label>
-                <input type="date" value={searchForm.depDate} onChange={e => sf("depDate", e.target.value)}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-              </div>
-              {tripType === "Round trip" && (
-                <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1">Return date</label>
-                  <input type="date" value={searchForm.retDate} onChange={e => sf("retDate", e.target.value)}
-                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-                </div>
-              )}
+            <div>
+              <label className="block text-xs text-peak-text-secondary mb-1">{tripType === "Round trip" ? "Departure + return dates" : "Departure date"}</label>
+              <DateRangePicker
+                startDate={searchForm.depDate} endDate={searchForm.retDate}
+                onStartChange={v => sf("depDate", v)} onEndChange={v => sf("retDate", v)}
+                mode={tripType === "Round trip" ? "range" : "single"}
+                context="flight" minStay={1}
+                placeholder={{ start: "Departure", end: "Return" }}
+              />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -295,8 +292,8 @@ export default function FlightsTab() {
               { label: "Airline", value: selectedFlight?.airline },
               { label: "Cabin", value: searchForm.cabin },
               { label: "Passengers", value: totalPax },
-              { label: "Departure", value: searchForm.depDate || "TBD" },
-              ...(tripType === "Round trip" ? [{ label: "Return", value: searchForm.retDate || "TBD" }] : []),
+              { label: "Departure", value: fmtDate(searchForm.depDate) || "TBD" },
+              ...(tripType === "Round trip" ? [{ label: "Return", value: fmtDate(searchForm.retDate) || "TBD" }] : []),
             ]}
             guestFields={[
               { key: "name", label: "Full name (as on passport)", placeholder: "Jane Smith" },

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { MapPin, ArrowUpDown } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
@@ -163,17 +164,14 @@ export default function StorageTab() {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Season start</label>
-                <input type="date" value={seasonForm.startSeason} onChange={e => setSeasonForm(s => ({ ...s, startSeason: e.target.value }))}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-              </div>
-              <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Season end</label>
-                <input type="date" value={seasonForm.endSeason} onChange={e => setSeasonForm(s => ({ ...s, endSeason: e.target.value }))}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-              </div>
+            <div>
+              <label className="block text-xs text-peak-text-secondary mb-1">Season dates</label>
+              <DateRangePicker
+                startDate={seasonForm.startSeason} endDate={seasonForm.endSeason}
+                onStartChange={v => setSeasonForm(s => ({ ...s, startSeason: v }))} onEndChange={v => setSeasonForm(s => ({ ...s, endSeason: v }))}
+                mode="range" context="storage" maxStay={365}
+                placeholder={{ start: "Season start", end: "Season end" }}
+              />
             </div>
           </div>
           <button onClick={() => setSeasonSubmitted(true)} className="mt-6 w-full py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">
@@ -252,19 +250,21 @@ export default function StorageTab() {
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Start date</label>
-                <input type="date" value={prefs.startDate} onChange={e => setPrefs(p => ({ ...p, startDate: e.target.value }))}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-              </div>
-              <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Start time</label>
-                <select value={prefs.startTime} onChange={e => setPrefs(p => ({ ...p, startTime: e.target.value }))}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
+            <div>
+              <label className="block text-xs text-peak-text-secondary mb-1">{needsEndDate ? "Start + end dates" : "Date"}</label>
+              <DateRangePicker
+                startDate={prefs.startDate} endDate={needsEndDate ? prefs.endDate : null}
+                onStartChange={v => setPrefs(p => ({ ...p, startDate: v }))} onEndChange={v => setPrefs(p => ({ ...p, endDate: v }))}
+                mode={needsEndDate ? "range" : "single"} context="storage"
+                placeholder={{ start: "Start date", end: "End date" }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-peak-text-secondary mb-1">Start time</label>
+              <select value={prefs.startTime} onChange={e => setPrefs(p => ({ ...p, startTime: e.target.value }))}
+                className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
+                {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
+              </select>
             </div>
             {(prefs.duration === "Half day" || prefs.duration === "Full day") && (
               <div>
@@ -276,19 +276,12 @@ export default function StorageTab() {
               </div>
             )}
             {needsEndDate && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1">End date</label>
-                  <input type="date" value={prefs.endDate} onChange={e => setPrefs(p => ({ ...p, endDate: e.target.value }))}
-                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-                </div>
-                <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1">End time</label>
-                  <select value={prefs.endTime} onChange={e => setPrefs(p => ({ ...p, endTime: e.target.value }))}
-                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                    {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs text-peak-text-secondary mb-1">End time</label>
+                <select value={prefs.endTime} onChange={e => setPrefs(p => ({ ...p, endTime: e.target.value }))}
+                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
+                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
+                </select>
               </div>
             )}
             <div>
@@ -424,8 +417,8 @@ export default function StorageTab() {
             { label: "Facility", value: selectedFacility?.name },
             { label: "Type", value: selectedFacility?.typeBadge },
             { label: "Duration", value: prefs.duration },
-            { label: "Start", value: `${prefs.startDate || "TBD"} ${prefs.startTime}` },
-            { label: "End", value: `${prefs.endDate || "TBD"} ${prefs.endTime}` },
+            { label: "Start", value: `${fmtDate(prefs.startDate) || "TBD"} ${prefs.startTime}` },
+            { label: "End", value: `${fmtDate(prefs.endDate) || "TBD"} ${prefs.endTime}` },
             { label: "Lockers", value: prefs.lockers },
             { label: "Items", value: prefs.items.map(k => ITEMS.find(i => i.key === k)?.label).filter(Boolean).join(", ") || "Not specified" },
           ]}
