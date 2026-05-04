@@ -1,9 +1,8 @@
 import { useState } from "react";
+import { useAppAuth } from "../context/AppAuthContext";
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Bookmark, Send, BarChart3, MapPin, Camera, Video, Tag } from "lucide-react";
 import AuthGate from "../components/AuthGate";
-
-const SIMULATED_LOGGED_IN = true;
 
 const CHALLENGES = [
   { id: "c1", name: "2026/27 Centurion", desc: "Ski 100 days this season", type: "Global · Season", progress: 38, target: 100, badge: "🏅", participants: 2341, unlocked: false },
@@ -164,34 +163,22 @@ function CommentThread({ post, onAddComment, onTextChange }) {
   );
 }
 
+const PUBLIC_POST_TYPES = ["resort", "sponsored", "challenge", "deal"];
+
 export default function Community() {
-  const [loggedIn] = useState(SIMULATED_LOGGED_IN);
+  const { isLoggedIn } = useAppAuth();
   const [feed, setFeed] = useState(INITIAL_FEED);
   const [feedNav, setFeedNav] = useState("For you");
   const [postText, setPostText] = useState("");
   const [logActivityOpen, setLogActivityOpen] = useState(false);
   const [activity, setActivity] = useState({ sport: "Skiing", resort: "", date: "", duration: "", vertical: "", runs: "", distance: "", maxSpeed: "", conditions: "Groomed", mood: "Great" });
 
-  if (!loggedIn) return <AuthGate />;
-
-  function toggleLike(id) {
-    setFeed(f => f.map(p => p.id === id ? { ...p, liked: !p.liked } : p));
-  }
-  function toggleSave(id) {
-    setFeed(f => f.map(p => p.id === id ? { ...p, saved: !p.saved } : p));
-  }
-  function toggleComments(id) {
-    setFeed(f => f.map(p => p.id === id ? { ...p, commentsOpen: !p.commentsOpen } : p));
-  }
-  function setCommentText(id, text) {
-    setFeed(f => f.map(p => p.id === id ? { ...p, commentText: text } : p));
-  }
-  function addComment(id) {
-    setFeed(f => f.map(p => p.id === id ? { ...p, commentList: [...p.commentList, { user: "You", text: p.commentText }], commentText: "", comments: p.comments + 1 } : p));
-  }
-  function toggleJoinChallenge(id) {
-    setFeed(f => f.map(p => p.id === id ? { ...p, joined: !p.joined } : p));
-  }
+  function toggleLike(id) { setFeed(f => f.map(p => p.id === id ? { ...p, liked: !p.liked } : p)); }
+  function toggleSave(id) { setFeed(f => f.map(p => p.id === id ? { ...p, saved: !p.saved } : p)); }
+  function toggleComments(id) { setFeed(f => f.map(p => p.id === id ? { ...p, commentsOpen: !p.commentsOpen } : p)); }
+  function setCommentText(id, text) { setFeed(f => f.map(p => p.id === id ? { ...p, commentText: text } : p)); }
+  function addComment(id) { setFeed(f => f.map(p => p.id === id ? { ...p, commentList: [...p.commentList, { user: "You", text: p.commentText }], commentText: "", comments: p.comments + 1 } : p)); }
+  function toggleJoinChallenge(id) { setFeed(f => f.map(p => p.id === id ? { ...p, joined: !p.joined } : p)); }
   function submitActivity() {
     if (!activity.resort) return;
     const newPost = {
@@ -205,6 +192,48 @@ export default function Community() {
     setFeed(prev => [newPost, ...prev]);
     setLogActivityOpen(false);
     setPostText("");
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen pt-20 bg-peak-bg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div className="space-y-4 min-w-0">
+              <div className="bg-peak-card border border-white/5 rounded-2xl p-6 text-center mb-2">
+                <h2 className="font-display font-extrabold text-2xl text-peak-text mb-2">Join the PeakXP community</h2>
+                <p className="text-peak-text-secondary text-sm mb-4">Log runs, connect with skiers, join challenges and get resort updates.</p>
+                <div className="flex gap-3 justify-center">
+                  <Link to="/auth" className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm font-medium rounded-xl transition-colors">Sign in</Link>
+                  <Link to="/auth" className="px-5 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white text-sm font-bold rounded-xl transition-colors">Create account</Link>
+                </div>
+              </div>
+              {INITIAL_FEED.filter(p => ["resort","sponsored","challenge","deal"].includes(p.type)).map(post => (
+                <div key={post.id} className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden">
+                  <div className="flex items-center gap-3 p-4 pb-3">
+                    <Avatar initials={post.avatar} />
+                    <div><span className="text-peak-text font-semibold text-sm">{post.user}</span><p className="text-peak-text-secondary text-xs">{post.time}</p></div>
+                  </div>
+                  {post.photo && <img src={post.photo} alt="" className="w-full h-52 object-cover" />}
+                  {post.caption && <p className="px-4 py-3 text-sm text-peak-text">{post.caption}</p>}
+                </div>
+              ))}
+            </div>
+            <div className="hidden lg:block">
+              <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
+                <h3 className="font-display font-bold text-peak-text text-sm mb-3">Trending this week</h3>
+                <div className="space-y-2">{TRENDING_RESORTS.map(r => (
+                  <Link key={r.id} to={`/resort/${r.id}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
+                    <img src={r.image} alt={r.name} className="w-12 h-9 rounded-lg object-cover" />
+                    <div><p className="text-peak-text font-semibold text-sm">{r.name}</p><p className="text-peak-text-secondary text-xs">{r.country}</p></div>
+                  </Link>
+                ))}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -1,4 +1,10 @@
 import { Toaster } from "@/components/ui/toaster"
+import { AppAuthProvider } from './context/AppAuthContext';
+import { ProfileProvider } from './context/ProfileContext';
+import Auth from './pages/Auth';
+import ProfileSetup from './pages/ProfileSetup';
+import Profile from './pages/Profile';
+import ProfileSettings from './pages/ProfileSettings';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -54,6 +60,10 @@ const AuthenticatedApp = () => {
         <Route path="/trip-planning" element={<TripPlanning />} />
         <Route path="/agents" element={<ExpertAgents />} />
         <Route path="/community" element={<Community />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/setup" element={<ProfileSetup />} />
+        <Route path="/profile/settings" element={<ProfileSettings />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
     </Routes>
@@ -62,15 +72,18 @@ const AuthenticatedApp = () => {
 
 
 function App() {
-
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
+      <AppAuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <ProfileProvider>
+              <AuthenticatedApp />
+            </ProfileProvider>
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AppAuthProvider>
     </AuthProvider>
   )
 }

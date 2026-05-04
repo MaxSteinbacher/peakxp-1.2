@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useAppAuth } from "../context/AppAuthContext";
+import AuthGate from "../components/AuthGate";
 import { Mountain, MapPin, Timer, TrendingUp, Heart, Star, Navigation, QrCode, Ticket } from "lucide-react";
 import ResortCard from "../components/ResortCard";
 import PerformanceChart from "../components/PerformanceChart";
@@ -12,6 +14,8 @@ const activityIcons = {
 };
 
 export default function Dashboard() {
+  const { isLoggedIn, user } = useAppAuth();
+  if (!isLoggedIn) return <AuthGate message="Sign in to access your personal dashboard, saved resorts and upcoming trips." />;
   const d = dashboardData;
   const savedResorts = resorts.filter((r) => d.savedResorts.includes(r.id));
 
@@ -26,12 +30,12 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Welcome header */}
       <div className="flex items-center gap-4 mb-10">
-        <div className="w-14 h-14 rounded-2xl bg-peak-blue/20 flex items-center justify-center flex-shrink-0">
-          <span className="font-display font-bold text-peak-blue text-xl">{d.userName[0]}</span>
+        <div className="w-14 h-14 rounded-2xl bg-peak-red flex items-center justify-center flex-shrink-0">
+          <span className="font-display font-bold text-white text-xl">{user?.firstName?.[0] || d.userName[0]}</span>
         </div>
         <div>
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">
-            Welcome back, {d.userName}
+            Welcome back, {user?.firstName || d.userName}
           </h1>
           <p className="text-peak-text-secondary text-sm">
             {"You've"} skied {d.totalDays} days this season. Push further.
