@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { Train, ArrowUpDown, SlidersHorizontal, Leaf } from "lucide-react";
-import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
 import CheckoutFlow from "./shared/CheckoutFlow";
@@ -142,29 +141,23 @@ export default function TrainTab() {
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
               </div>
             </div>
-            <div>
-              <label className="block text-xs text-peak-text-secondary mb-1">{tripType === "Return" ? "Outbound + return dates" : "Outbound date"}</label>
-              <DateRangePicker
-                startDate={searchForm.depDate} endDate={searchForm.retDate}
-                onStartChange={v => sf("depDate", v)} onEndChange={v => sf("retDate", v)}
-                mode={tripType === "Return" ? "range" : "single"}
-                context="train" minStay={1}
-                placeholder={{ start: "Outbound", end: "Return" }}
-              />
-            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">Outbound time</label>
+                <label className="block text-xs text-peak-text-secondary mb-1">Outbound date</label>
+                <input type="date" value={searchForm.depDate} onChange={e => sf("depDate", e.target.value)}
+                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
                 <select value={searchForm.depTime} onChange={e => sf("depTime", e.target.value)}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
+                  className="mt-2 w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
                   {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–24:00"].map(t => <option key={t}>{t}</option>)}
                 </select>
               </div>
               {tripType === "Return" && (
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1">Return time</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1">Return date</label>
+                  <input type="date" value={searchForm.retDate} onChange={e => sf("retDate", e.target.value)}
+                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
                   <select value={searchForm.retTime} onChange={e => sf("retTime", e.target.value)}
-                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
+                    className="mt-2 w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
                     {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–24:00"].map(t => <option key={t}>{t}</option>)}
                   </select>
                 </div>
@@ -304,8 +297,8 @@ export default function TrainTab() {
               { label: "Route", value: `${selectedTrain?.from} → ${selectedTrain?.to}` },
               { label: "Operator", value: selectedTrain?.operator },
               { label: "Class", value: selectedTrain?.class },
-              { label: "Outbound", value: fmtDate(searchForm.depDate) || "TBD" },
-              ...(tripType === "Return" ? [{ label: "Return", value: fmtDate(searchForm.retDate) || "TBD" }] : []),
+              { label: "Outbound", value: searchForm.depDate || "TBD" },
+              ...(tripType === "Return" ? [{ label: "Return", value: searchForm.retDate || "TBD" }] : []),
               { label: "Passengers", value: totalPax },
             ]}
             guestFields={[
