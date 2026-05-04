@@ -183,10 +183,10 @@ export default function DateRangePicker({
     return { rStart: start, rEnd: null, preview: false };
   }
 
-  function renderDaysGrid() {
+  function renderDaysGridForMonth(yr, mo) {
     const { rStart, rEnd, preview } = getEffectiveRange();
-    const daysInMonth = new Date(Date.UTC(viewYear, viewMonth + 1, 0)).getUTCDate();
-    const firstDow = (new Date(Date.UTC(viewYear, viewMonth, 1)).getUTCDay() + 6) % 7;
+    const daysInMonth = new Date(Date.UTC(yr, mo + 1, 0)).getUTCDate();
+    const firstDow = (new Date(Date.UTC(yr, mo, 1)).getUTCDay() + 6) % 7;
     const cells = [];
 
     for (let i = 0; i < firstDow; i++) {
@@ -194,7 +194,7 @@ export default function DateRangePicker({
     }
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const date = utc(viewYear, viewMonth, d);
+      const date = utc(yr, mo, d);
       const isPast = date < today;
       const isUnavail = isDateUnavailable(date, unavailableDates, unavailableRanges);
       const isDisabled = isPast || isUnavail;
@@ -204,9 +204,8 @@ export default function DateRangePicker({
       const isInRange = rStart && rEnd && date > rStart && date < rEnd;
       const bandColor = preview ? "bg-peak-red/10" : "bg-peak-red/15";
       const hasRange = !!(rStart && rEnd);
-
       const dow = (date.getUTCDay() + 6) % 7;
-      const ariaLabel = `${DAYS_FULL[dow]} ${d} ${MONTHS[viewMonth]} ${viewYear}`;
+      const ariaLabel = `${DAYS_FULL[dow]} ${d} ${MONTHS[mo]} ${yr}`;
 
       cells.push(
         <div
@@ -219,11 +218,9 @@ export default function DateRangePicker({
           aria-selected={isStart || isEnd}
           title={isUnavail && !isPast ? "Not available" : undefined}
         >
-          {/* Range band layers */}
           {isInRange && <div className={`absolute inset-y-1 left-0 right-0 ${bandColor}`} />}
           {isStart && hasRange && <div className={`absolute inset-y-1 left-1/2 right-0 ${bandColor}`} />}
           {isEnd && hasRange && rStart.getTime() !== rEnd.getTime() && <div className={`absolute inset-y-1 left-0 right-1/2 ${bandColor}`} />}
-          {/* Day circle */}
           <div className={`relative z-10 w-8 h-8 flex items-center justify-center text-sm rounded-full transition-colors duration-75 select-none ${
             isStart || isEnd
               ? "bg-peak-red text-white font-bold cursor-pointer"
@@ -261,9 +258,30 @@ export default function DateRangePicker({
     );
   }
 
-  function CalendarGrid() {
+  function MonthPanel({ yr, mo }) {
     return (
-      <div role="dialog" aria-label="Date picker" className="p-4 w-80">
+      <div className="flex-1 min-w-0">
+        <div className="text-center font-display font-bold text-peak-text text-base mb-3">
+          {MONTHS[mo]} {yr}
+        </div>
+        <div className="grid grid-cols-7 mb-1">
+          {DAYS_LABELS.map(d => (
+            <div key={d} className="text-peak-text-secondary text-xs font-medium text-center py-1">{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7" onMouseLeave={() => setHoveredDate(null)}>
+          {renderDaysGridForMonth(yr, mo)}
+        </div>
+      </div>
+    );
+  }
+
+  function CalendarGrid() {
+    const nextMo = viewMonth === 11 ? 0 : viewMonth + 1;
+    const nextYr = viewMonth === 11 ? viewYear + 1 : viewYear;
+
+    return (
+      <div role="dialog" aria-label="Date picker" className={`p-5 ${isMobile ? "w-80" : "w-[640px]"}`}>
         {mode === "range" && (
           <p className="text-peak-text-secondary text-xs text-center mb-3">
             {!start || !selectingEnd
@@ -272,48 +290,34 @@ export default function DateRangePicker({
           </p>
         )}
 
-        {/* Calendar header */}
+        {/* Navigation row */}
         <div className="flex items-center justify-between mb-4">
           <button onClick={prevMonth} disabled={isPrevMonthDisabled && calView === "days"}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${isPrevMonthDisabled && calView === "days" ? "text-white/20 cursor-not-allowed" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/10"}`}>
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 ${isPrevMonthDisabled && calView === "days" ? "text-white/20 cursor-not-allowed" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/10"}`}>
             <ChevronLeft className="h-4 w-4" />
           </button>
-
-          <div className="flex items-center gap-1">
-            {calView === "days" && (
-              <>
-                <button onClick={() => setCalView("months")} className="font-display font-bold text-peak-text text-base hover:text-peak-blue transition-colors px-1">
-                  {MONTHS[viewMonth]}
-                </button>
-                <button onClick={() => setCalView("years")} className="font-display font-bold text-peak-text text-base hover:text-peak-blue transition-colors px-1">
-                  {viewYear}
-                </button>
-              </>
-            )}
-            {(calView === "months" || calView === "years") && (
-              <button onClick={() => setCalView("days")} className="flex items-center gap-1 text-peak-text-secondary text-sm hover:text-peak-text px-1">
-                <ChevronLeft className="h-3.5 w-3.5" /> Back
-              </button>
-            )}
-          </div>
-
-          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-peak-text-secondary hover:text-peak-text hover:bg-white/10 transition-colors">
+          {(calView === "months" || calView === "years") && (
+            <button onClick={() => setCalView("days")} className="flex items-center gap-1 text-peak-text-secondary text-sm hover:text-peak-text px-1">
+              <ChevronLeft className="h-3.5 w-3.5" /> Back
+            </button>
+          )}
+          <div className="flex-1" />
+          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg text-peak-text-secondary hover:text-peak-text hover:bg-white/10 transition-colors flex-shrink-0">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Day grid */}
+        {/* Dual month grid */}
         {calView === "days" && (
-          <>
-            <div className="grid grid-cols-7 mb-1">
-              {DAYS_LABELS.map(d => (
-                <div key={d} className="text-peak-text-secondary text-xs font-medium text-center py-1">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7" onMouseLeave={() => setHoveredDate(null)}>
-              {renderDaysGrid()}
-            </div>
-          </>
+          <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
+            <MonthPanel yr={viewYear} mo={viewMonth} />
+            {!isMobile && (
+              <>
+                <div className="w-px bg-white/5" />
+                <MonthPanel yr={nextYr} mo={nextMo} />
+              </>
+            )}
+          </div>
         )}
 
         {/* Month picker */}
@@ -341,7 +345,7 @@ export default function DateRangePicker({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-3">
+        <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-4">
           <div className="text-peak-text-secondary text-xs flex-1 mr-2 truncate">
             <FooterSummary />
           </div>
