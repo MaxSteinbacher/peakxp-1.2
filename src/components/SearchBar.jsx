@@ -20,7 +20,22 @@ const addOns = [
 
 export default function SearchBar() {
   const [destination, setDestination] = useState("");
-  const [who, setWho] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [kids, setKids] = useState(0);
+  const [guestOpen, setGuestOpen] = useState(false);
+  const guestRef = useRef(null);
+
+  useEffect(() => {
+    if (!guestOpen) return;
+    function handler(e) {
+      if (guestRef.current && !guestRef.current.contains(e.target)) setGuestOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [guestOpen]);
+
+  const totalGuests = adults + kids;
+  const guestLabel = totalGuests === 0 ? "Add guests" : `${adults} adult${adults !== 1 ? "s" : ""}${kids > 0 ? `, ${kids} child${kids !== 1 ? "ren" : ""}` : ""}`;
   const [searchStart, setSearchStart] = useState(null);
   const [searchEnd, setSearchEnd] = useState(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -108,21 +123,40 @@ export default function SearchBar() {
         </button>
 
         {/* Who */}
-        <div className="flex-1 flex items-center px-5 py-4 gap-3">
-          <Users className="h-7 w-7 text-peak-blue flex-shrink-0" strokeWidth={2.5} />
-          <div className="flex items-center gap-2 flex-1">
-            <button
-              onClick={() => setWho(w => Math.max(1, w - 1))}
-              className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center text-base transition-colors flex-shrink-0"
-            >−</button>
-            <span className="text-peak-text text-sm font-medium w-20 text-center">
-              {who} {who === 1 ? "guest" : "guests"}
+        <div className="relative flex-1" ref={guestRef}>
+          <button
+            onClick={() => setGuestOpen(o => !o)}
+            className="w-full flex items-center px-5 py-4 text-left"
+          >
+            <Users className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
+            <span className={`text-sm font-medium truncate ${totalGuests > 0 ? "text-peak-text" : "text-peak-text-secondary/70"}`}>
+              {guestLabel}
             </span>
-            <button
-              onClick={() => setWho(w => Math.min(20, w + 1))}
-              className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center text-base transition-colors flex-shrink-0"
-            >+</button>
-          </div>
+          </button>
+          {guestOpen && (
+            <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-peak-card border border-white/10 rounded-2xl shadow-2xl p-4 min-w-[220px]">
+              {[{ label: "Adults", sub: "Age 13+", val: adults, set: setAdults, min: 1 }, { label: "Children", sub: "Ages 2–12", val: kids, set: setKids, min: 0 }].map(({ label, sub, val, set, min }) => (
+                <div key={label} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+                  <div>
+                    <p className="text-peak-text text-sm font-medium">{label}</p>
+                    <p className="text-peak-text-secondary text-xs">{sub}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => set(v => Math.max(min, v - 1))} className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center transition-colors">−</button>
+                    <input
+                      type="number"
+                      value={val}
+                      min={min}
+                      max={20}
+                      onChange={e => set(Math.min(20, Math.max(min, parseInt(e.target.value) || min)))}
+                      className="w-8 text-center bg-transparent text-peak-text text-sm font-bold outline-none"
+                    />
+                    <button onClick={() => set(v => Math.min(20, v + 1))} className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center transition-colors">+</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Search button */}
