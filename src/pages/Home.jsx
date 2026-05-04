@@ -6,10 +6,10 @@ import ResortCard from "../components/ResortCard";
 import { resorts, trendingCards } from "../lib/data";
 
 const pillars = [
-{ icon: Ticket, label: "Smart booking", desc: "One cart for everything" },
-{ icon: Navigation, label: "On-mountain GPS", desc: "Real-time trail mapping" },
-{ icon: BarChart3, label: "Performance tracking", desc: "Every run, recorded" }];
-
+  { icon: Ticket, label: "Smart booking", desc: "One cart for everything" },
+  { icon: Navigation, label: "On-mountain GPS", desc: "Real-time trail mapping" },
+  { icon: BarChart3, label: "Performance tracking", desc: "Every run, recorded" },
+];
 
 export default function Home() {
   return (
@@ -20,16 +20,16 @@ export default function Home() {
           <img
             src="https://picsum.photos/seed/alpshero/1920/1080"
             alt="Alpine mountains"
-            className="w-full h-full object-cover" />
-          
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-peak-bg/80 backdrop-blur-sm" />
           <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/40 to-transparent" />
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-peak-text mb-4 font-display text-5xl font-extrabold tracking-tight leading-none sm:text-7xl lg:text-8xl">THE MOUNTAIN. 
-UNIFIED.
-
+          <h1 className="font-display font-extrabold text-5xl sm:text-7xl lg:text-8xl text-peak-text tracking-tight leading-none mb-4">
+            THE MOUNTAIN,<br />
+            <span className="text-peak-red">UNIFIED.</span>
           </h1>
           <p className="text-peak-text-secondary text-lg sm:text-xl max-w-2xl mx-auto mb-10">
             Find, book, and experience every ski resort in the Alps — in one place.
@@ -78,9 +78,9 @@ UNIFIED.
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {resorts.slice(0, 12).map((resort) =>
-          <ResortCard key={resort.id} resort={resort} compact />
-          )}
+          {resorts.slice(0, 12).map((resort) => (
+            <ResortCard key={resort.id} resort={resort} compact />
+          ))}
         </div>
       </section>
 
@@ -90,17 +90,17 @@ UNIFIED.
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-8">Trending this week</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {trendingCards.map((card) =>
-          <Link
-            key={card.id}
-            to={`/resort/${card.id}`}
-            className="group relative rounded-xl overflow-hidden h-72">
-            
+          {trendingCards.map((card) => (
+            <Link
+              key={card.id}
+              to={`/resort/${card.id}`}
+              className="group relative rounded-xl overflow-hidden h-72"
+            >
               <img
-              src={card.image}
-              alt={card.resort}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            
+                src={card.image}
+                alt={card.resort}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/30 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <span className="inline-block bg-peak-red/90 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
@@ -109,7 +109,7 @@ UNIFIED.
                 <h3 className="font-display font-bold text-peak-text text-2xl">{card.resort}</h3>
               </div>
             </Link>
-          )}
+          ))}
         </div>
       </section>
 
@@ -123,8 +123,8 @@ UNIFIED.
             Everything you need, unified in one platform.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {pillars.map((p) =>
-            <div key={p.label} className="flex items-center gap-4 bg-peak-surface rounded-xl p-5">
+            {pillars.map((p) => (
+              <div key={p.label} className="flex items-center gap-4 bg-peak-surface rounded-xl p-5">
                 <div className="w-12 h-12 rounded-xl bg-peak-blue/10 flex items-center justify-center flex-shrink-0">
                   <p.icon className="h-6 w-6 text-peak-blue" />
                 </div>
@@ -133,7 +133,7 @@ UNIFIED.
                   <p className="text-peak-text-secondary text-xs">{p.desc}</p>
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -151,6 +151,6 @@ UNIFIED.
           </div>
         </div>
       </footer>
-    </div>);
-
+    </div>
+  );
 }
