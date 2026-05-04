@@ -27,9 +27,9 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-[hsl(var(--primary))] mb-4 font-display text-5xl font-extrabold tracking-tight leading-none sm:text-7xl lg:text-8xl">THE MOUNTAIN.
-UNIFIED.
-
+          <h1 className="font-display font-extrabold text-5xl sm:text-7xl lg:text-8xl tracking-tight leading-none mb-4">
+            <span className="text-peak-text">THE MOUNTAIN.</span><br />
+            <span className="text-peak-red">UNIFIED.</span>
           </h1>
           <p className="text-peak-text-secondary text-lg sm:text-xl max-w-2xl mx-auto mb-10">
             Find, book, and experience every ski resort in the Alps — in one place.
