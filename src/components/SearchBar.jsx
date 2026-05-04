@@ -20,7 +20,7 @@ const addOns = [
 
 export default function SearchBar() {
   const [destination, setDestination] = useState("");
-  const [who, setWho] = useState("");
+  const [who, setWho] = useState(1);
   const [searchStart, setSearchStart] = useState(null);
   const [searchEnd, setSearchEnd] = useState(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -108,15 +108,21 @@ export default function SearchBar() {
         </button>
 
         {/* Who */}
-        <div className="flex-1 flex items-center px-5 py-4">
-          <Users className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
-          <input
-            type="text"
-            value={who}
-            onChange={(e) => setWho(e.target.value)}
-            placeholder="Add guests"
-            className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
-          />
+        <div className="flex-1 flex items-center px-5 py-4 gap-3">
+          <Users className="h-7 w-7 text-peak-blue flex-shrink-0" strokeWidth={2.5} />
+          <div className="flex items-center gap-2 flex-1">
+            <button
+              onClick={() => setWho(w => Math.max(1, w - 1))}
+              className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center text-base transition-colors flex-shrink-0"
+            >−</button>
+            <span className="text-peak-text text-sm font-medium w-20 text-center">
+              {who} {who === 1 ? "guest" : "guests"}
+            </span>
+            <button
+              onClick={() => setWho(w => Math.min(20, w + 1))}
+              className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center text-base transition-colors flex-shrink-0"
+            >+</button>
+          </div>
         </div>
 
         {/* Search button */}
