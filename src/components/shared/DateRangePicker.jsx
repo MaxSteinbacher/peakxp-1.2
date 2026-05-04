@@ -6,7 +6,7 @@
 // Until live data is available, pass empty arrays (all dates available).
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Calendar, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, X } from "lucide-react";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -261,7 +261,7 @@ export default function DateRangePicker({
     );
   }
 
-  function CalendarContent() {
+  function CalendarGrid() {
     return (
       <div role="dialog" aria-label="Date picker" className="p-4 w-80">
         {mode === "range" && (
@@ -358,7 +358,7 @@ export default function DateRangePicker({
   }
 
   if (triggerStyle === "inline") {
-    return <div ref={containerRef}><CalendarContent /></div>;
+    return <div ref={containerRef}><CalendarGrid /></div>;
   }
 
   const alignClass = align === "right" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0";
@@ -369,7 +369,7 @@ export default function DateRangePicker({
       <div className="flex items-center bg-peak-surface border border-white/10 rounded-xl overflow-hidden">
         <button onClick={() => openCalendar(false)}
           className="flex-1 flex items-center gap-2 px-4 py-2.5 hover:bg-white/5 transition-colors min-w-0">
-          <Calendar className="h-4 w-4 text-peak-text-secondary flex-shrink-0" />
+          <CalendarDays className="h-4 w-4 text-peak-text-secondary flex-shrink-0" />
           <span className={`text-sm truncate ${start ? "text-peak-text" : "text-peak-text-secondary"}`}>
             {start ? fmtDate(start) : placeholder.start}
           </span>
@@ -380,7 +380,7 @@ export default function DateRangePicker({
             <div className="w-px h-5 bg-white/10 flex-shrink-0" />
             <button onClick={() => openCalendar(true)}
               className={`flex-1 flex items-center gap-2 px-4 py-2.5 hover:bg-white/5 transition-colors min-w-0 ${start && !end ? "animate-pulse" : ""}`}>
-              <Calendar className="h-4 w-4 text-peak-text-secondary flex-shrink-0" />
+              <CalendarDays className="h-4 w-4 text-peak-text-secondary flex-shrink-0" />
               <span className={`text-sm truncate ${end ? "text-peak-text" : "text-peak-text-secondary"}`}>
                 {end ? fmtDate(end) : placeholder.end}
               </span>
@@ -400,7 +400,7 @@ export default function DateRangePicker({
       {open && !isMobile && (
         <div className={`absolute z-50 mt-2 bg-peak-card border border-white/10 rounded-2xl shadow-2xl ${alignClass}`}
           style={{ animation: "drpIn 150ms ease both" }}>
-          <CalendarContent />
+          <CalendarGrid />
         </div>
       )}
 
@@ -411,7 +411,7 @@ export default function DateRangePicker({
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-peak-card rounded-t-2xl pb-8"
             style={{ animation: "slideUp 300ms cubic-bezier(0.32,0.72,0,1) both" }}>
             <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1" />
-            <CalendarContent />
+            <CalendarGrid />
           </div>
         </>
       )}

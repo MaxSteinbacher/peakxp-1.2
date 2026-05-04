@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import DateRangePicker from "../../shared/DateRangePicker";
 
 function Tooltip({ text }) {
   const [open, setOpen] = useState(false);
@@ -179,18 +180,14 @@ function buildQuestions(selectedEquipment) {
       render: (val, set) => {
         const v = val || {};
         return (
-          <div className="flex items-center gap-3 flex-wrap">
-            <div>
-              <p className="text-xs text-peak-text-secondary mb-1">From</p>
-              <input type="date" value={v.start || ""} onChange={(e) => set({ ...v, start: e.target.value })}
-                className="bg-peak-surface border border-white/10 rounded-xl px-4 py-2 text-peak-text outline-none focus:border-peak-blue" />
-            </div>
-            <div>
-              <p className="text-xs text-peak-text-secondary mb-1">To</p>
-              <input type="date" value={v.end || ""} onChange={(e) => set({ ...v, end: e.target.value })}
-                className="bg-peak-surface border border-white/10 rounded-xl px-4 py-2 text-peak-text outline-none focus:border-peak-blue" />
-            </div>
-          </div>
+          <DateRangePicker
+            startDate={v.start || null}
+            endDate={v.end || null}
+            onStartChange={(d) => set({ ...v, start: d })}
+            onEndChange={(d) => set({ ...v, end: d })}
+            context="equipment"
+            placeholder={{ start: "Pick-up date", end: "Return date" }}
+          />
         );
       },
     },

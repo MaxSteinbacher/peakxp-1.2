@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, Calendar, Users, Plus, Check } from "lucide-react";
+import { Search, MapPin, CalendarDays, Users, Plus, Check } from "lucide-react";
+import DateRangePicker, { fmtDate } from "./shared/DateRangePicker";
 import { resorts } from "../lib/data";
 
 const addOns = [
@@ -19,11 +20,25 @@ const addOns = [
 
 export default function SearchBar() {
   const [destination, setDestination] = useState("");
-  const [when, setWhen] = useState("");
   const [who, setWho] = useState("");
+  const [searchStart, setSearchStart] = useState(null);
+  const [searchEnd, setSearchEnd] = useState(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const dateContainerRef = useRef(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selected, setSelected] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!datePickerOpen) return;
+    function handler(e) {
+      if (dateContainerRef.current && !dateContainerRef.current.contains(e.target)) {
+        setDatePickerOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [datePickerOpen]);
 
   const suggestions = destination.length > 0
     ? resorts.filter(r => r.name.toLowerCase().includes(destination.toLowerCase()))
@@ -82,16 +97,15 @@ export default function SearchBar() {
         </div>
 
         {/* When */}
-        <div className="flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10">
-          <Calendar className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
-          <input
-            type="text"
-            value={when}
-            onChange={(e) => setWhen(e.target.value)}
-            placeholder="Add dates"
-            className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
-          />
-        </div>
+        <button
+          onClick={() => setDatePickerOpen(true)}
+          className="flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10 text-left"
+        >
+          <CalendarDays className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
+          <span className={`text-sm font-medium ${searchStart ? "text-peak-text" : "text-peak-text-secondary/70"}`}>
+            {searchStart ? (searchEnd ? `${fmtDate(searchStart)} → ${fmtDate(searchEnd)}` : fmtDate(searchStart)) : "Add dates"}
+          </span>
+        </button>
 
         {/* Who */}
         <div className="flex-1 flex items-center px-5 py-4">
@@ -114,6 +128,20 @@ export default function SearchBar() {
           <span className="hidden sm:inline">Search</span>
         </button>
       </div>
+
+      {/* Inline DateRangePicker */}
+      {datePickerOpen && (
+        <div ref={dateContainerRef} className="mt-2 bg-peak-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+          <DateRangePicker
+            triggerStyle="inline"
+            startDate={searchStart} endDate={searchEnd}
+            onStartChange={setSearchStart}
+            onEndChange={(d) => { setSearchEnd(d); if (searchStart && d) setDatePickerOpen(false); }}
+            context="general"
+            placeholder={{ start: "Arrival", end: "Departure" }}
+          />
+        </div>
+      )}
 
       {/* Add-ons */}
       <div className="mt-4 flex flex-wrap gap-2 justify-center">

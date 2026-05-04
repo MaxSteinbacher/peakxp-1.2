@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import DateRangePicker from "../shared/DateRangePicker";
 import { ArrowUpDown, SlidersHorizontal, Star } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -107,6 +108,8 @@ export default function ResortsTab() {
   const [nightSkiing, setNightSkiing] = useState(false);
   const [facilities, setFacilities] = useState([]);
   const [parking, setParking] = useState("any");
+  const [arrivalDate, setArrivalDate] = useState(null);
+  const [departureDate, setDepartureDate] = useState(null);
 
   const filteredResorts = useMemo(() => {
     let results = [...resorts];
@@ -319,6 +322,16 @@ export default function ResortsTab() {
 
   return (
     <div>
+      {/* Date picker */}
+      <div className="mb-5 max-w-sm">
+        <DateRangePicker
+          startDate={arrivalDate} endDate={departureDate}
+          onStartChange={setArrivalDate} onEndChange={setDepartureDate}
+          context="general"
+          placeholder={{ start: "Arrival", end: "Departure" }}
+        />
+      </div>
+
       {/* Sort bar */}
       <div className="flex items-center justify-between mb-6 gap-3">
         <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">

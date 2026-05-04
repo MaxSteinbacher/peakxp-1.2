@@ -59,7 +59,7 @@ export default function SkiSchoolTab() {
   const [step, setStep] = useState(0);
   const [participants, setParticipants] = useState([{ type: "adult", age: null, name: "Participant 1" }]);
   const [courseType, setCourseType] = useState(null);
-  const [schedule, setSchedule] = useState({ sport: "Skiing", duration: "half-day", time: "morning", days: 3, date: null, level: "Beginner", language: "English", requests: "" });
+  const [schedule, setSchedule] = useState({ sport: "Skiing", duration: "half-day", time: "morning", days: 3, date: null, endDate: null, level: "Beginner", language: "English", requests: "" });
   const [selectedSchool, setSelectedSchool] = useState(null);
 
   const hasKids = participants.some(p => p.type === "kid" && p.age <= 5);
@@ -217,12 +217,12 @@ export default function SkiSchoolTab() {
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Start date</p>
+              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Lesson dates</p>
               <DateRangePicker
-                startDate={schedule.date} endDate={null}
-                onStartChange={v => setSchedule(s => ({ ...s, date: v }))} onEndChange={() => {}}
-                mode="single" context="ski-school"
-                placeholder={{ start: "Select start date", end: "" }}
+                startDate={schedule.date} endDate={schedule.endDate}
+                onStartChange={v => setSchedule(s => ({ ...s, date: v }))} onEndChange={v => setSchedule(s => ({ ...s, endDate: v }))}
+                mode="range" context="ski-school"
+                placeholder={{ start: "First lesson day", end: "Last lesson day" }}
               />
             </div>
             <div>

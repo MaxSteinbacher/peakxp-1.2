@@ -1,5 +1,7 @@
+import { useState } from "react";
 import AccommodationFilter from "./AccommodationFilter";
 import { Link } from "react-router-dom";
+import DateRangePicker from "../shared/DateRangePicker";
 
 const mockProperties = [
   { id: "hotel-kitzhof", name: "Hotel Kitzhof Mountain Design Resort", type: "Hotel", location: "Kitzbühel, Austria", price: 195, rating: 9.1, image: "https://media.base44.com/images/public/69f1c737747c83c0b091a543/18c29298b_AuenansichtfrontHotelKitzhof.jpg", stars: 4 },
@@ -38,10 +40,21 @@ function PropertyCard({ p }) {
 }
 
 export default function AccommodationTab() {
+  const [checkIn, setCheckIn] = useState(null);
+  const [checkOut, setCheckOut] = useState(null);
+
   return (
     <div className="flex gap-8">
       <AccommodationFilter />
       <div className="flex-1">
+        <div className="mb-5 max-w-sm">
+          <DateRangePicker
+            startDate={checkIn} endDate={checkOut}
+            onStartChange={setCheckIn} onEndChange={setCheckOut}
+            context="hotel" minStay={1}
+            placeholder={{ start: "Check-in", end: "Check-out" }}
+          />
+        </div>
         <p className="text-peak-text-secondary text-sm mb-6">{mockProperties.length} properties found</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {mockProperties.map(p => <PropertyCard key={p.id} p={p} />)}
