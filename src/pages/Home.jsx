@@ -27,7 +27,7 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-[hsl(var(--primary))] mb-4 font-display text-5xl font-extrabold tracking-tight leading-none sm:text-7xl lg:text-8xl">THE MOUNTAIN. 
+          <h1 className="text-peak-text mb-4 font-display text-5xl font-extrabold tracking-tight leading-none sm:text-7xl lg:text-8xl">THE MOUNTAIN. 
 UNIFIED.
 
           </h1>
