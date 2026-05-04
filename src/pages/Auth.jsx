@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import { useAppAuth } from "../context/AppAuthContext";
 
 function PasswordStrength({ password }) {
@@ -59,10 +59,36 @@ export default function Auth() {
     navigate(redirect);
   }
 
+  const [socialModal, setSocialModal] = useState(null); // "Google" | "Apple" | "Facebook" | null
+  const [socialForm, setSocialForm] = useState({ email: "", firstName: "", lastName: "", password: "" });
+  const [socialError, setSocialError] = useState("");
+
   function handleSocialLogin(provider) {
-    const userData = { id: String(Date.now()), firstName: provider, lastName: "User", email: `${provider.toLowerCase()}@social.peakxp`, createdAt: new Date().toISOString(), avatar: null };
-    login(userData);
-    navigate("/dashboard");
+    setSocialForm({ email: "", firstName: "", lastName: "", password: "" });
+    setSocialError("");
+    setSocialModal(provider);
+  }
+
+  function handleSocialSubmit(e) {
+    e.preventDefault();
+    if (!socialForm.email.includes("@")) { setSocialError("Enter a valid email."); return; }
+    if (!socialForm.firstName.trim()) { setSocialError("Enter your first name."); return; }
+    const accounts = JSON.parse(localStorage.getItem("peakxp_accounts") || "[]");
+    const existing = accounts.find(a => a.email === socialForm.email);
+    if (existing) {
+      const { password: _p, ...safeUser } = existing;
+      login(safeUser);
+      setSocialModal(null);
+      navigate("/dashboard");
+      return;
+    }
+    const newUser = { id: String(Date.now()), firstName: socialForm.firstName, lastName: socialForm.lastName || "", email: socialForm.email, password: "__social__", country: "", provider: socialModal, createdAt: new Date().toISOString(), avatar: null };
+    accounts.push(newUser);
+    localStorage.setItem("peakxp_accounts", JSON.stringify(accounts));
+    const { password: _p, ...safeUser } = newUser;
+    login(safeUser);
+    setSocialModal(null);
+    navigate("/profile/setup");
   }
 
   function handleRegisterSubmit(e) {
@@ -90,6 +116,44 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-peak-bg flex items-center justify-center px-4 py-16">
+      {/* Social OAuth Modal */}
+      {socialModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                {socialModal === "Google" && <GoogleIcon />}
+                {socialModal === "Apple" && <AppleIcon />}
+                {socialModal === "Facebook" && <FacebookIcon />}
+                <span className="font-semibold text-gray-800 text-sm">Sign in with {socialModal}</span>
+              </div>
+              <button onClick={() => setSocialModal(null)} className="text-gray-400 hover:text-gray-600"><X className="h-5 w-5" /></button>
+            </div>
+            <form onSubmit={handleSocialSubmit} className="p-5 space-y-4">
+              <p className="text-xs text-gray-500">{socialModal} will share your name and email address with PeakXP.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">First name</label>
+                  <input value={socialForm.firstName} onChange={e => setSocialForm(f => ({ ...f, firstName: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400" />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Last name</label>
+                  <input value={socialForm.lastName} onChange={e => setSocialForm(f => ({ ...f, lastName: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Email address</label>
+                <input type="email" value={socialForm.email} onChange={e => setSocialForm(f => ({ ...f, email: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400" placeholder="you@example.com" />
+              </div>
+              {socialError && <p className="text-xs text-red-500">{socialError}</p>}
+              <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">Continue</button>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md bg-peak-card border border-white/5 rounded-2xl p-8">
         <div className="text-center mb-6">
           <h1 className="font-display font-extrabold text-2xl text-peak-text">PEAK<span className="text-peak-red">XP</span></h1>
@@ -200,6 +264,33 @@ export default function Auth() {
   );
 }
 
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18">
+      <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+      <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+      <path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+      <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"/>
+    </svg>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 814 1000" fill="currentColor" className="text-gray-900">
+      <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-47.4-148.2-112.7C46.3 742.5 0 636.1 0 532.2 0 325.1 136.4 214.1 270.5 214.1c67.1 0 123.1 44.2 164.1 44.2 38.9 0 101.1-46.7 176.3-46.7 28.5 0 130.9 2.6 198.3 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z"/>
+    </svg>
+  );
+}
+
+function FacebookIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+      <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+    </svg>
+  );
+}
+
 function SocialDivider({ onSocial }) {
   return (
     <>
@@ -209,12 +300,18 @@ function SocialDivider({ onSocial }) {
         <div className="flex-1 h-px bg-white/10" />
       </div>
       <div className="grid grid-cols-3 gap-3">
-        {[["Google","G"],["Apple","A"],["Facebook","f"]].map(([p, icon]) => (
-          <button key={p} type="button" onClick={() => onSocial(p)}
-            className="py-2.5 border border-white/10 rounded-xl text-sm text-peak-text-secondary hover:text-peak-text hover:bg-white/5 transition-colors font-semibold">
-            {icon} {p}
-          </button>
-        ))}
+        <button type="button" onClick={() => onSocial("Google")}
+          className="py-2.5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/5 transition-colors">
+          <GoogleIcon />
+        </button>
+        <button type="button" onClick={() => onSocial("Apple")}
+          className="py-2.5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/5 transition-colors">
+          <AppleIcon />
+        </button>
+        <button type="button" onClick={() => onSocial("Facebook")}
+          className="py-2.5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/5 transition-colors">
+          <FacebookIcon />
+        </button>
       </div>
     </>
   );
