@@ -1,128 +1,239 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, CalendarDays, Users, Plus, Check } from "lucide-react";
+import { Search, MapPin, CalendarDays, Users, Plus, Check, Globe, Map, X } from "lucide-react";
 import DateRangePicker, { fmtDate } from "./shared/DateRangePicker";
-import { resorts } from "../lib/data";
+import { searchDestinations, searchIndex } from "../lib/searchIndex";
+import { useTripPlanner } from "../context/TripPlannerContext";
+import { toast } from "sonner";
 
-const addOns = [
-  { key: "ski_passes", label: "Ski passes" },
+const SERVICE_KEYS = [
+  { key: "ski-pass", label: "Ski passes" },
   { key: "accommodation", label: "Accommodation" },
   { key: "equipment", label: "Equipment rental" },
-  { key: "ski_school", label: "Ski school" },
+  { key: "ski-school", label: "Ski school" },
   { key: "flights", label: "Flights" },
   { key: "train", label: "Train" },
-  { key: "car_rental", label: "Car rental" },
+  { key: "car", label: "Car rental" },
   { key: "storage", label: "Storage & lockers" },
   { key: "dining", label: "Dining" },
   { key: "activities", label: "Activities" },
   { key: "childcare", label: "Childcare" },
 ];
 
+function GuestStepper({ label, sub, value, onChange, min = 0 }) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+      <div>
+        <p className="text-peak-text text-sm font-medium">{label}</p>
+        <p className="text-peak-text-secondary text-xs">{sub}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={() => onChange(Math.max(min, value - 1))} className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center transition-colors">−</button>
+        <span className="w-6 text-center text-peak-text text-sm font-bold">{value}</span>
+        <button onClick={() => onChange(Math.min(20, value + 1))} className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center transition-colors">+</button>
+      </div>
+    </div>
+  );
+}
+
+const TYPE_ICON = { resort: MapPin, country: Globe, region: Map };
+const TYPE_LABEL = { resort: "Resort", country: "Country", region: "Region" };
+
 export default function SearchBar() {
-  const [destination, setDestination] = useState("");
+  const navigate = useNavigate();
+  const { startTrip } = useTripPlanner();
+
+  const [query, setQuery] = useState("");
+  const [selectedDest, setSelectedDest] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [results, setResults] = useState([]);
+  const [destError, setDestError] = useState("");
+  const destRef = useRef(null);
+
+  const [searchStart, setSearchStart] = useState(null);
+  const [searchEnd, setSearchEnd] = useState(null);
+
   const [adults, setAdults] = useState(1);
-  const [kids, setKids] = useState(0);
+  const [children, setChildren] = useState(0);
+  const [seniors, setSeniors] = useState(0);
   const [guestOpen, setGuestOpen] = useState(false);
   const guestRef = useRef(null);
 
+  const [selected, setSelected] = useState(["ski-pass"]);
+
+  // Close dropdowns on outside click
   useEffect(() => {
-    if (!guestOpen) return;
     function handler(e) {
       if (guestRef.current && !guestRef.current.contains(e.target)) setGuestOpen(false);
+      if (destRef.current && !destRef.current.contains(e.target)) setShowDropdown(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [guestOpen]);
+  }, []);
 
-  const totalGuests = adults + kids;
-  const guestLabel = totalGuests === 0 ? "Add guests" : `${adults} adult${adults !== 1 ? "s" : ""}${kids > 0 ? `, ${kids} child${kids !== 1 ? "ren" : ""}` : ""}`;
-  const [searchStart, setSearchStart] = useState(null);
-  const [searchEnd, setSearchEnd] = useState(null);
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const dateContainerRef = useRef(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selected, setSelected] = useState([]);
-  const navigate = useNavigate();
-
+  // Search as user types
   useEffect(() => {
-    if (!datePickerOpen) return;
-    function handler(e) {
-      if (dateContainerRef.current && !dateContainerRef.current.contains(e.target)) {
-        setDatePickerOpen(false);
-      }
+    if (query.length > 0 && !selectedDest) {
+      setResults(searchDestinations(query, searchIndex));
+      setShowDropdown(true);
+    } else {
+      setResults([]);
+      if (!selectedDest) setShowDropdown(false);
     }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [datePickerOpen]);
+  }, [query, selectedDest]);
 
-  const suggestions = destination.length > 0
-    ? resorts.filter(r => r.name.toLowerCase().includes(destination.toLowerCase()))
-    : [];
+  function handleSelectDest(item) {
+    setSelectedDest(item);
+    setQuery(item.label);
+    setShowDropdown(false);
+    setDestError("");
+  }
 
-  const toggleAddOn = (key) => {
-    setSelected(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
+  function clearDest() {
+    setSelectedDest(null);
+    setQuery("");
+    setDestError("");
+  }
 
-  const handleSearch = () => {
-    navigate("/trip-planning" + (destination ? `?q=${encodeURIComponent(destination)}` : ""));
-  };
+  const totalGuests = adults + children + seniors;
+  const guestParts = [];
+  if (adults > 0) guestParts.push(`${adults} adult${adults !== 1 ? "s" : ""}`);
+  if (children > 0) guestParts.push(`${children} child${children !== 1 ? "ren" : ""}`);
+  if (seniors > 0) guestParts.push(`${seniors} senior${seniors !== 1 ? "s" : ""}`);
+  const guestLabel = guestParts.length > 0 ? guestParts.join(" · ") : "Add guests";
+
+  function toggleService(key) {
+    if (selected.includes(key)) {
+      if (selected.length <= 1) {
+        toast.error("Select at least one service");
+        return;
+      }
+      setSelected(prev => prev.filter(k => k !== key));
+    } else {
+      setSelected(prev => [...prev, key]);
+    }
+  }
+
+  function handleSearch() {
+    if (!selectedDest) {
+      setDestError("Please select a destination");
+      return;
+    }
+    setDestError("");
+
+    if (!searchStart) {
+      toast("Adding dates helps us show accurate availability", { icon: "📅" });
+    }
+
+    const destination = {
+      type: selectedDest.type,
+      label: selectedDest.label,
+      id: selectedDest.id,
+      countryCode: Array.isArray(selectedDest.countryCode) ? selectedDest.countryCode[0] : selectedDest.countryCode,
+      region: selectedDest.region || null,
+      flag: selectedDest.flag || "",
+    };
+
+    const nights = searchStart && searchEnd ? Math.round((new Date(searchEnd) - new Date(searchStart)) / 86400000) : null;
+    const dates = {
+      start: searchStart ? (searchStart instanceof Date ? searchStart.toISOString() : new Date(searchStart).toISOString()) : null,
+      end: searchEnd ? (searchEnd instanceof Date ? searchEnd.toISOString() : new Date(searchEnd).toISOString()) : null,
+      nights,
+    };
+
+    const guests = { adults, children, seniors };
+
+    startTrip(destination, dates, guests, selected);
+    navigate("/plan");
+  }
+
+  // Group results for dropdown
+  const grouped = {};
+  results.forEach(r => {
+    if (!grouped[r.type]) grouped[r.type] = [];
+    grouped[r.type].push(r);
+  });
+  const groupOrder = ["region", "country", "resort"];
+  const groupLabels = { region: "Regions", country: "Countries", resort: "Resorts" };
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Main search bar */}
       <div className="relative flex flex-col sm:flex-row items-stretch bg-peak-card border border-white/10 rounded-xl overflow-visible shadow-2xl">
 
         {/* Destination */}
-        <div className="relative flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10">
+        <div className="relative flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10" ref={destRef}>
           <MapPin className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
-          <input
-            type="text"
-            value={destination}
-            onChange={(e) => { setDestination(e.target.value); setShowSuggestions(true); }}
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-            placeholder="Where are you going?"
-            className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          />
-          {/* Autocomplete */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-peak-card border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-              {suggestions.map((resort) => (
-                <button
-                  key={resort.id}
-                  onMouseDown={() => {
-                    setDestination(resort.name);
-                    setShowSuggestions(false);
-                  }}
-                  className="w-full flex items-center gap-4 px-5 py-3 hover:bg-white/5 transition-colors text-left"
-                >
-                  <img src={resort.image} alt={resort.name} className="w-12 h-8 rounded object-cover" />
-                  <div>
-                    <p className="text-peak-text text-sm font-medium">{resort.name}</p>
-                    <p className="text-peak-text-secondary text-xs">{resort.flag} {resort.country} · {resort.pisteKm}km</p>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); if (selectedDest) setSelectedDest(null); }}
+              onFocus={() => { if (query.length > 0 && !selectedDest) setShowDropdown(true); }}
+              placeholder="Where are you going?"
+              className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            />
+            {selectedDest && (
+              <>
+                <span className="bg-peak-blue/20 text-peak-blue text-xs px-2 py-0.5 rounded-full whitespace-nowrap">{TYPE_LABEL[selectedDest.type]}</span>
+                <button onClick={clearDest} className="text-peak-text-secondary hover:text-peak-text"><X className="h-3.5 w-3.5" /></button>
+              </>
+            )}
+          </div>
+
+          {/* Destination dropdown */}
+          {showDropdown && results.length > 0 && (
+            <div className="absolute top-full left-0 w-full sm:w-96 bg-peak-card border border-white/10 rounded-2xl shadow-xl z-50 overflow-hidden mt-2">
+              {groupOrder.map(type => {
+                const items = grouped[type];
+                if (!items || items.length === 0) return null;
+                return (
+                  <div key={type}>
+                    <div className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider px-4 py-2 bg-peak-surface">{groupLabels[type]}</div>
+                    {items.map(item => {
+                      const Icon = TYPE_ICON[item.type] || MapPin;
+                      return (
+                        <button
+                          key={item.id}
+                          onMouseDown={() => handleSelectDest(item)}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors text-left"
+                        >
+                          <Icon className="h-4 w-4 text-peak-blue flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-peak-text text-sm font-medium">{item.flag} {item.label}</p>
+                            <p className="text-peak-text-secondary text-xs truncate">{item.sublabel}</p>
+                          </div>
+                          {item.type === "resort" && item.pisteKm && (
+                            <span className="text-peak-text-secondary text-xs flex-shrink-0">{item.pisteKm}km</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                  <span className="ml-auto text-peak-blue text-xs font-semibold">{resort.rating}</span>
-                </button>
-              ))}
+                );
+              })}
             </div>
+          )}
+
+          {destError && (
+            <p className="absolute -bottom-5 left-5 text-peak-red text-xs">{destError}</p>
           )}
         </div>
 
-        {/* When */}
-        <button
-          onClick={() => setDatePickerOpen(true)}
-          className="flex-1 flex items-center px-5 py-4 border-b sm:border-b-0 sm:border-r border-white/10 text-left"
-        >
-          <CalendarDays className="h-7 w-7 text-peak-blue mr-3 flex-shrink-0" strokeWidth={2.5} />
-          <span className={`text-sm font-medium ${searchStart ? "text-peak-text" : "text-peak-text-secondary/70"}`}>
-            {searchStart ? (searchEnd ? `${fmtDate(searchStart)} → ${fmtDate(searchEnd)}` : fmtDate(searchStart)) : "Add dates"}
-          </span>
-        </button>
+        {/* Dates */}
+        <div className="flex-1 border-b sm:border-b-0 sm:border-r border-white/10">
+          <DateRangePicker
+            startDate={searchStart}
+            endDate={searchEnd}
+            onStartChange={setSearchStart}
+            onEndChange={setSearchEnd}
+            triggerStyle="input"
+            context="general"
+            placeholder={{ start: "Arrival", end: "Departure" }}
+          />
+        </div>
 
-        {/* Who */}
+        {/* Guests */}
         <div className="relative flex-1" ref={guestRef}>
           <button
             onClick={() => setGuestOpen(o => !o)}
@@ -135,26 +246,9 @@ export default function SearchBar() {
           </button>
           {guestOpen && (
             <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-peak-card border border-white/10 rounded-2xl shadow-2xl p-4 min-w-[220px]">
-              {[{ label: "Adults", sub: "Age 13+", val: adults, set: setAdults, min: 1 }, { label: "Children", sub: "Ages 2–12", val: kids, set: setKids, min: 0 }].map(({ label, sub, val, set, min }) => (
-                <div key={label} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                  <div>
-                    <p className="text-peak-text text-sm font-medium">{label}</p>
-                    <p className="text-peak-text-secondary text-xs">{sub}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => set(v => Math.max(min, v - 1))} className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center transition-colors">−</button>
-                    <input
-                      type="number"
-                      value={val}
-                      min={min}
-                      max={20}
-                      onChange={e => set(Math.min(20, Math.max(min, parseInt(e.target.value) || min)))}
-                      className="w-8 text-center bg-transparent text-peak-text text-sm font-bold outline-none"
-                    />
-                    <button onClick={() => set(v => Math.min(20, v + 1))} className="w-7 h-7 rounded-full border border-white/20 text-peak-text-secondary hover:text-peak-text hover:border-white/40 flex items-center justify-center transition-colors">+</button>
-                  </div>
-                </div>
-              ))}
+              <GuestStepper label="Adults" sub="Age 13+" value={adults} onChange={setAdults} min={1} />
+              <GuestStepper label="Children" sub="Ages 2–12" value={children} onChange={setChildren} />
+              <GuestStepper label="Seniors" sub="Age 65+" value={seniors} onChange={setSeniors} />
             </div>
           )}
         </div>
@@ -169,36 +263,22 @@ export default function SearchBar() {
         </button>
       </div>
 
-      {/* Inline DateRangePicker */}
-      {datePickerOpen && (
-        <div ref={dateContainerRef} className="mt-2 bg-peak-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-          <DateRangePicker
-            triggerStyle="inline"
-            startDate={searchStart} endDate={searchEnd}
-            onStartChange={setSearchStart}
-            onEndChange={(d) => { setSearchEnd(d); if (searchStart && d) setDatePickerOpen(false); }}
-            context="general"
-            placeholder={{ start: "Arrival", end: "Departure" }}
-          />
-        </div>
-      )}
-
-      {/* Add-ons */}
+      {/* Service pills */}
       <div className="mt-4 flex flex-wrap gap-2 justify-center">
-        {addOns.map((addon) => {
-          const isSelected = selected.includes(addon.key);
+        {SERVICE_KEYS.map((svc) => {
+          const isSelected = selected.includes(svc.key);
           return (
             <button
-              key={addon.key}
-              onClick={() => toggleAddOn(addon.key)}
+              key={svc.key}
+              onClick={() => toggleService(svc.key)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
                 isSelected
-                  ? "bg-peak-red/20 border-peak-red/50 text-peak-red"
+                  ? "bg-peak-red/20 border-peak-red/40 text-peak-red"
                   : "bg-white/5 border-white/10 text-peak-text-secondary hover:border-white/25 hover:text-peak-text"
               }`}
             >
               {isSelected ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-              {addon.label}
+              {svc.label}
             </button>
           );
         })}

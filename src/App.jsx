@@ -22,6 +22,10 @@ import ExpertAgents from './pages/ExpertAgents';
 import Community from './pages/Community';
 import ResortRoutePlanner from './pages/ResortRoutePlanner';
 import HotelDetail from './pages/HotelDetail';
+import TripPlannerFlow from './pages/TripPlannerFlow';
+import TripSummary from './pages/TripSummary';
+import TripConfirmed from './pages/TripConfirmed';
+import { TripPlannerProvider } from './context/TripPlannerContext';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -55,6 +59,9 @@ const AuthenticatedApp = () => {
         <Route path="/resort/:id" element={<ResortDetail />} />
         <Route path="/resort/:id/map" element={<ResortRoutePlanner />} />
         <Route path="/hotel/:id" element={<HotelDetail />} />
+        <Route path="/plan" element={<TripPlannerFlow />} />
+        <Route path="/plan/summary" element={<TripSummary />} />
+        <Route path="/plan/confirmed" element={<TripConfirmed />} />
         <Route path="/book" element={<Booking />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trip-planning" element={<TripPlanning />} />
@@ -75,14 +82,16 @@ function App() {
   return (
     <AuthProvider>
       <AppAuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <ProfileProvider>
-              <AuthenticatedApp />
-            </ProfileProvider>
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
+        <TripPlannerProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router>
+              <ProfileProvider>
+                <AuthenticatedApp />
+              </ProfileProvider>
+            </Router>
+            <Toaster />
+          </QueryClientProvider>
+        </TripPlannerProvider>
       </AppAuthProvider>
     </AuthProvider>
   )
