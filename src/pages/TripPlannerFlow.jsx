@@ -7,7 +7,9 @@ import BasketPanel from "../components/trip/BasketPanel";
 import LeaveWarningModal from "../components/trip/LeaveWarningModal";
 import ResortSelectionStep from "../components/trip/steps/ResortSelectionStep";
 import ServiceStep from "../components/trip/steps/ServiceStep";
-import { MapPin, ArrowRight, Bot, X } from "lucide-react";
+import CompletionPanel from "../components/trip/CompletionPanel";
+import { MapPin, ArrowRight, Bot, X, CheckCircle, ShoppingBag } from "lucide-react";
+import { Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car } from "lucide-react";
 
 export default function TripPlannerFlow() {
   const { session, setCurrentStep, getNextStep } = useTripPlanner();
@@ -112,16 +114,7 @@ export default function TripPlannerFlow() {
       )}
 
       {allDone ? (
-        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <div className="w-16 h-16 rounded-full bg-peak-green/20 flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl">{"\uD83C\uDF89"}</span>
-          </div>
-          <h2 className="font-display font-extrabold text-3xl text-peak-text mb-2">All steps complete!</h2>
-          <p className="text-peak-text-secondary text-sm mb-8">Review your selections and proceed to checkout.</p>
-          <button onClick={() => navigate("/plan/summary")} className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-bold rounded-xl transition-colors text-lg inline-flex items-center gap-2">
-            {"Review & checkout"} <ArrowRight className="h-5 w-5" />
-          </button>
-        </div>
+        <CompletionPanel basket={session.basket} total={session.basket.reduce((s, i) => s + (i.priceEUR || 0) * (i.quantity || 1), 0)} onCheckout={() => navigate("/plan/summary")} onAddMore={() => { const next = getNextStep(); if (next) { setCurrentStep(next.serviceKey, next.resortId); } else { setCurrentStep(session.selectedServices[0], session.resorts[0]?.resortId || null); } }} />
       ) : current?.serviceKey === "resort-selection" ? (
         <ResortSelectionStep />
       ) : current?.serviceKey ? (

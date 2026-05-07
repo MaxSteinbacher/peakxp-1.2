@@ -32,7 +32,7 @@ function StepIndicator({ current }) {
   );
 }
 
-export default function EquipmentRentalTab({ agentServiceDetails = {} }) {
+export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [selectedEquipment, setSelectedEquipment] = useState([]);
   const [mode, setMode] = useState(null); // "expert" | "guided"
@@ -121,6 +121,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {} }) {
           shop={selectedShop}
           specs={mode === "expert" ? expertSpecs : guidedAnswers}
           answers={guidedAnswers}
+          onBook={onBook}
         />
       )}
     </div>

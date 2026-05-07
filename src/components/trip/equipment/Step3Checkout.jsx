@@ -65,7 +65,7 @@ function TrustBadges() {
   );
 }
 
-export default function Step3Checkout({ selectedEquipment, shop, specs, answers }) {
+export default function Step3Checkout({ selectedEquipment, shop, specs, answers, onBook }) {
   const [checkoutStep, setCheckoutStep] = useState(0);
   const [guests, setGuests] = useState([{ name: "", email: "", notes: "" }]);
   const [payment, setPayment] = useState({ card: "", expiry: "", cvv: "", name: "" });
@@ -82,21 +82,7 @@ export default function Step3Checkout({ selectedEquipment, shop, specs, answers 
     setGuests((prev) => prev.map((g, idx) => idx === i ? { ...g, [field]: val } : g));
   }
 
-  if (complete) {
-    return (
-      <div className="max-w-md mx-auto text-center py-16">
-        <div className="w-16 h-16 rounded-full bg-peak-green/20 flex items-center justify-center mx-auto mb-4">
-          <Check className="h-8 w-8 text-peak-green" />
-        </div>
-        <h2 className="font-display font-bold text-2xl text-peak-text mb-2">Booking confirmed!</h2>
-        <p className="text-peak-text-secondary text-sm mb-4">
-          Your equipment rental at <strong className="text-peak-text">{shop?.name}</strong> is confirmed.
-          A confirmation has been sent to {guests[0]?.email || "your email"}.
-        </p>
-        <TrustBadges />
-      </div>
-    );
-  }
+
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -192,10 +178,10 @@ export default function Step3Checkout({ selectedEquipment, shop, specs, answers 
           <div className="flex gap-3 mt-6">
             <button onClick={() => setCheckoutStep(1)} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
             <button
-              onClick={() => setComplete(true)}
-              className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors"
+              onClick={() => onBook?.(`${shop?.name} — Equipment rental · ${days} days`, total, { shop: shop?.name, days, equipment: selectedEquipment })}
+              className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
             >
-              {"Confirm & pay \u20ac" + total}
+              Add to trip basket
             </button>
           </div>
         </div>

@@ -43,7 +43,7 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-export default function CarRentalTab({ agentServiceDetails = {} }) {
+export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [departureLocation, setDepartureLocation] = useState("");
   const [sameReturn, setSameReturn] = useState(true);
@@ -334,7 +334,7 @@ export default function CarRentalTab({ agentServiceDetails = {} }) {
                 <button key={a.key} onClick={() => setAddons(prev => prev.includes(a.key) ? prev.filter(k => k !== a.key) : [...prev, a.key])}
                   className={`flex items-center justify-between p-3 rounded-xl border text-left transition-colors ${addons.includes(a.key) ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10 bg-peak-card"}`}>
                   <span className={`text-sm ${addons.includes(a.key) ? "text-peak-text" : "text-peak-text-secondary"}`}>{a.label}</span>
-                  <span className="text-xs text-peak-blue font-medium">{"+\u20ac" + a.price + a.unit}</span>
+                  <span className="text-xs text-peak-blue font-medium">{`+€${a.price}${a.unit}`}</span>
                 </button>
               ))}
             </div>
@@ -358,6 +358,9 @@ export default function CarRentalTab({ agentServiceDetails = {} }) {
               { key: "phone", label: "Phone number", placeholder: "+44 7700 900123" },
             ]}
             trustBadges={TRUST}
+            onComplete={() => {
+              onBook?.(`${selectedCar?.name} — ${pickupDays} day rental · ${selectedCar?.company}`, totalPrice, { vehicle: selectedCar?.name, category: selectedCar?.category, pickupDate: searchForm.pickupDate, returnDate: searchForm.returnDate, location: selectedCar?.location });
+            }}
           />
         </div>
       )}

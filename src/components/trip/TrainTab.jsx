@@ -29,7 +29,7 @@ const TRUST = [
   { icon: "ShieldCheck", label: "Skip the station queue" },
 ];
 
-export default function TrainTab({ agentServiceDetails = {} }) {
+export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -323,6 +323,9 @@ export default function TrainTab({ agentServiceDetails = {} }) {
               { key: "accessibility", label: "Accessibility needs (optional)", placeholder: "e.g. Wheelchair space required" },
             ]}
             trustBadges={TRUST}
+            onComplete={() => {
+              onBook?.(`${selectedTrain?.operator} — ${selectedTrain?.from} → ${selectedTrain?.to} · ${totalPax} pax`, totalPrice, { operator: selectedTrain?.operator, from: selectedTrain?.from, to: selectedTrain?.to, class: selectedTrain?.class, departure: searchForm.depDate, returnDate: searchForm.retDate });
+            }}
           />
         </div>
       )}

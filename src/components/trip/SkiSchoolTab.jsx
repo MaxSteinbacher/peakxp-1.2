@@ -55,7 +55,7 @@ const SCHOOLS = [
   { id: "little-snow-stars", name: "Little Snow Stars", image: "https://picsum.photos/seed/school3/600/400", rating: 4.9, reviews: 187, meta: ["Slope-side — Kids meeting point", "English · French · German", "Specialist kids school · 18 instructors"], pricePerDay: 45, status: "Available", tier: "Best for kids" },
 ];
 
-export default function SkiSchoolTab({ agentServiceDetails = {} }) {
+export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [participants, setParticipants] = useState([{ type: "adult", age: null, name: "Participant 1" }]);
   const [courseType, setCourseType] = useState(null);
@@ -346,6 +346,10 @@ export default function SkiSchoolTab({ agentServiceDetails = {} }) {
             { key: "medical", label: "Medical notes (optional, private)", placeholder: "Any relevant medical info..." },
           ]}
           trustBadges={TRUST}
+          onComplete={(guestData) => {
+            const price = selectedSchool ? selectedSchool.pricePerDay * days : 0;
+            onBook?.(`${selectedSchool?.name} — ${schedule.sport} · ${schedule.days} day${schedule.days !== 1 ? "s" : ""}`, price, { school: selectedSchool?.name, course: courseType, days: schedule.days, sport: schedule.sport, level: schedule.level, startDate: schedule.date });
+          }}
         />
       )}
     </BookingShell>

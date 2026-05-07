@@ -206,13 +206,13 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
   }
 
   // ── DEDICATED TAB ROUTES ──
-  if (serviceKey === "ski-school") return <SkiSchoolTab agentServiceDetails={agentServiceDetails} />;
-  if (serviceKey === "equipment") return <EquipmentRentalTab agentServiceDetails={agentServiceDetails} />;
-  if (serviceKey === "car") return <CarRentalTab agentServiceDetails={agentServiceDetails} />;
-  if (serviceKey === "train") return <TrainTab agentServiceDetails={agentServiceDetails} />;
-  if (serviceKey === "flights") return <FlightsTab agentServiceDetails={agentServiceDetails} />;
-  if (serviceKey === "storage") return <StorageTab agentServiceDetails={agentServiceDetails} />;
-  if (serviceKey === "dining") return <DiningTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "ski-school") return <SkiSchoolTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "ski-school", details)} />;
+  if (serviceKey === "equipment") return <EquipmentRentalTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "equipment", details)} />;
+  if (serviceKey === "car") return <CarRentalTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "car", details)} />;
+  if (serviceKey === "train") return <TrainTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "train", details)} />;
+  if (serviceKey === "flights") return <FlightsTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "flights", details)} />;
+  if (serviceKey === "storage") return <StorageTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "storage", details)} />;
+  if (serviceKey === "dining") return <DiningTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "dining", details)} />;
 
   const priceMap = { equipment: 35, dining: 45, storage: 15, childcare: 65, flights: 180, train: 95, car: 55 };
   const unitPrice = priceMap[serviceKey] || 50;

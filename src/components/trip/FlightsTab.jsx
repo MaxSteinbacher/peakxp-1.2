@@ -34,7 +34,7 @@ const TRUST = [
   { icon: "Lock", label: "SSL secured" },
 ];
 
-export default function FlightsTab({ agentServiceDetails = {} }) {
+export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -322,6 +322,9 @@ export default function FlightsTab({ agentServiceDetails = {} }) {
               { key: "meal", label: "Meal preference (optional)", placeholder: "Standard / Vegetarian / Vegan / Halal / Kosher" },
             ]}
             trustBadges={TRUST}
+            onComplete={() => {
+              onBook?.(`${selectedFlight?.airline} — ${selectedFlight?.from} → ${selectedFlight?.to} · ${totalPax} pax`, totalPrice, { airline: selectedFlight?.airline, from: selectedFlight?.from, to: selectedFlight?.to, cabin: searchForm.cabin, departure: searchForm.depDate, returnDate: searchForm.retDate });
+            }}
           />
         </div>
       )}

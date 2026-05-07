@@ -69,7 +69,7 @@ const TRUST = [
 
 const DURATION_OPTIONS = ["Half day", "Full day", "Multi-day", "Weekly", "Season locker"];
 
-export default function StorageTab({ agentServiceDetails = {} }) {
+export default function StorageTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [location, setLocation] = useState("");
   const [locating, setLocating] = useState(false);
@@ -434,6 +434,10 @@ export default function StorageTab({ agentServiceDetails = {} }) {
             { key: "instructions", label: "Special instructions (optional)", placeholder: "e.g. Arriving at 08:30, need ground-floor access" },
           ]}
           trustBadges={TRUST}
+          onComplete={() => {
+            const price = selectedFacility ? Math.round(selectedFacility.pricePerDay * rentalDays * prefs.lockers) : 0;
+            onBook?.(`${selectedFacility?.name} — ${prefs.duration} · ${prefs.lockers} locker${prefs.lockers > 1 ? "s" : ""}`, price, { facility: selectedFacility?.name, duration: prefs.duration, lockers: prefs.lockers });
+          }}
         />
       )}
     </BookingShell>
