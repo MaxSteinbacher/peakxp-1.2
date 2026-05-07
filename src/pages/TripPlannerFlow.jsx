@@ -7,7 +7,7 @@ import BasketPanel from "../components/trip/BasketPanel";
 import LeaveWarningModal from "../components/trip/LeaveWarningModal";
 import ResortSelectionStep from "../components/trip/steps/ResortSelectionStep";
 import ServiceStep from "../components/trip/steps/ServiceStep";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, Bot, X } from "lucide-react";
 
 export default function TripPlannerFlow() {
   const { session, setCurrentStep, getNextStep } = useTripPlanner();
@@ -15,6 +15,17 @@ export default function TripPlannerFlow() {
   const navigate = useNavigate();
   const [basketOpen, setBasketOpen] = useState(false);
   const [showLeaveWarning, setShowLeaveWarning] = useState(false);
+  const [agentBanner, setAgentBanner] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem("peakxp_agent_option");
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  });
+
+  function dismissAgentBanner() {
+    setAgentBanner(null);
+    sessionStorage.removeItem("peakxp_agent_option");
+  }
 
   useUnsavedTripWarning();
 
@@ -69,6 +80,22 @@ export default function TripPlannerFlow() {
   return (
     <div className="min-h-screen bg-peak-bg">
       <PlannerHeader onOpenBasket={() => setBasketOpen(true)} onLogoClick={handleLogoClick} />
+
+      {agentBanner && (
+        <div className="bg-peak-blue/10 border-b border-peak-blue/20 px-6 py-2 flex items-center gap-3">
+          <Bot className="h-4 w-4 text-peak-blue flex-shrink-0" />
+          <p className="text-peak-blue text-xs font-medium flex-1 truncate">
+            This trip was recommended by your {agentBanner.agentName}
+            {agentBanner.optionLabel && ` · ${agentBanner.optionLabel}`}
+          </p>
+          {agentBanner.optionSummary && (
+            <p className="text-peak-text-secondary text-xs hidden sm:block truncate max-w-xs">{agentBanner.optionSummary}</p>
+          )}
+          <button onClick={dismissAgentBanner} className="text-peak-text-secondary hover:text-peak-text ml-2 flex-shrink-0">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
       <BasketPanel open={basketOpen} onClose={() => setBasketOpen(false)} />
 
       {showLeaveWarning && (

@@ -25,6 +25,7 @@ import HotelDetail from './pages/HotelDetail';
 import TripPlannerFlow from './pages/TripPlannerFlow';
 import TripSummary from './pages/TripSummary';
 import TripConfirmed from './pages/TripConfirmed';
+import MyTrips from './pages/MyTrips';
 import { TripPlannerProvider } from './context/TripPlannerContext';
 
 const AuthenticatedApp = () => {
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
         <Route path="/plan" element={<TripPlannerFlow />} />
         <Route path="/plan/summary" element={<TripSummary />} />
         <Route path="/plan/confirmed" element={<TripConfirmed />} />
+        <Route path="/my-trips" element={<MyTrips />} />
         <Route path="/book" element={<Booking />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trip-planning" element={<TripPlanning />} />

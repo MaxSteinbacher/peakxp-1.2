@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ChevronRight, Send, CheckCircle, Mail } from "lucide-react";
+import { X, ChevronRight, Send } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAppAuth } from "../../context/AppAuthContext";
-import { useTripPlanner } from "../../context/TripPlannerContext";
-import { useNavigate } from "react-router-dom";
+import AgentOptionsPanel from "./AgentOptionsPanel";
 
 function TypingIndicator({ agent }) {
   return (
@@ -56,48 +55,15 @@ function QuickReplies({ chips, onSelect }) {
   );
 }
 
-function PlanCard({ plan, onBook, onSave }) {
-  return (
-    <div className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden mt-2 w-full">
-      <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
-        <CheckCircle className="h-5 w-5 text-peak-green flex-shrink-0" />
-        <span className="font-bold text-peak-text">Your personalised trip plan is ready</span>
-      </div>
-      <div className="px-5 py-4 space-y-3">
-        {plan.resorts?.map((r, i) => (
-          <div key={i} className="flex items-center gap-3 bg-peak-surface rounded-xl px-4 py-3">
-            <span className="text-lg">{r.flag || "🏔"}</span>
-            <div>
-              <p className="text-peak-text text-sm font-semibold">{r.name}</p>
-              <p className="text-peak-text-secondary text-xs">{r.reason}</p>
-            </div>
-          </div>
-        ))}
-        {plan.notes && <p className="text-peak-text-secondary text-xs px-1">{plan.notes}</p>}
-      </div>
-      <div className="px-5 py-4 border-t border-white/5 flex gap-3">
-        <button onClick={onBook} className="bg-peak-red hover:bg-peak-red-hover text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
-          Start booking this trip →
-        </button>
-        <button onClick={onSave} className="border border-white/10 text-peak-text-secondary px-5 py-2.5 rounded-xl text-sm hover:text-peak-text transition-colors">
-          Save to My Trips
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function now() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function AgentChat({ agent, isOpen, onClose }) {
   const { user } = useAppAuth();
-  const { startTrip } = useTripPlanner();
-  const navigate = useNavigate();
 
   const [messages, setMessages] = useState([]);
-  const [history, setHistory] = useState([]); // for API context
+  const [history, setHistory] = useState([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [quickReplies, setQuickReplies] = useState([]);
@@ -112,7 +78,6 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   useEffect(() => {
     if (isOpen && agent) {
       setVisible(true);
-      // Init with intro message
       setMessages([{ role: "assistant", content: agent.introMessage, time: now() }]);
       setHistory([]);
       setPlan(null);
@@ -133,6 +98,14 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     setInput(e.target.value);
     e.target.style.height = "auto";
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+  }
+
+  function handleStartOver() {
+    setMessages([{ role: "assistant", content: agent.introMessage, time: now() }]);
+    setHistory([]);
+    setPlan(null);
+    setQuickReplies(agent.quickReplies || []);
+    setError(null);
   }
 
   async function sendMessage(text) {
@@ -160,7 +133,6 @@ export default function AgentChat({ agent, isOpen, onClose }) {
       let parsedPlan = null;
 
       if (rawContent.includes("[PLAN_READY]")) {
-        // Extract JSON plan block
         const jsonMatch = rawContent.match(/```json\n?([\s\S]*?)\n?```/);
         if (jsonMatch) {
           try { parsedPlan = JSON.parse(jsonMatch[1]); } catch {}
@@ -175,8 +147,6 @@ export default function AgentChat({ agent, isOpen, onClose }) {
 
       if (parsedPlan) {
         setPlan(parsedPlan);
-        // Store in sessionStorage for notification
-        sessionStorage.setItem(`peakxp_agent_result_${agent.key}`, JSON.stringify(parsedPlan));
       }
     } catch {
       setTyping(false);
@@ -184,30 +154,19 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     }
   }
 
-  function handleBook() {
-    if (!plan) return;
-    onClose();
-    navigate("/plan");
-  }
-
   if (!visible || !agent) return null;
 
   const panelClass = isOpen
-    ? "translate-x-0 sm:translate-x-0 translate-y-0"
-    : "translate-x-full sm:translate-x-full translate-y-full sm:translate-y-0";
+    ? "translate-x-0 translate-y-0"
+    : "translate-x-full translate-y-full sm:translate-y-0";
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-peak-bg/70 backdrop-blur-md z-50 transition-opacity duration-200 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
       />
-
-      {/* Panel */}
-      <div className={`fixed right-0 top-0 bottom-0 w-full max-w-2xl bg-peak-bg border-l border-white/5 flex flex-col z-50 shadow-2xl transition-transform duration-[350ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${panelClass}
-        sm:rounded-none
-        max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:w-full max-sm:max-w-none max-sm:h-[92vh] max-sm:rounded-t-3xl`}>
+      <div className={`fixed right-0 top-0 bottom-0 w-full max-w-2xl bg-peak-bg border-l border-white/5 flex flex-col z-50 shadow-2xl transition-transform duration-[350ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${panelClass} sm:rounded-none max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:w-full max-sm:max-w-none max-sm:h-[92vh] max-sm:rounded-t-3xl`}>
 
         {/* Header */}
         <div className="flex-shrink-0 px-6 py-5 border-b border-white/5 flex items-center gap-4">
@@ -219,7 +178,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
             <p className={`text-xs font-medium ${agent.color}`}>{agent.tagline}</p>
           </div>
           <div className="flex items-center gap-2">
-            {[{ icon: ChevronRight, label: "Minimise" }, { icon: X, label: "Close" }].map(({ icon: Icon, label }) => (
+            {[{ Icon: ChevronRight, label: "Minimise" }, { Icon: X, label: "Close" }].map(({ Icon, label }) => (
               <button key={label} onClick={onClose} aria-label={label}
                 className="w-9 h-9 rounded-xl bg-peak-surface border border-white/5 flex items-center justify-center text-peak-text-secondary hover:text-peak-text hover:border-white/15 transition-colors cursor-pointer">
                 <Icon className="h-4 w-4" />
@@ -227,33 +186,24 @@ export default function AgentChat({ agent, isOpen, onClose }) {
             ))}
           </div>
         </div>
-        {/* Colour glow line */}
-        <div className={`h-px flex-shrink-0`} style={{ background: `linear-gradient(to right, transparent, ${agent.glowColor || "rgba(56,148,227,0.4)"}, transparent)` }} />
+        <div className="h-px flex-shrink-0" style={{ background: `linear-gradient(to right, transparent, ${agent.glowColor || "rgba(56,148,227,0.4)"}, transparent)` }} />
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-4 scrollbar-thin">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
           {messages.map((msg, i) => (
             <div key={i}>
               <MessageBubble msg={msg} agent={agent} userInitials={userInitials} />
               {msg.role === "assistant" && i === messages.length - 1 && quickReplies.length > 0 && !plan && (
-                <QuickReplies chips={quickReplies} onSelect={(c) => { sendMessage(c); }} />
+                <QuickReplies chips={quickReplies} onSelect={(c) => sendMessage(c)} />
               )}
               {msg.role === "assistant" && plan && i === messages.length - 1 && (
-                <>
-                  <PlanCard plan={plan} onBook={handleBook} onSave={() => {}} />
-                  {/* Email banner */}
-                  <div className="bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-3 flex items-center gap-3 mt-3">
-                    <Mail className="h-4 w-4 text-peak-blue flex-shrink-0" />
-                    {user ? (
-                      <p className="text-peak-text-secondary text-sm">A copy of your trip plan has been sent to {user.email}</p>
-                    ) : (
-                      <p className="text-peak-text-secondary text-sm">
-                        <a href="/auth" className="text-peak-blue hover:underline">Sign in</a> to receive your plan by email
-                      </p>
-                    )}
-                    {/* TODO: connect to email API (Resend / SendGrid) — trigger POST /api/send-plan with plan data and user email */}
-                  </div>
-                </>
+                <AgentOptionsPanel
+                  options={plan.options || []}
+                  agentKey={agent.key}
+                  agentName={agent.name}
+                  onClose={onClose}
+                  onStartOver={handleStartOver}
+                />
               )}
             </div>
           ))}
@@ -265,7 +215,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
               </div>
               <div className="bg-peak-surface border border-peak-red/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
                 <p className="text-peak-text text-sm">{error}</p>
-                <button onClick={() => { setError(null); }} className="text-peak-blue text-xs mt-1 hover:underline">Retry</button>
+                <button onClick={() => setError(null)} className="text-peak-blue text-xs mt-1 hover:underline">Retry</button>
               </div>
             </div>
           )}
