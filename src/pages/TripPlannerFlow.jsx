@@ -22,6 +22,13 @@ export default function TripPlannerFlow() {
     } catch { return null; }
   });
 
+  const [agentServiceDetails] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem("peakxp_agent_service_details");
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+
   function dismissAgentBanner() {
     setAgentBanner(null);
     sessionStorage.removeItem("peakxp_agent_option");
@@ -120,7 +127,7 @@ export default function TripPlannerFlow() {
       ) : current?.serviceKey === "resort-selection" ? (
         <ResortSelectionStep />
       ) : current?.serviceKey ? (
-        <ServiceStep serviceKey={current.serviceKey} resortId={current.resortId} />
+        <ServiceStep serviceKey={current.serviceKey} resortId={current.resortId} agentServiceDetails={agentServiceDetails} />
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
           <p className="text-peak-text-secondary">Setting up your trip plan...</p>

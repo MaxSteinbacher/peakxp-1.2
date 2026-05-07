@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { Plane, Leaf, ArrowUpDown, SlidersHorizontal, Plus, X } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
@@ -34,7 +34,7 @@ const TRUST = [
   { icon: "Lock", label: "SSL secured" },
 ];
 
-export default function FlightsTab() {
+export default function FlightsTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -46,6 +46,19 @@ export default function FlightsTab() {
   const [selectedFlight, setSelectedFlight] = useState(null);
   const [addons, setAddons] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [preFilled, setPreFilled] = useState(false);
+
+  useEffect(() => {
+    const sd = agentServiceDetails?.flights;
+    if (!sd) return;
+    if (sd.departureAirport) setOrigin(sd.departureAirport);
+    if (sd.cabinClass) {
+      const cabinMap = { economy: "Economy", business: "Business", first: "First" };
+      sf("cabin", cabinMap[sd.cabinClass] || "Economy");
+    }
+    if (typeof sd.returnFlight === "boolean") setTripType(sd.returnFlight ? "Round trip" : "One way");
+    setPreFilled(true);
+  }, []);
 
   const sf = (field, val) => setSearchForm(f => ({ ...f, [field]: val }));
 
@@ -73,6 +86,11 @@ export default function FlightsTab() {
 
   return (
     <BookingShell steps={STEPS} current={step} onBack={goBack}>
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
 
       {/* STEP 0 */}
       {step === 0 && (

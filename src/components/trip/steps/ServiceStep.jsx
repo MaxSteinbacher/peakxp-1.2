@@ -1,5 +1,11 @@
 import { useState } from "react";
 import SkiSchoolTab from "../SkiSchoolTab";
+import EquipmentRentalTab from "../EquipmentRentalTab";
+import CarRentalTab from "../CarRentalTab";
+import TrainTab from "../TrainTab";
+import FlightsTab from "../FlightsTab";
+import StorageTab from "../StorageTab";
+import DiningTab from "../DiningTab";
 import { useTripPlanner } from "../../../context/TripPlannerContext";
 import { getResortById } from "../../../lib/data";
 import { toast } from "sonner";
@@ -30,7 +36,7 @@ const ACTIVITIES = [
   { name: "Helicopter tour", price: 250 },
 ];
 
-export default function ServiceStep({ serviceKey, resortId }) {
+export default function ServiceStep({ serviceKey, resortId, agentServiceDetails = {} }) {
   const { session, addToBasket, markStepComplete, markStepSkipped, setCurrentStep, getNextStep } = useTripPlanner();
   const config = SERVICE_CONFIG[serviceKey] || { icon: Ticket, title: serviceKey, skip: "Skip" };
   const Icon = config.icon;
@@ -199,11 +205,14 @@ export default function ServiceStep({ serviceKey, resortId }) {
     );
   }
 
-  // ── GENERIC STEP (equipment, ski-school, dining, storage, childcare, flights, train, car) ──
-  // ── SKI SCHOOL (full tab) ──
-  if (serviceKey === "ski-school") {
-    return <SkiSchoolTab />;
-  }
+  // ── DEDICATED TAB ROUTES ──
+  if (serviceKey === "ski-school") return <SkiSchoolTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "equipment") return <EquipmentRentalTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "car") return <CarRentalTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "train") return <TrainTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "flights") return <FlightsTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "storage") return <StorageTab agentServiceDetails={agentServiceDetails} />;
+  if (serviceKey === "dining") return <DiningTab agentServiceDetails={agentServiceDetails} />;
 
   const priceMap = { equipment: 35, dining: 45, storage: 15, childcare: 65, flights: 180, train: 95, car: 55 };
   const unitPrice = priceMap[serviceKey] || 50;

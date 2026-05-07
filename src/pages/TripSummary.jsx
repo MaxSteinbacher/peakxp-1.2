@@ -154,6 +154,10 @@ export default function TripSummary() {
     }
   }, [session]);
 
+  useEffect(() => {
+    sessionStorage.removeItem("peakxp_agent_service_details");
+  }, []);
+
   if (!session || session.basket.length === 0) return null;
 
   const total = getBasketTotal();

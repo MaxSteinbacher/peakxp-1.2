@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import Step0 from "./equipment/Step0";
 import Step1Expert from "./equipment/Step1Expert";
@@ -32,13 +32,23 @@ function StepIndicator({ current }) {
   );
 }
 
-export default function EquipmentRentalTab() {
+export default function EquipmentRentalTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [selectedEquipment, setSelectedEquipment] = useState([]);
   const [mode, setMode] = useState(null); // "expert" | "guided"
   const [expertSpecs, setExpertSpecs] = useState({});
   const [guidedAnswers, setGuidedAnswers] = useState({});
   const [selectedShop, setSelectedShop] = useState(null);
+  const [preFilled, setPreFilled] = useState(false);
+
+  useEffect(() => {
+    const sd = agentServiceDetails?.equipment;
+    if (!sd) return;
+    if (Array.isArray(sd.items) && sd.items.length) setSelectedEquipment(sd.items);
+    if (sd.guidedMode) setMode("guided");
+    else if (sd.hasOwnMeasurements) { setMode("expert"); setStep(2); }
+    setPreFilled(true);
+  }, []);
 
   const stepIndex = step === "1a" ? 1 : step === "1b" ? 1 : typeof step === "number" ? step : 0;
 
@@ -55,6 +65,11 @@ export default function EquipmentRentalTab() {
   return (
     <div>
       <StepIndicator current={stepIndex} />
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
 
       {step !== 0 && (
         <button onClick={goBack} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">

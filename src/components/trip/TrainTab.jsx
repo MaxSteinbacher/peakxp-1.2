@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Train, ArrowUpDown, SlidersHorizontal, Leaf } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
@@ -29,7 +29,7 @@ const TRUST = [
   { icon: "ShieldCheck", label: "Skip the station queue" },
 ];
 
-export default function TrainTab() {
+export default function TrainTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -43,6 +43,15 @@ export default function TrainTab() {
   const [priceRange, setPriceRange] = useState([0, 300]);
   const [selectedTrain, setSelectedTrain] = useState(null);
   const [addons, setAddons] = useState([]);
+  const [preFilled, setPreFilled] = useState(false);
+
+  useEffect(() => {
+    const sd = agentServiceDetails?.train;
+    if (!sd) return;
+    if (sd.departureStation) setOrigin(sd.departureStation);
+    if (typeof sd.returnJourney === "boolean") setTripType(sd.returnJourney ? "Return" : "Single");
+    setPreFilled(true);
+  }, []);
 
   const sf = (field, val) => setSearchForm(f => ({ ...f, [field]: val }));
   const totalPax = searchForm.adults + searchForm.youth + searchForm.children;
@@ -71,6 +80,11 @@ export default function TrainTab() {
 
   return (
     <BookingShell steps={STEPS} current={step} onBack={goBack}>
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
 
       {/* STEP 0 */}
       {step === 0 && (

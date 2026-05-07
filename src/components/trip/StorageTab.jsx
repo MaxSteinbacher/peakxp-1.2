@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { MapPin, ArrowUpDown } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
@@ -36,7 +36,7 @@ const FACILITIES = [
     rating: 4.4, reviews: 178, type: "Village centre", typeBadge: "Village centre",
     distLift: "350m from cable car", distAccom: "On main street",
     sizes: ["M: 40x35x150cm", "L: 60x40x180cm", "XL: 80x60x200cm"],
-    payment: ["Pay now", "Reserve free, pay later"],  hours: "08:00–19:00 daily",
+    payment: ["Pay now", "Reserve free, pay later"], hours: "08:00–19:00 daily",
     pricePerDay: 9, status: "Available",
     amenities: ["CCTV", "Heated", "Ski boot dryer"],
   },
@@ -45,7 +45,7 @@ const FACILITIES = [
     rating: 4.9, reviews: 521, type: "Slope-side", typeBadge: "Slope-side",
     distLift: "Slope-side — 10m from turnstiles", distAccom: "600m from village",
     sizes: ["S: 30x30x120cm", "M: 40x35x150cm", "L: 60x40x180cm"],
-    payment: ["Pay now"],  hours: "07:30–18:30 daily",
+    payment: ["Pay now"], hours: "07:30–18:30 daily",
     pricePerDay: 15, status: "Limited",
     amenities: ["CCTV", "Heated", "Drying rack", "Charging points", "Ski boot dryer", "Attendant on-site"],
   },
@@ -54,7 +54,7 @@ const FACILITIES = [
     rating: 4.6, reviews: 89, type: "Hotel", typeBadge: "Hotel",
     distLift: "420m from main lift", distAccom: "In-hotel",
     sizes: ["L: 60x40x180cm", "XL: 80x60x200cm"],
-    payment: ["Pay at venue", "Reserve free, pay later"],  hours: "24h access",
+    payment: ["Pay at venue", "Reserve free, pay later"], hours: "24h access",
     pricePerDay: 10, status: "Available",
     amenities: ["CCTV", "Heated"],
   },
@@ -69,7 +69,7 @@ const TRUST = [
 
 const DURATION_OPTIONS = ["Half day", "Full day", "Multi-day", "Weekly", "Season locker"];
 
-export default function StorageTab() {
+export default function StorageTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [location, setLocation] = useState("");
   const [locating, setLocating] = useState(false);
@@ -83,8 +83,16 @@ export default function StorageTab() {
   const [filterAmenities, setFilterAmenities] = useState([]);
   const [filterFreeCancel, setFilterFreeCancel] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState(null);
+  const [preFilled, setPreFilled] = useState(false);
 
-  const multiDay = ["Multi-day", "Weekly", "Season locker"].includes(prefs.duration);
+  useEffect(() => {
+    const sd = agentServiceDetails?.storage;
+    if (!sd) return;
+    const durMap = { "daily-lockers": "Full day", "trip-storage": "Multi-day" };
+    if (sd.type && durMap[sd.type]) setPrefs(p => ({ ...p, duration: durMap[sd.type] }));
+    setPreFilled(true);
+  }, []);
+
   const needsEndDate = ["Multi-day", "Weekly"].includes(prefs.duration);
   const rentalDays = useMemo(() => {
     if (prefs.duration === "Half day") return 0.5;
@@ -130,6 +138,7 @@ export default function StorageTab() {
 
   function goBack() { if (step > 0) setStep(s => s - 1); }
 
+  // Season locker enquiry path
   if (prefs.duration === "Season locker" && step === 2) {
     if (seasonSubmitted) return (
       <div className="max-w-md mx-auto text-center py-16">
@@ -184,6 +193,11 @@ export default function StorageTab() {
 
   return (
     <BookingShell steps={STEPS} current={step} onBack={goBack}>
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
 
       {/* STEP 0 — Location */}
       {step === 0 && (
@@ -266,16 +280,7 @@ export default function StorageTab() {
                 {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
-            {(prefs.duration === "Half day" || prefs.duration === "Full day") && (
-              <div>
-                <label className="block text-xs text-peak-text-secondary mb-1">End time</label>
-                <select value={prefs.endTime} onChange={e => setPrefs(p => ({ ...p, endTime: e.target.value }))}
-                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-            )}
-            {needsEndDate && (
+            {(prefs.duration === "Half day" || prefs.duration === "Full day" || needsEndDate) && (
               <div>
                 <label className="block text-xs text-peak-text-secondary mb-1">End time</label>
                 <select value={prefs.endTime} onChange={e => setPrefs(p => ({ ...p, endTime: e.target.value }))}

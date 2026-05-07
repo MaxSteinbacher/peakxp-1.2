@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -301,7 +301,7 @@ function RestaurantCard({ restaurant, onReserve }) {
   );
 }
 
-export default function DiningTab() {
+export default function DiningTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [location, setLocation] = useState("");
   const [locating, setLocating] = useState(false);
@@ -313,6 +313,24 @@ export default function DiningTab() {
   const [minRating, setMinRating] = useState(0);
   const [priceFilter, setPriceFilter] = useState([]);
   const [openNowOnly, setOpenNowOnly] = useState(false);
+  const [preFilled, setPreFilled] = useState(false);
+
+  useEffect(() => {
+    const sd = agentServiceDetails?.dining;
+    if (!sd) return;
+    if (Array.isArray(sd.types)) {
+      const areaArr = [];
+      const momentArr = [];
+      sd.types.forEach(t => {
+        if (t === "mountain") areaArr.push("mountain");
+        if (t === "valley") areaArr.push("valley");
+        if (t === "apres-ski") { if (!areaArr.includes("valley")) areaArr.push("valley"); momentArr.push("Apres-ski"); }
+      });
+      if (areaArr.length) setAreas([...new Set(areaArr)]);
+      if (momentArr.length) setMealMoments(momentArr);
+    }
+    setPreFilled(true);
+  }, []);
 
   const toggleArea = (a) => setAreas(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
   const toggleMoment = (m) => setMealMoments(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
@@ -367,6 +385,11 @@ export default function DiningTab() {
         ))}
       </div>
       <p className="text-peak-text-secondary text-xs mb-6">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
       {step > 0 && (
         <button onClick={goBack} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
           ← Back

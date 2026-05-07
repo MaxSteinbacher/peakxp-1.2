@@ -88,6 +88,8 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
       setTimeout(() => addResort({ ...resortObj, resortId: resortObj.id }), 80);
     }
 
+    sessionStorage.setItem("peakxp_agent_service_details", JSON.stringify(option.serviceDetails || {}));
+
     sessionStorage.setItem("peakxp_agent_option", JSON.stringify({
       agentKey,
       agentName,

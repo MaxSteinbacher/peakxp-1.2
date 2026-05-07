@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { User, Star, Users, Snowflake, Zap, HelpCircle, Plus, X } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
@@ -55,12 +55,29 @@ const SCHOOLS = [
   { id: "little-snow-stars", name: "Little Snow Stars", image: "https://picsum.photos/seed/school3/600/400", rating: 4.9, reviews: 187, meta: ["Slope-side — Kids meeting point", "English · French · German", "Specialist kids school · 18 instructors"], pricePerDay: 45, status: "Available", tier: "Best for kids" },
 ];
 
-export default function SkiSchoolTab() {
+export default function SkiSchoolTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [participants, setParticipants] = useState([{ type: "adult", age: null, name: "Participant 1" }]);
   const [courseType, setCourseType] = useState(null);
   const [schedule, setSchedule] = useState({ sport: "Skiing", duration: "half-day", time: "morning", days: 3, date: null, endDate: null, level: "Beginner", language: "English", requests: "" });
   const [selectedSchool, setSelectedSchool] = useState(null);
+  const [preFilled, setPreFilled] = useState(false);
+
+  useEffect(() => {
+    const sd = agentServiceDetails?.["ski-school"];
+    if (!sd) return;
+    if (sd.courseType) setCourseType(sd.courseType);
+    if (typeof sd.days === "number") setSchedule(s => ({ ...s, days: sd.days }));
+    if (sd.language) setSchedule(s => ({ ...s, language: sd.language }));
+    if (Array.isArray(sd.participants) && sd.participants.length) {
+      setParticipants(sd.participants.map((p, i) => ({
+        type: (p.age && p.age < 15) ? "kid" : "adult",
+        age: p.age || null,
+        name: `Participant ${i + 1}`,
+      })));
+    }
+    setPreFilled(true);
+  }, []);
 
   const hasKids = participants.some(p => p.type === "kid" && p.age <= 5);
   const days = schedule.days || 1;
@@ -94,6 +111,11 @@ export default function SkiSchoolTab() {
 
   return (
     <BookingShell steps={STEPS} current={step} onBack={goBack}>
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
 
       {/* STEP 0 */}
       {step === 0 && (

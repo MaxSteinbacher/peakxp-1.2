@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { ArrowUpDown, X } from "lucide-react";
 import BookingShell from "./shared/BookingShell";
@@ -43,7 +43,7 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-export default function CarRentalTab() {
+export default function CarRentalTab({ agentServiceDetails = {} }) {
   const [step, setStep] = useState(0);
   const [departureLocation, setDepartureLocation] = useState("");
   const [sameReturn, setSameReturn] = useState(true);
@@ -58,6 +58,20 @@ export default function CarRentalTab() {
   const [selectedCar, setSelectedCar] = useState(null);
   const [addons, setAddons] = useState([]);
   const [winterDismissed, setWinterDismissed] = useState(false);
+  const [preFilled, setPreFilled] = useState(false);
+
+  useEffect(() => {
+    const sd = agentServiceDetails?.car;
+    if (!sd) return;
+    if (sd.departureLocation) setDepartureLocation(sd.departureLocation);
+    const prefs = [];
+    if (sd.needsSnowTyres) prefs.push("Snow-ready");
+    if (sd.needs4WD) prefs.push("4WD / AWD");
+    if (prefs.length) setVehiclePrefs(prefs);
+    if (sd.preferredCategory === "luxury") setSortBy("Luxury first");
+    else if (sd.preferredCategory === "economy") setSortBy("Cheapest");
+    setPreFilled(true);
+  }, []);
 
   const sf = (field, val) => setSearchForm(f => ({ ...f, [field]: val }));
   const togglePref = (p) => setVehiclePrefs(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -96,6 +110,11 @@ export default function CarRentalTab() {
 
   return (
     <BookingShell steps={STEPS} current={step} onBack={goBack}>
+      {preFilled && (
+        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
+          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+        </div>
+      )}
 
       {/* STEP 0 */}
       {step === 0 && (
