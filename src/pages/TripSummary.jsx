@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTripPlanner, useUnsavedTripWarning } from "../context/TripPlannerContext";
 import { useAppAuth } from "../context/AppAuthContext";
-import { ArrowLeft, ChevronDown, ChevronUp, Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car, X, Pencil, Plus, CreditCard, Shield, Check, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car, X, Pencil, Plus, CreditCard, Shield, Check, Clock, AlertCircle, TriangleAlert } from "lucide-react";
+import DateRangePicker from "../components/shared/DateRangePicker";
 
 const SERVICE_ICONS = {
   "ski-pass": Ticket, accommodation: Hotel, equipment: Wrench, "ski-school": GraduationCap,
@@ -12,17 +13,56 @@ const SERVICE_ICONS = {
 
 const GLOBAL_SERVICES = ["flights", "train", "car"];
 
-function ItemRow({ item, expandedItem, setExpandedItem, removeFromBasket, navigate }) {
+function calcNights(start, end) {
+  if (!start || !end) return null;
+  return Math.round((new Date(end) - new Date(start)) / 86400000);
+}
+
+function ItemRow({ item, expandedItem, setExpandedItem, removeFromBasket, navigate, updateBasketItem, onReviewed, reviewed }) {
   const Icon = SERVICE_ICONS[item.serviceKey] || Ticket;
   const isExpanded = expandedItem === item.itemId;
+  const isPending = item.status === "pending-confirmation";
+  const [localStart, setLocalStart] = useState(item.details?.startDate || null);
+  const [localEnd, setLocalEnd] = useState(item.details?.endDate || null);
+  const [updated, setUpdated] = useState(false);
+
+  function handleToggle() {
+    setExpandedItem(isExpanded ? null : item.itemId);
+    if (!reviewed) onReviewed(item.itemId);
+  }
+
+  function handleDateChange(start, end) {
+    setLocalStart(start);
+    setLocalEnd(end);
+    if (start && end) {
+      const nights = calcNights(start, end);
+      const pricePer = item.details?.pricePerNight || (item.priceEUR / (item.details?.nights || 1));
+      const newPrice = pricePer * nights;
+      updateBasketItem(item.itemId, {
+        priceEUR: Math.round(newPrice),
+        details: { ...item.details, startDate: start, endDate: end, nights },
+        label: item.label.replace(/\d+ nights/, `${nights} nights`),
+      });
+      setUpdated(true);
+      setTimeout(() => setUpdated(false), 1500);
+    }
+  }
+
   const price = ((item.priceEUR || 0) * (item.quantity || 1));
+  const hasDateDetails = ["accommodation", "ski-pass", "equipment", "ski-school", "flights", "train", "car", "storage"].includes(item.serviceKey);
+
   return (
     <div className="bg-peak-surface rounded-xl overflow-hidden mb-2">
-      <button onClick={() => setExpandedItem(isExpanded ? null : item.itemId)}
+      <button onClick={handleToggle}
         className="w-full flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors text-left">
         <div className="flex items-center gap-3 min-w-0">
           <Icon className="h-4 w-4 text-peak-blue flex-shrink-0" />
           <span className="text-peak-text text-sm font-medium truncate">{item.label}</span>
+          {isPending && !reviewed && (
+            <span className="flex items-center gap-1 text-amber-400 text-xs flex-shrink-0">
+              <TriangleAlert className="h-3 w-3" /> Review needed
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-peak-text font-bold text-sm">{"\u20AC"}{price.toLocaleString()}</span>
@@ -31,14 +71,38 @@ function ItemRow({ item, expandedItem, setExpandedItem, removeFromBasket, naviga
       </button>
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-white/5 pt-3">
+          {isPending && (
+            <div className="flex items-center gap-2 bg-amber-400/10 border border-amber-400/20 rounded-lg px-3 py-2 mb-3">
+              <TriangleAlert className="h-4 w-4 text-amber-400 flex-shrink-0" />
+              <p className="text-amber-400 text-xs">Review and confirm the details for this item before checkout</p>
+            </div>
+          )}
           <div className="text-peak-text-secondary text-xs space-y-1 mb-3">
-            {item.details && Object.entries(item.details).map(([k, v]) => (
+            {item.details && Object.entries(item.details).filter(([k]) => k !== "startDate" && k !== "endDate").map(([k, v]) => (
               <p key={k}><span className="capitalize">{k.replace(/([A-Z])/g, " $1")}:</span> {String(v)}</p>
             ))}
           </div>
+          {hasDateDetails && (
+            <div className="mb-3">
+              <p className="text-peak-text-secondary text-xs font-semibold mb-2 uppercase tracking-wider">Dates</p>
+              <DateRangePicker
+                startDate={localStart}
+                endDate={localEnd}
+                onStartChange={(d) => handleDateChange(d, localEnd)}
+                onEndChange={(d) => handleDateChange(localStart, d)}
+                context="edit"
+                placeholder={{ start: "Check-in / Start", end: "Check-out / End" }}
+              />
+              {updated && (
+                <span className="inline-flex items-center gap-1 text-peak-green text-xs mt-1">
+                  <Check className="h-3 w-3" /> Updated
+                </span>
+              )}
+            </div>
+          )}
           <div className="flex gap-2">
             <button onClick={() => navigate(`/plan?edit=${item.itemId}`)} className="flex items-center gap-1 px-3 py-1.5 text-xs text-peak-blue border border-peak-blue/30 rounded-lg hover:bg-peak-blue/10 transition-colors">
-              <Pencil className="h-3 w-3" /> Edit
+              <Pencil className="h-3 w-3" /> Edit in planner
             </button>
             <button onClick={() => { removeFromBasket(item.itemId); setExpandedItem(null); }} className="flex items-center gap-1 px-3 py-1.5 text-xs text-peak-red border border-peak-red/30 rounded-lg hover:bg-peak-red/10 transition-colors">
               <X className="h-3 w-3" /> Remove
@@ -65,10 +129,18 @@ function InputField({ label, field, form, errors, updateForm, type = "text", pla
 }
 
 export default function TripSummary() {
-  const { session, removeFromBasket, getBasketTotal, clearTrip } = useTripPlanner();
+  const { session, removeFromBasket, updateBasketItem, getBasketTotal, clearTrip } = useTripPlanner();
   const { user } = useAppAuth();
   const navigate = useNavigate();
   const [expandedItem, setExpandedItem] = useState(null);
+  const [reviewedItems, setReviewedItems] = useState(new Set());
+
+  const pendingItems = session?.basket?.filter(item => item.status === "pending-confirmation") || [];
+  const allPendingReviewed = pendingItems.every(item => reviewedItems.has(item.itemId));
+
+  const markReviewed = useCallback((itemId) => {
+    setReviewedItems(prev => new Set([...prev, itemId]));
+  }, []);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState(0);
   const [form, setForm] = useState({ name: "", email: "", phone: "", nationality: "", emergencyName: "", emergencyPhone: "", requests: "", cardNumber: "", expiry: "", cvv: "", cardName: "" });
@@ -296,7 +368,7 @@ export default function TripSummary() {
                   <h3 className="font-display font-bold text-peak-text text-xl mb-3 flex items-center gap-2">
                     {resort.resortFlag} {resort.resortName}
                   </h3>
-                  {items.map(item => <ItemRow key={item.itemId} item={item} expandedItem={expandedItem} setExpandedItem={setExpandedItem} removeFromBasket={removeFromBasket} navigate={navigate} />)}
+                  {items.map(item => <ItemRow key={item.itemId} item={item} expandedItem={expandedItem} setExpandedItem={setExpandedItem} removeFromBasket={removeFromBasket} navigate={navigate} updateBasketItem={updateBasketItem} onReviewed={markReviewed} reviewed={reviewedItems.has(item.itemId)} />)}
                 </div>
               );
             })}
@@ -306,7 +378,7 @@ export default function TripSummary() {
                 <h3 className="font-display font-bold text-peak-text text-xl mb-3 flex items-center gap-2">
                   <Plane className="h-5 w-5 text-peak-blue" /> Getting there
                 </h3>
-                {globalItems.map(item => <ItemRow key={item.itemId} item={item} expandedItem={expandedItem} setExpandedItem={setExpandedItem} removeFromBasket={removeFromBasket} navigate={navigate} />)}
+                {globalItems.map(item => <ItemRow key={item.itemId} item={item} expandedItem={expandedItem} setExpandedItem={setExpandedItem} removeFromBasket={removeFromBasket} navigate={navigate} updateBasketItem={updateBasketItem} onReviewed={markReviewed} reviewed={reviewedItems.has(item.itemId)} />)}
               </div>
             )}
           </div>
@@ -329,8 +401,16 @@ export default function TripSummary() {
               <span>Total</span><span>{"\u20AC"}{grandTotal.toLocaleString()}</span>
             </div>
             <p className="text-peak-text-secondary text-xs mt-1">All prices in EUR. Taxes included.</p>
-            <button onClick={() => setShowCheckout(true)} className="w-full bg-peak-red hover:bg-peak-red-hover text-white font-bold rounded-xl py-4 text-lg mt-4 transition-colors">
-              Proceed to checkout
+            <button
+              onClick={() => { if (allPendingReviewed) setShowCheckout(true); }}
+              disabled={!allPendingReviewed}
+              className={`w-full font-bold rounded-xl py-4 text-lg mt-4 transition-colors ${
+                allPendingReviewed
+                  ? "bg-peak-red hover:bg-peak-red-hover text-white"
+                  : "bg-peak-surface text-peak-text-secondary border border-white/10 cursor-not-allowed"
+              }`}
+            >
+              {allPendingReviewed ? "Proceed to checkout" : "Confirm all items to continue"}
             </button>
           </div>
         </div>

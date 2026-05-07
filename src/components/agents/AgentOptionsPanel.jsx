@@ -1,4 +1,12 @@
 import { useState } from "react";
+
+// Normalise service key variants to hyphen-case
+function normaliseServiceKey(key) {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/_/g, "-")
+    .toLowerCase();
+}
 import { useNavigate } from "react-router-dom";
 import {
   CheckCircle, ArrowRight, Mountain, Building2, Wrench,
@@ -53,18 +61,28 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
       flag: resortObj?.flag || "",
     };
 
-    const dates = option.dates
-      ? { ...option.dates, nights: option.dates.start && option.dates.end
-          ? Math.round((new Date(option.dates.end) - new Date(option.dates.start)) / 86400000)
-          : null }
-      : { start: null, end: null, nights: null };
+    // Build dates, calculating end from start+nights if needed
+    let datesObj = { start: null, end: null, nights: option.nights || null, skiDays: option.skiDays || null };
+    if (option.dates?.start) {
+      datesObj.start = option.dates.start;
+      if (option.dates.end) {
+        datesObj.end = option.dates.end;
+        datesObj.nights = Math.round((new Date(option.dates.end) - new Date(option.dates.start)) / 86400000);
+      } else if (option.nights) {
+        const endDate = new Date(option.dates.start);
+        endDate.setDate(endDate.getDate() + option.nights);
+        datesObj.end = endDate.toISOString();
+        datesObj.nights = option.nights;
+      }
+    } else if (option.nights) {
+      datesObj.nights = option.nights;
+    }
 
     const guests = option.guests || { adults: 2, children: 0, seniors: 0 };
-    const selectedServices = option.selectedServices?.length > 0
-      ? option.selectedServices
-      : ["ski-pass"];
+    const selectedServices = (option.selectedServices?.length > 0 ? option.selectedServices : ["ski-pass"])
+      .map(normaliseServiceKey);
 
-    startTrip(destination, dates, guests, selectedServices);
+    startTrip(destination, datesObj, guests, selectedServices);
 
     if (resortObj) {
       setTimeout(() => addResort({ ...resortObj, resortId: resortObj.id }), 80);

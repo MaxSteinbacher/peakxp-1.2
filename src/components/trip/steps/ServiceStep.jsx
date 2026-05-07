@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SkiSchoolTab from "../SkiSchoolTab";
 import { useTripPlanner } from "../../../context/TripPlannerContext";
 import { getResortById } from "../../../lib/data";
 import { toast } from "sonner";
@@ -129,7 +130,7 @@ export default function ServiceStep({ serviceKey, resortId }) {
 
   // ── ACCOMMODATION ──
   if (serviceKey === "accommodation") {
-    const nights = session.dates.nights || 7;
+    const nights = session.dates.nights || session.dates.skiDays || 3;
     const seed = resort?.name || "resort";
     const hotels = [
       { name: `Hotel Alpin ${resort?.name || "Resort"}`, stars: 4, price: 180 + ((seed.charCodeAt(0) || 0) % 80) },
@@ -199,10 +200,15 @@ export default function ServiceStep({ serviceKey, resortId }) {
   }
 
   // ── GENERIC STEP (equipment, ski-school, dining, storage, childcare, flights, train, car) ──
-  const priceMap = { equipment: 35, "ski-school": 55, dining: 45, storage: 15, childcare: 65, flights: 180, train: 95, car: 55 };
+  // ── SKI SCHOOL (full tab) ──
+  if (serviceKey === "ski-school") {
+    return <SkiSchoolTab />;
+  }
+
+  const priceMap = { equipment: 35, dining: 45, storage: 15, childcare: 65, flights: 180, train: 95, car: 55 };
   const unitPrice = priceMap[serviceKey] || 50;
   const isPerDay = ["equipment", "storage", "childcare", "car"].includes(serviceKey);
-  const days = session.dates.nights || 7;
+  const days = session.dates.nights || session.dates.skiDays || 3;
   const totalPrice = isPerDay ? unitPrice * days : unitPrice * (session.guests.adults + session.guests.children + session.guests.seniors);
 
   return (
