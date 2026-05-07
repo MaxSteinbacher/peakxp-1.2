@@ -23,7 +23,7 @@ export function TripPlannerProvider({ children }) {
     return String(Date.now());
   }
 
-  function startTrip(destination, dates, guests, selectedServices) {
+  function startTrip(destination, dates, guests, selectedServices, initialResort = null) {
     const newSession = {
       id: generateSessionId(),
       createdAt: new Date().toISOString(),
@@ -32,7 +32,9 @@ export function TripPlannerProvider({ children }) {
       dates,
       guests,
       selectedServices,
-      resorts: [],
+      resorts: initialResort
+        ? [{ ...initialResort, resortId: initialResort.resortId || initialResort.id, order: 0 }]
+        : [],
       currentResortIndex: 0,
       currentStep: null,
       completedSteps: [],

@@ -49,14 +49,12 @@ export default function TripPlannerFlow() {
     }
   }, []);
 
-  // Auto-advance to next step on mount if no current step
+  // On mount: always reset to the first step (important for fresh agent sessions)
   useEffect(() => {
     if (!session || session.status !== "in-progress") return;
-    if (!session.currentStep) {
-      const next = getNextStep();
-      if (next) setCurrentStep(next.serviceKey, next.resortId);
-    }
-  }, [session?.status]);
+    const next = getNextStep();
+    if (next) setCurrentStep(next.serviceKey, next.resortId);
+  }, []);
 
   function handleLogoClick() {
     if (session && session.basket.length > 0) {

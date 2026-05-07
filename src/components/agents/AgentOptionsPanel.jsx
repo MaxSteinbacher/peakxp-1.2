@@ -45,7 +45,7 @@ function getLabelStyle(label) {
 
 export default function AgentOptionsPanel({ options, agentKey, agentName, onClose, onStartOver }) {
   const [compareOpen, setCompareOpen] = useState(false);
-  const { startTrip, addResort } = useTripPlanner();
+  const { startTrip } = useTripPlanner();
   const navigate = useNavigate();
 
   function handleBook(option) {
@@ -82,11 +82,7 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
     const selectedServices = (option.selectedServices?.length > 0 ? option.selectedServices : ["ski-pass"])
       .map(normaliseServiceKey);
 
-    startTrip(destination, datesObj, guests, selectedServices);
-
-    if (resortObj) {
-      setTimeout(() => addResort({ ...resortObj, resortId: resortObj.id }), 80);
-    }
+    startTrip(destination, datesObj, guests, selectedServices, resortObj ? { ...resortObj, resortId: resortObj.id } : null);
 
     sessionStorage.setItem("peakxp_agent_service_details", JSON.stringify(option.serviceDetails || {}));
 
