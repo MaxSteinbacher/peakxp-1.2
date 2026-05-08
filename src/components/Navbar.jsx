@@ -6,7 +6,7 @@ import { useAppAuth } from "../context/AppAuthContext";
 
 const ALL_NAV_LINKS = [
   { label: "Discovery", path: "/" },
-  { label: "PeakTracking", path: "/tracking", authOnly: true, icon: Activity },
+  { label: "PeakTracking", path: "/tracking", icon: Activity, authOnly: true },
   { label: "Trip Planning", path: "/trip-planning" },
   { label: "Expert Agents", path: "/agents" },
   { label: "Community", path: "/community" },
@@ -69,19 +69,26 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  location.pathname === link.path
-                    ? "text-peak-text bg-white/5"
-                    : "text-peak-text-secondary hover:text-peak-text hover:bg-white/5"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = link.path === "/tracking"
+                ? location.pathname.startsWith("/tracking")
+                : location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+                    isActive
+                      ? "text-peak-text bg-white/5"
+                      : "text-peak-text-secondary hover:text-peak-text hover:bg-white/5"
+                  }`}
+                >
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right actions */}
@@ -155,7 +162,7 @@ export default function Navbar() {
                       <p className="text-xs text-peak-text-secondary truncate">{user?.email}</p>
                     </div>
                     <div className="h-px bg-white/5 mb-1" />
-                    {[["My Profile", "/profile"], ["My Trips", "/my-trips"], ["Peak Log", "/tracking/log"], ["Settings", "/profile/settings"]].map(([label, path]) => (
+                    {[["My Profile", "/profile"], ["My Trips", "/book"], ["Peak Log", "/tracking/log"], ["Settings", "/profile/settings"]].map(([label, path]) => (
                       <button key={path} onClick={() => { navigate(path); setAvatarOpen(false); }}
                         className="w-full text-left px-3 py-2.5 text-sm text-peak-text-secondary hover:text-peak-text hover:bg-white/5 rounded-xl transition-colors">
                         {label}
