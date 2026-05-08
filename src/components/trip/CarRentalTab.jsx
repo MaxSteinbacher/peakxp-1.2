@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
-import { ArrowUpDown, AlertTriangle, MapPin, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpDown, AlertTriangle, MapPin, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
+import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
 import { Slider } from "@/components/ui/slider";
@@ -361,8 +362,8 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                           </div>
                           <div>
                             <button onClick={() => { setSelectedCar(car); setStep(2); }}
-                              className="w-full bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors">
-                              Select
+                              className="w-full bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
+                              <ShoppingBag className="h-3 w-3" /> Select
                             </button>
                             <button onClick={() => setExpandedCar(expandedCar === car.id ? null : car.id)}
                               className="mt-1.5 text-xs text-peak-text-secondary hover:text-peak-text flex items-center justify-end gap-1 w-full">

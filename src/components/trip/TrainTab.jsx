@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { Train, ArrowUpDown, ArrowLeftRight, Leaf, ChevronDown, ChevronUp, MapPin, Wifi, Zap, UtensilsCrossed, Bike } from "lucide-react";
+import { Train, ArrowUpDown, ArrowLeftRight, Leaf, ChevronDown, ChevronUp, MapPin, Wifi, Zap, UtensilsCrossed, Bike, ShoppingBag } from "lucide-react";
+import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
 import { Slider } from "@/components/ui/slider";
@@ -369,8 +370,8 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                         <p className="text-peak-text-secondary text-xs">€{train.price * totalPax} total</p>
                         <p className="text-peak-green text-xs mt-0.5">Saves ~{train.co2saved}kg CO₂</p>
                         <button onClick={() => { setSelectedTrain(train); setStep(2); }}
-                          className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors">
-                          Select
+                          className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
+                          <ShoppingBag className="h-3 w-3" /> Select
                         </button>
                       </div>
                     </div>

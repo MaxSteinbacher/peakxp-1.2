@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
-import { Plane, Leaf, ArrowUpDown, SlidersHorizontal, ArrowLeftRight, ChevronDown, ChevronUp, MapPin, AlertTriangle } from "lucide-react";
+import { Plane, Leaf, ArrowUpDown, SlidersHorizontal, ArrowLeftRight, ChevronDown, ChevronUp, MapPin, AlertTriangle, ShoppingBag } from "lucide-react";
+import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
 import { Slider } from "@/components/ui/slider";
@@ -394,8 +395,8 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                         <p className="text-peak-text-secondary text-xs">/ person</p>
                         <p className="text-peak-text-secondary text-xs">€{flight.price * totalPax} total</p>
                         <button onClick={() => { setSelectedFlight(flight); setStep(2); }}
-                          className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors">
-                          Select
+                          className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
+                          <ShoppingBag className="h-3 w-3" /> Select
                         </button>
                       </div>
                     </div>
