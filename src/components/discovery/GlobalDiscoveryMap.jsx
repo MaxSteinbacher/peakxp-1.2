@@ -64,7 +64,7 @@ const HIERARCHY = {
       ]
     },
     {
-      id: "south-america", name: "South America", labelPosition: { lat: -35, lon: -65 },
+      id: "south-america", name: "South America", labelPosition: { lat: -20, lon: -58 },
       regions: [
         { id: "andes", name: "Andes (Argentina & Chile)", labelPosition: { lat: -33, lon: -70 }, subRegions: [{ id: "andes-main", name: "Andes Argentina Chile", lat: -33, lon: -70 }] },
       ]
@@ -81,7 +81,7 @@ const HIERARCHY = {
       ]
     },
     {
-      id: "oceania", name: "Oceania", labelPosition: { lat: -40, lon: 170 },
+      id: "oceania", name: "Oceania", labelPosition: { lat: -25, lon: 135 },
       regions: [
         { id: "nz-south-island", name: "New Zealand South Island", labelPosition: { lat: -44.5, lon: 169.5 }, subRegions: [{ id: "nz-south-island-main", name: "New Zealand South Island", lat: -44.5, lon: 169.5 }] },
         { id: "australia-victoria", name: "Australia Victoria", labelPosition: { lat: -36.5, lon: 146.5 }, subRegions: [{ id: "australia-victoria-main", name: "Australia Victoria", lat: -36.5, lon: 146.5 }] },
@@ -125,6 +125,12 @@ export default function GlobalDiscoveryMap() {
   const zoomRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const setHoveredItemRef = useRef(null);
+  const setTooltipPositionRef = useRef(null);
+  const setSelectedContinentRef = useRef(null);
+  const setZoomLevelRef = useRef(null);
+  const svgRefForD3 = useRef(null);
+  const d3RefForCb = useRef(null);
 
   const [zoomLevel, setZoomLevel] = useState("world");
   const [selectedContinent, setSelectedContinent] = useState(null);
@@ -138,6 +144,14 @@ export default function GlobalDiscoveryMap() {
   const [libsLoaded, setLibsLoaded] = useState(false);
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  // Keep refs in sync with latest setters
+  useEffect(() => { setHoveredItemRef.current = setHoveredItem; }, [setHoveredItem]);
+  useEffect(() => { setTooltipPositionRef.current = setTooltipPosition; }, [setTooltipPosition]);
+  useEffect(() => { setSelectedContinentRef.current = setSelectedContinent; }, [setSelectedContinent]);
+  useEffect(() => { setZoomLevelRef.current = setZoomLevel; }, [setZoomLevel]);
+  useEffect(() => { svgRefForD3.current = svgRef.current; }, [libsLoaded]);
+  useEffect(() => { d3RefForCb.current = d3Ref.current; }, [libsLoaded]);
 
   // Load D3 + TopoJSON
   useEffect(() => {
@@ -160,48 +174,58 @@ export default function GlobalDiscoveryMap() {
     const topojson = window.topojson;
     if (!d3 || !topojson) return;
     d3Ref.current = d3;
+    d3RefForCb.current = d3;
 
-    const svg = d3.select(svgRef.current);
+    const svgEl = svgRef.current;
+    const svg = d3.select(svgEl);
     svg.selectAll("*").remove();
 
-    const w = svgRef.current.clientWidth || containerRef.current?.clientWidth || 900;
-    const h = svgRef.current.clientHeight || containerRef.current?.clientHeight || 520;
+    const w = svgEl.clientWidth || containerRef.current?.clientWidth || 900;
+    const h = svgEl.clientHeight || containerRef.current?.clientHeight || 520;
+
+    svgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
     const projection = d3.geoNaturalEarth1().fitSize([w, h], { type: "Sphere" });
     const path = d3.geoPath().projection(projection);
 
     const countries = topojson.feature(topoRef.current, topoRef.current.objects.countries);
-    const borders = topojson.mesh(topoRef.current, topoRef.current.objects.countries, (a, b) => a !== b);
 
-    // Graticule
-    svg.append("path").datum(d3.geoGraticule()()).attr("d", path)
-      .attr("stroke", "rgba(255,255,255,0.04)").attr("stroke-width", 0.5).attr("fill", "none");
+    // Fix 7: transparent rect to capture events across full bounds
+    svg.insert("rect", ":first-child")
+      .attr("width", w).attr("height", h)
+      .attr("fill", "transparent")
+      .style("pointer-events", "none");
 
-    // Country fills
+    // Fix 1+2: Land fills only — no borders, no mesh
     svg.selectAll(".country").data(countries.features).enter().append("path")
       .attr("class", "country").attr("d", path)
-      .attr("fill", "rgba(255,255,255,0.04)").attr("stroke", "none");
+      .attr("fill", "rgba(255,255,255,0.04)")
+      .attr("stroke", "none")
+      .style("pointer-events", "none"); // Fix 4: land never intercepts events
 
-    // Country borders
-    svg.append("path").datum(borders).attr("d", path)
-      .attr("fill", "none").attr("stroke", "rgba(255,255,255,0.15)").attr("stroke-width", 0.5);
-
-    // Continent hit zones + labels
+    // Fix 3+4: Continent markers rendered LAST (on top), pointer-events: all
     HIERARCHY.continents.forEach(continent => {
       const [cx, cy] = projection([continent.labelPosition.lon, continent.labelPosition.lat]);
       if (!cx || !cy) return;
 
-      const totalResorts = continent.regions.reduce((sum, r) => sum + r.subRegions.length * 3, 0);
-
-      const g = svg.append("g").attr("class", `continent-${continent.id}`).style("cursor", "pointer");
+      const g = svg.append("g")
+        .attr("class", `continent-${continent.id}`)
+        .style("cursor", "pointer")
+        .style("pointer-events", "all"); // Fix 4
 
       const ring = g.append("circle")
+        .attr("class", "continent-circle")
+        .attr("data-continent", continent.id) // Fix 8
         .attr("cx", cx).attr("cy", cy).attr("r", 44)
-        .attr("fill", "transparent").attr("stroke", "rgba(251,52,61,0.3)").attr("stroke-width", 1.5);
+        .attr("fill", "rgba(251,52,61,0.08)")
+        .attr("stroke", "rgba(251,52,61,0.4)")
+        .attr("stroke-width", 1.5)
+        .style("pointer-events", "all");
 
       const pulse = g.append("circle")
         .attr("cx", cx).attr("cy", cy).attr("r", 44)
-        .attr("fill", "none").attr("stroke", "rgba(251,52,61,0.5)").attr("stroke-width", 1);
+        .attr("fill", "none").attr("stroke", "rgba(251,52,61,0.4)").attr("stroke-width", 1)
+        .style("pointer-events", "none");
       pulse.append("animate")
         .attr("attributeName", "r").attr("from", 44).attr("to", 62)
         .attr("dur", "2s").attr("repeatCount", "indefinite");
@@ -209,42 +233,45 @@ export default function GlobalDiscoveryMap() {
         .attr("attributeName", "opacity").attr("from", 0.6).attr("to", 0)
         .attr("dur", "2s").attr("repeatCount", "indefinite");
 
-      const dot = g.append("circle")
-        .attr("cx", cx).attr("cy", cy).attr("r", 8)
-        .attr("fill", "rgba(251,52,61,0.8)");
+      g.append("circle")
+        .attr("cx", cx).attr("cy", cy).attr("r", 7)
+        .attr("fill", "#FB343D")
+        .style("pointer-events", "none");
 
-      const label = g.append("text")
+      g.append("text")
         .attr("x", cx).attr("y", cy + 22)
         .attr("text-anchor", "middle").attr("fill", "rgba(255,255,255,0.7)")
         .attr("font-size", 12).attr("font-family", "var(--font-display)").attr("font-weight", 700)
-        .attr("pointer-events", "none")
+        .style("pointer-events", "none")
         .text(continent.name);
 
+      // Fix 5: clean handlers using refs to avoid stale closures
       g.on("mouseenter", function (event) {
-        ring.attr("fill", "rgba(251,52,61,0.18)").attr("stroke", "rgba(251,52,61,0.8)");
-        dot.attr("fill", "#FB343D");
-        label.attr("fill", "white");
-        setHoveredItem({ id: continent.id, name: continent.name, resortCount: continent.regions.length + " regions" });
-        const rect = svgRef.current.getBoundingClientRect();
-        setTooltipPosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+        event.stopPropagation();
+        ring.attr("fill", "rgba(251,52,61,0.2)")
+          .attr("stroke", "rgba(251,52,61,0.8)")
+          .style("filter", "drop-shadow(0 0 14px rgba(251,52,61,0.7))");
+        setHoveredItemRef.current?.({ id: continent.id, name: continent.name, resortCount: continent.regions.length + " regions" });
+        const rect = svgEl.getBoundingClientRect();
+        setTooltipPositionRef.current?.({ x: event.clientX - rect.left, y: event.clientY - rect.top });
       });
 
       g.on("mouseleave", function () {
-        ring.attr("fill", "transparent").attr("stroke", "rgba(251,52,61,0.3)");
-        dot.attr("fill", "rgba(251,52,61,0.8)");
-        label.attr("fill", "rgba(255,255,255,0.7)");
-        setHoveredItem(null);
-        setTooltipPosition(null);
+        ring.attr("fill", "rgba(251,52,61,0.08)")
+          .attr("stroke", "rgba(251,52,61,0.4)")
+          .style("filter", null);
+        setHoveredItemRef.current?.(null);
+        setTooltipPositionRef.current?.(null);
       });
 
-      g.on("click", function () {
-        setSelectedContinent(continent);
-        setZoomLevel("continent");
-        // Zoom toward label position
+      g.on("click", function (event) {
+        event.stopPropagation();
+        setSelectedContinentRef.current?.(continent);
+        setZoomLevelRef.current?.("continent");
         const scale = 3;
         const tx = w / 2 - scale * cx;
         const ty = h / 2 - scale * cy;
-        d3.select(svgRef.current).transition().duration(800).ease(d3.easeCubicInOut)
+        d3.select(svgEl).transition().duration(800).ease(d3.easeCubicInOut)
           .attr("transform", `translate(${tx},${ty}) scale(${scale})`);
       });
     });
@@ -253,10 +280,8 @@ export default function GlobalDiscoveryMap() {
     const zoom = d3.zoom().scaleExtent([1, 20]).on("zoom", (event) => {
       svg.attr("transform", event.transform);
     });
-    d3.select(svgRef.current).call(zoom);
+    d3.select(svgEl).call(zoom);
     zoomRef.current = zoom;
-
-    svgRef.current.setAttribute("viewBox", `0 0 ${w} ${h}`);
   }, [libsLoaded]);
 
   // Draw region markers when continent selected
@@ -513,12 +538,38 @@ export default function GlobalDiscoveryMap() {
 
       {/* D3 SVG map */}
       {zoomLevel !== "map3d" && (
-        <svg
-          ref={svgRef}
-          width="100%"
-          height="100%"
-          style={{ opacity: svgOpacity, transition: "opacity 0.4s", touchAction: "none", position: "absolute", inset: 0 }}
-        />
+        <div
+          style={{ position: "absolute", inset: 0 }}
+          onClick={(e) => {
+            const continentId = e.target.closest("[data-continent]")?.getAttribute("data-continent");
+            if (continentId) {
+              const continent = HIERARCHY.continents.find(c => c.id === continentId);
+              if (continent && d3Ref.current && svgRef.current) {
+                const d3 = d3Ref.current;
+                const w = svgRef.current.clientWidth || 900;
+                const h = svgRef.current.clientHeight || 520;
+                const projection = d3.geoNaturalEarth1().fitSize([w, h], { type: "Sphere" });
+                const [cx, cy] = projection([continent.labelPosition.lon, continent.labelPosition.lat]);
+                setSelectedContinent(continent);
+                setZoomLevel("continent");
+                if (cx && cy) {
+                  const scale = 3;
+                  const tx = w / 2 - scale * cx;
+                  const ty = h / 2 - scale * cy;
+                  d3.select(svgRef.current).transition().duration(800).ease(d3.easeCubicInOut)
+                    .attr("transform", `translate(${tx},${ty}) scale(${scale})`);
+                }
+              }
+            }
+          }}
+        >
+          <svg
+            ref={svgRef}
+            width="100%"
+            height="100%"
+            style={{ opacity: svgOpacity, transition: "opacity 0.4s", touchAction: "none", display: "block", pointerEvents: "all" }}
+          />
+        </div>
       )}
 
       {/* MapTiler 3D map */}
