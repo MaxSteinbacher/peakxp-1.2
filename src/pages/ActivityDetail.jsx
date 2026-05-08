@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Edit2, Trash2, Star } from "lucide-react";
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { getActivityById, deleteActivity, exportActivityAsGPX } from "../lib/activities";
+import { getActivityById, deleteActivity, exportActivityAsGPX, saveActivity } from "../lib/activities";
 import { toast } from "sonner";
 
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
@@ -119,7 +119,6 @@ export default function ActivityDetail() {
 
   function handleSaveEdit() {
     const updated = { ...activity, name: editName, notes: editNotes };
-    const { saveActivity } = await import("../lib/activities");
     saveActivity(updated);
     setActivity(updated);
     setShowEdit(false);
