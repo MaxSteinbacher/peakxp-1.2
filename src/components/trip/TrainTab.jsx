@@ -416,6 +416,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
           </div>
           <CheckoutFlow
             totalPrice={totalPrice}
+            planData={{ serviceKey: "train", name: `${selectedTrain.operator} — ${selectedTrain.from} → ${selectedTrain.to}`, destination: { label: selectedTrain.to, type: "general" }, dates: { start: searchForm.depDate || null, end: searchForm.retDate || null }, guests: { adults: totalPax, children: 0, seniors: 0 }, itemDetails: { operator: selectedTrain.operator, class: selectedTrain.class }, estimatedPriceEUR: totalPrice }}
             summary={[
               { label: "Route", value: `${selectedTrain.from} → ${selectedTrain.to}` },
               { label: "Operator", value: selectedTrain.operator },

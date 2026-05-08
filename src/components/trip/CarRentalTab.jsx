@@ -413,6 +413,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
           </div>
           <CheckoutFlow
             totalPrice={totalPrice}
+            planData={{ serviceKey: "car", name: `${selectedCar.name} — ${pickupDays} day rental`, destination: { label: pickupVal, type: "general" }, dates: { start: searchForm.pickupDate || null, end: searchForm.returnDate || null }, itemDetails: { vehicle: selectedCar.name, category: selectedCar.category, company: selectedCar.company, days: pickupDays }, estimatedPriceEUR: totalPrice }}
             summary={[
               { label: "Vehicle", value: selectedCar.name },
               { label: "Category", value: selectedCar.category },

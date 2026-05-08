@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
-import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink } from "lucide-react";
+import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink, Bookmark } from "lucide-react";
+import { savePlan } from "../../lib/bookings";
+import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -180,10 +182,20 @@ function ReservationPanel({ restaurant, onClose }) {
             </div>
           ))}
         </div>
-        <button onClick={() => setConfirmed(true)} disabled={!selectedTime || !name || !email}
-          className="w-full py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-          Reserve table
-        </button>
+        <div className="flex gap-3">
+          <button onClick={() => setConfirmed(true)} disabled={!selectedTime || !name || !email}
+            className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
+            Reserve table
+          </button>
+          <button
+            onClick={() => {
+              savePlan("guest", { serviceKey: "dining", name: `${restaurant.name}`, destination: { label: restaurant.location, type: "general" }, dates: { start: date || null, end: null }, itemDetails: { restaurant: restaurant.name, time: selectedTime, partySize, seating }, estimatedPriceEUR: 0 });
+              toast.success("Saved to Trip Planning", { description: "View in My Trips", action: { label: "View", onClick: () => { window.location.href = "/my-trips?tab=planning"; } } });
+            }}
+            className="flex-1 py-3 border border-white/10 text-peak-text-secondary rounded-xl flex items-center justify-center gap-2 hover:border-white/25 hover:text-peak-text transition-colors text-sm">
+            <Bookmark className="h-4 w-4" /> Save to planning
+          </button>
+        </div>
       </div>
     </div>
   );

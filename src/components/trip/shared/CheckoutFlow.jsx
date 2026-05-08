@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { ShieldCheck, RefreshCw, Lock, ShoppingBag } from "lucide-react";
+import { ShieldCheck, RefreshCw, Lock, ShoppingBag, Bookmark } from "lucide-react";
 import StepIndicator from "./StepIndicator";
+import { savePlan } from "../../../lib/bookings";
+import { toast } from "sonner";
 
 function Input({ label, value, onChange, placeholder, type = "text" }) {
   return (
@@ -31,7 +33,7 @@ export function TrustBadges({ badges }) {
 
 const CHECKOUT_STEPS = ["Summary", "Your details"];
 
-export default function CheckoutFlow({ summary, guestFields, trustBadges, onComplete, totalPrice }) {
+export default function CheckoutFlow({ summary, guestFields, trustBadges, onComplete, totalPrice, planData }) {
   const [step, setStep] = useState(0);
   const [guestData, setGuestData] = useState([{}]);
 
@@ -70,12 +72,22 @@ export default function CheckoutFlow({ summary, guestFields, trustBadges, onComp
             ))}
           </div>
           <TrustBadges badges={trustBadges} />
-          <div className="flex gap-3 mt-6">
+          <div className="flex gap-3 mt-6 flex-wrap">
             <button onClick={() => setStep(0)} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
             <button onClick={() => onComplete?.(guestData[0])}
-              className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors flex items-center gap-2">
+              className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2">
               <ShoppingBag className="h-4 w-4" /> Add to trip basket
             </button>
+            {planData && (
+              <button
+                onClick={() => {
+                  savePlan("guest", planData);
+                  toast.success("Saved to Trip Planning", { description: "View in My Trips", action: { label: "View", onClick: () => { window.location.href = "/my-trips?tab=planning"; } } });
+                }}
+                className="flex-1 py-3 border border-white/10 text-peak-text-secondary rounded-xl flex items-center justify-center gap-2 hover:border-white/25 hover:text-peak-text transition-colors text-sm">
+                <Bookmark className="h-4 w-4" /> Save to trip planning
+              </button>
+            )}
           </div>
         </div>
       )}

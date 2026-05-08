@@ -424,6 +424,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
       {step === 3 && (
         <CheckoutFlow
           totalPrice={selectedFacility ? Math.round(selectedFacility.pricePerDay * rentalDays * prefs.lockers) : 0}
+          planData={{ serviceKey: "storage", name: `${selectedFacility?.name} — ${prefs.duration}`, destination: { label: location, type: "general" }, dates: { start: prefs.startDate || null, end: prefs.endDate || null }, itemDetails: { facility: selectedFacility?.name, duration: prefs.duration, lockers: prefs.lockers }, estimatedPriceEUR: selectedFacility ? Math.round(selectedFacility.pricePerDay * rentalDays * prefs.lockers) : 0 }}
           summary={[
             { label: "Facility", value: selectedFacility?.name },
             { label: "Type", value: selectedFacility?.typeBadge },

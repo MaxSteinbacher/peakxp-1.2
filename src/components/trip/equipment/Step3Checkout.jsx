@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ShieldCheck, RefreshCw, Lock, Check } from "lucide-react";
+import { ShieldCheck, RefreshCw, Lock, Check, ShoppingBag, Bookmark } from "lucide-react";
+import { savePlan } from "../../../lib/bookings";
+import { toast } from "sonner";
 
 const LABELS = {
   skis: "Skis", snowboard: "Snowboard", ski_boots: "Ski Boots", snowboard_boots: "Snowboard Boots",
@@ -7,7 +9,7 @@ const LABELS = {
   gloves: "Gloves", goggles: "Goggles", back_protector: "Back Protector",
 };
 
-const STEPS = ["Summary", "Guest details", "Payment"];
+const STEPS = ["Summary", "Guest details"];
 
 function StepBar({ current }) {
   return (
@@ -68,8 +70,6 @@ function TrustBadges() {
 export default function Step3Checkout({ selectedEquipment, shop, specs, answers, onBook }) {
   const [checkoutStep, setCheckoutStep] = useState(0);
   const [guests, setGuests] = useState([{ name: "", email: "", notes: "" }]);
-  const [payment, setPayment] = useState({ card: "", expiry: "", cvv: "", name: "" });
-  const [complete, setComplete] = useState(false);
 
   const days = answers?.days || 3;
   const total = shop ? shop.pricePerDay * days : 0;
@@ -82,7 +82,19 @@ export default function Step3Checkout({ selectedEquipment, shop, specs, answers,
     setGuests((prev) => prev.map((g, idx) => idx === i ? { ...g, [field]: val } : g));
   }
 
-
+  function handleSave() {
+    savePlan("guest", {
+      serviceKey: "equipment",
+      name: `${shop?.name} — ${selectedEquipment.join(", ")}`,
+      destination: { label: shop?.name || "Equipment rental", type: "general" },
+      itemDetails: { shop: shop?.name, equipment: selectedEquipment, days },
+      estimatedPriceEUR: total,
+    });
+    toast.success("Saved to Trip Planning", {
+      description: "View in My Trips",
+      action: { label: "View", onClick: () => { window.location.href = "/my-trips?tab=planning"; } },
+    });
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -103,7 +115,7 @@ export default function Step3Checkout({ selectedEquipment, shop, specs, answers,
             {answers?.dates?.start && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-peak-text-secondary">Dates</span>
-                <span className="text-peak-text">{answers.dates.start} {"->"} {answers.dates.end}</span>
+                <span className="text-peak-text">{answers.dates.start} {"→"} {answers.dates.end}</span>
               </div>
             )}
             <div className="border-t border-white/5 pt-3 space-y-1">
@@ -152,36 +164,20 @@ export default function Step3Checkout({ selectedEquipment, shop, specs, answers,
             ))}
           </div>
           <button onClick={addGuest} className="text-xs text-peak-blue hover:underline mb-6">+ Add another guest</button>
-          <div className="flex gap-3">
-            <button onClick={() => setCheckoutStep(0)} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
-            <button onClick={() => setCheckoutStep(2)} className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">Continue to payment</button>
-          </div>
-        </div>
-      )}
-
-      {checkoutStep === 2 && (
-        <div>
-          <h3 className="font-display font-bold text-xl text-peak-text mb-4">Payment</h3>
-          <div className="bg-peak-card border border-white/5 rounded-xl p-5 space-y-4 mb-6">
-            <Input label="Cardholder name" value={payment.name} onChange={(v) => setPayment((p) => ({ ...p, name: v }))} placeholder="Jane Smith" />
-            <Input label="Card number" value={payment.card} onChange={(v) => setPayment((p) => ({ ...p, card: v }))} placeholder="•••• •••• •••• ••••" />
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Expiry" value={payment.expiry} onChange={(v) => setPayment((p) => ({ ...p, expiry: v }))} placeholder="MM/YY" />
-              <Input label="CVV" value={payment.cvv} onChange={(v) => setPayment((p) => ({ ...p, cvv: v }))} placeholder="•••" />
-            </div>
-          </div>
-          <div className="bg-peak-surface border border-white/5 rounded-xl p-4 flex items-center justify-between mb-4">
-            <span className="text-peak-text-secondary text-sm">Total due</span>
-            <span className="text-peak-text font-bold text-xl">{"€" + total}</span>
-          </div>
           <TrustBadges />
-          <div className="flex gap-3 mt-6">
-            <button onClick={() => setCheckoutStep(1)} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
+          <div className="flex gap-3 mt-6 flex-wrap">
+            <button onClick={() => setCheckoutStep(0)} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
             <button
               onClick={() => onBook?.(`${shop?.name} — Equipment rental · ${days} days`, total, { shop: shop?.name, days, equipment: selectedEquipment })}
-              className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors flex items-center gap-2"
+              className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              Add to trip basket
+              <ShoppingBag className="h-4 w-4" /> Add to trip basket
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-1 py-3 border border-white/10 text-peak-text-secondary rounded-xl flex items-center justify-center gap-2 hover:border-white/25 hover:text-peak-text transition-colors text-sm"
+            >
+              <Bookmark className="h-4 w-4" /> Save to trip planning
             </button>
           </div>
         </div>

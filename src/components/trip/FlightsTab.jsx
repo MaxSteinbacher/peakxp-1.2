@@ -461,6 +461,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
 
           <CheckoutFlow
             totalPrice={totalPrice}
+            planData={{ serviceKey: "flights", name: `${selectedFlight.airline} — ${selectedFlight.from} → ${selectedFlight.to}`, destination: { label: selectedFlight.to, type: "general" }, dates: { start: searchForm.depDate || null, end: searchForm.retDate || null }, guests: { adults: searchForm.adults, children: searchForm.children, seniors: 0 }, itemDetails: { airline: selectedFlight.airline, cabin: searchForm.cabin, flightNo: selectedFlight.flightNo }, estimatedPriceEUR: totalPrice }}
             summary={[
               { label: "Flight", value: `${selectedFlight.from} → ${selectedFlight.to}` },
               { label: "Airline", value: `${selectedFlight.airline} ${selectedFlight.flightNo}` },

@@ -334,6 +334,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       {step === 4 && (
         <CheckoutFlow
           totalPrice={selectedSchool ? selectedSchool.pricePerDay * days : 0}
+          planData={{ serviceKey: "ski-school", name: `${selectedSchool?.name} — ${schedule.sport} · ${schedule.days} days`, destination: { label: "Ski School", type: "general" }, dates: { start: schedule.date || null, end: schedule.endDate || null }, guests: { adults: participants.filter(p => p.type === "adult").length, children: participants.filter(p => p.type === "kid").length, seniors: 0 }, itemDetails: { school: selectedSchool?.name, courseType, sport: schedule.sport, level: schedule.level, days: schedule.days }, estimatedPriceEUR: selectedSchool ? selectedSchool.pricePerDay * days : 0 }}
           summary={[
             { label: "School", value: selectedSchool?.name },
             { label: "Course", value: courseType },
