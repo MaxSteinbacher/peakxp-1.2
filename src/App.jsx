@@ -26,6 +26,12 @@ import TripPlannerFlow from './pages/TripPlannerFlow';
 import TripSummary from './pages/TripSummary';
 import TripConfirmed from './pages/TripConfirmed';
 import MyTrips from './pages/MyTrips';
+import PeakTracking from './pages/PeakTracking';
+import ActivityDetail from './pages/ActivityDetail';
+import TrackingRecord from './components/tracking/TrackingRecord';
+import PeakLog from './components/tracking/PeakLog';
+import PeakVision from './components/tracking/PeakVision';
+import TrackingImport from './components/tracking/TrackingImport';
 import { TripPlannerProvider } from './context/TripPlannerContext';
 
 const AuthenticatedApp = () => {
@@ -64,6 +70,13 @@ const AuthenticatedApp = () => {
         <Route path="/plan/summary" element={<TripSummary />} />
         <Route path="/plan/confirmed" element={<TripConfirmed />} />
         <Route path="/my-trips" element={<MyTrips />} />
+        <Route path="/tracking" element={<PeakTracking />}>
+          <Route index element={<TrackingRecord />} />
+          <Route path="log" element={<PeakLog />} />
+          <Route path="vision" element={<PeakVision />} />
+          <Route path="import" element={<TrackingImport />} />
+        </Route>
+        <Route path="/tracking/activity/:id" element={<ActivityDetail />} />
         <Route path="/book" element={<Booking />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trip-planning" element={<TripPlanning />} />

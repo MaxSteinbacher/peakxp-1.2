@@ -1,15 +1,14 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, Bell, Mountain, Globe } from "lucide-react";
+import { Menu, X, Bell, Mountain, Globe, Activity } from "lucide-react";
 import NotificationsPanel from "./NotificationsPanel";
 import { useAppAuth } from "../context/AppAuthContext";
 
 const ALL_NAV_LINKS = [
   { label: "Discovery", path: "/" },
+  { label: "PeakTracking", path: "/tracking", authOnly: true, icon: Activity },
   { label: "Trip Planning", path: "/trip-planning" },
   { label: "Expert Agents", path: "/agents" },
-  { label: "My Trips", path: "/book", authOnly: true },
-  { label: "Dashboard", path: "/dashboard", authOnly: true },
   { label: "Community", path: "/community" },
 ];
 
@@ -156,7 +155,7 @@ export default function Navbar() {
                       <p className="text-xs text-peak-text-secondary truncate">{user?.email}</p>
                     </div>
                     <div className="h-px bg-white/5 mb-1" />
-                    {[["My Profile", "/profile"], ["My Trips", "/book"], ["Dashboard", "/dashboard"], ["Settings", "/profile/settings"]].map(([label, path]) => (
+                    {[["My Profile", "/profile"], ["My Trips", "/my-trips"], ["Peak Log", "/tracking/log"], ["Settings", "/profile/settings"]].map(([label, path]) => (
                       <button key={path} onClick={() => { navigate(path); setAvatarOpen(false); }}
                         className="w-full text-left px-3 py-2.5 text-sm text-peak-text-secondary hover:text-peak-text hover:bg-white/5 rounded-xl transition-colors">
                         {label}
