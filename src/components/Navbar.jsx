@@ -6,9 +6,9 @@ import { useAppAuth } from "../context/AppAuthContext";
 
 const ALL_NAV_LINKS = [
   { label: "Discovery", path: "/" },
-  { label: "PeakTracking", path: "/tracking", icon: Activity, authOnly: true },
   { label: "Trip Planning", path: "/trip-planning" },
   { label: "Expert Agents", path: "/agents" },
+  { label: "PeakTracking", path: "/tracking", icon: Activity, authOnly: true },
   { label: "Community", path: "/community" },
 ];
 
