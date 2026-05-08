@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
+import SavePlanButton from "./SavePlanButton";
 import Step0 from "./equipment/Step0";
 import Step1Expert from "./equipment/Step1Expert";
 import Step1Guided from "./equipment/Step1Guided";
@@ -106,13 +107,20 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
       )}
 
       {step === 2 && (
-        <Step2Shops
-          selectedEquipment={selectedEquipment}
-          specs={mode === "expert" ? expertSpecs : guidedAnswers}
-          selectedShop={selectedShop}
-          setSelectedShop={setSelectedShop}
-          onContinue={() => setStep(3)}
-        />
+        <>
+          <Step2Shops
+            selectedEquipment={selectedEquipment}
+            specs={mode === "expert" ? expertSpecs : guidedAnswers}
+            selectedShop={selectedShop}
+            setSelectedShop={setSelectedShop}
+            onContinue={() => setStep(3)}
+          />
+          {selectedShop && (
+            <div className="mt-4">
+              <SavePlanButton planData={{ serviceKey: "equipment", name: `${selectedShop.name} — ${selectedEquipment.join(", ")}`, destination: { label: selectedShop.name, type: "general" }, itemDetails: { shop: selectedShop.name, equipment: selectedEquipment, specs: mode === "expert" ? expertSpecs : guidedAnswers }, estimatedPriceEUR: selectedShop.pricePerDay || 0 }} />
+            </div>
+          )}
+        </>
       )}
 
       {step === 3 && (

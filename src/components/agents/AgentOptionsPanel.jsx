@@ -1,12 +1,4 @@
 import { useState } from "react";
-
-// Normalise service key variants to hyphen-case
-function normaliseServiceKey(key) {
-  return key
-    .replace(/([a-z])([A-Z])/g, "$1-$2")
-    .replace(/_/g, "-")
-    .toLowerCase();
-}
 import { useNavigate } from "react-router-dom";
 import {
   CheckCircle, ArrowRight, Mountain, Building2, Wrench,
@@ -16,6 +8,15 @@ import {
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { resorts } from "../../lib/data";
 import { toast } from "sonner";
+import { savePlan } from "../../lib/bookings";
+
+// Normalise service key variants to hyphen-case
+function normaliseServiceKey(key) {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/_/g, "-")
+    .toLowerCase();
+}
 
 const SERVICE_ICONS = {
   "ski-pass": Mountain,
@@ -61,7 +62,6 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
       flag: resortObj?.flag || "",
     };
 
-    // Build dates, calculating end from start+nights if needed
     let datesObj = { start: null, end: null, nights: option.nights || null, skiDays: option.skiDays || null };
     if (option.dates?.start) {
       datesObj.start = option.dates.start;
@@ -85,7 +85,6 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
     startTrip(destination, datesObj, guests, selectedServices, resortObj ? { ...resortObj, resortId: resortObj.id } : null);
 
     sessionStorage.setItem("peakxp_agent_service_details", JSON.stringify(option.serviceDetails || {}));
-
     sessionStorage.setItem("peakxp_agent_option", JSON.stringify({
       agentKey,
       agentName,
@@ -96,6 +95,23 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
 
     onClose();
     navigate("/plan");
+  }
+
+  function handleSavePlan(option) {
+    savePlan("guest", {
+      serviceKey: "flights",
+      name: `${option.optionLabel} — ${option.resortName || option.destination}`,
+      destination: { label: option.resortName || option.destination || "", type: "resort" },
+      resortName: option.resortName,
+      dates: option.dates || {},
+      guests: option.guests || {},
+      itemDetails: option.serviceDetails || {},
+      estimatedPriceEUR: option.estimatedTotalEUR || 0,
+    });
+    toast.success("Saved to Trip Planning", {
+      description: "View in My Trips",
+      action: { label: "View", onClick: () => { window.location.href = "/my-trips?tab=planning"; } },
+    });
   }
 
   function handleSaveAll() {
@@ -177,17 +193,23 @@ export default function AgentOptionsPanel({ options, agentKey, agentName, onClos
           )}
 
           {/* Footer */}
-          <div className="px-5 py-3 border-t border-white/5 flex items-center justify-between gap-4">
-            {option.notes ? (
-              <p className="text-peak-text-secondary text-xs italic flex-1 truncate min-w-0" title={option.notes}>
+          <div className="px-5 py-3 border-t border-white/5 flex items-center gap-3 flex-wrap">
+            {option.notes && (
+              <p className="text-peak-text-secondary text-xs italic min-w-full truncate" title={option.notes}>
                 {option.notes}
               </p>
-            ) : <span className="flex-1" />}
+            )}
             <button
               onClick={() => handleBook(option)}
-              className="bg-peak-red hover:bg-peak-red-hover text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2 flex-shrink-0"
+              className="flex-1 bg-peak-red hover:bg-peak-red-hover text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
             >
               Book this trip <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => handleSavePlan(option)}
+              className="flex-1 border border-white/10 text-peak-text-secondary rounded-xl py-2.5 flex items-center justify-center gap-2 hover:border-white/25 hover:text-peak-text transition-colors text-sm"
+            >
+              Save to trip planning
             </button>
           </div>
         </div>

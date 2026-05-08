@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { User, Star, Users, Snowflake, Zap, HelpCircle, Plus, X } from "lucide-react";
+import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
 import CheckoutFlow from "./shared/CheckoutFlow";
@@ -317,10 +318,15 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
               />
             ))}
           </div>
-          <button onClick={() => setStep(4)} disabled={!selectedSchool}
-            className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Continue to checkout
-          </button>
+          <div className="flex gap-3">
+            <button onClick={() => setStep(4)} disabled={!selectedSchool}
+              className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
+              Continue to checkout
+            </button>
+            {selectedSchool && (
+              <SavePlanButton planData={{ serviceKey: "ski-school", name: `${selectedSchool.name} — ${schedule.sport} · ${schedule.days} days`, destination: { label: "Ski School", type: "general" }, dates: { start: schedule.date || null, end: schedule.endDate || null }, guests: { adults: participants.filter(p => p.type === "adult").length, children: participants.filter(p => p.type === "kid").length, seniors: 0 }, itemDetails: { school: selectedSchool.name, courseType, sport: schedule.sport, level: schedule.level, days: schedule.days }, estimatedPriceEUR: selectedSchool.pricePerDay * days }} />
+            )}
+          </div>
         </div>
       )}
 

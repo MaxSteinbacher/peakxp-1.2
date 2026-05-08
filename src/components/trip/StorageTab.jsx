@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { MapPin, ArrowUpDown } from "lucide-react";
+import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
 import CheckoutFlow from "./shared/CheckoutFlow";
@@ -407,10 +408,15 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
               </div>
             </div>
           </div>
-          <button onClick={() => setStep(3)} disabled={!selectedFacility}
-            className="mt-8 px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Continue to checkout
-          </button>
+          <div className="mt-8 flex gap-3">
+            <button onClick={() => setStep(3)} disabled={!selectedFacility}
+              className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
+              Continue to checkout
+            </button>
+            {selectedFacility && (
+              <SavePlanButton planData={{ serviceKey: "storage", name: `${selectedFacility.name} — ${prefs.duration}`, destination: { label: location, type: "general" }, dates: { start: prefs.startDate || null, end: prefs.endDate || null }, itemDetails: { facility: selectedFacility.name, duration: prefs.duration, lockers: prefs.lockers }, estimatedPriceEUR: Math.round(selectedFacility.pricePerDay * rentalDays * prefs.lockers) }} />
+            )}
+          </div>
         </div>
       )}
 
