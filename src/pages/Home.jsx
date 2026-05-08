@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Ticket, Navigation, BarChart3, ArrowRight } from "lucide-react";
+import GlobalDiscoveryMap from "../components/discovery/GlobalDiscoveryMap";
 import DayTrips from "../components/DayTrips";
 import SearchBar from "../components/SearchBar";
 import ResortCard from "../components/ResortCard";
@@ -82,6 +83,13 @@ export default function Home() {
           <ResortCard key={resort.id} resort={resort} compact />
           )}
         </div>
+      </section>
+
+      {/* Discover by destination */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-2">Discover by destination</h2>
+        <p className="text-peak-text-secondary text-sm mb-6">Explore every ski region in the world — from the Alps to the Andes.</p>
+        <GlobalDiscoveryMap />
       </section>
 
       <DayTrips />
