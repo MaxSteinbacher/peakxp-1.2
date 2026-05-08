@@ -162,7 +162,7 @@ export default function Navbar() {
                       <p className="text-xs text-peak-text-secondary truncate">{user?.email}</p>
                     </div>
                     <div className="h-px bg-white/5 mb-1" />
-                    {[["My Profile", "/profile"], ["My Trips", "/book"], ["Peak Log", "/tracking/log"], ["Settings", "/profile/settings"]].map(([label, path]) => (
+                    {[["My Profile", "/profile"], ["My Trips", "/my-trips"], ["Peak Log", "/tracking/log"], ["Settings", "/profile/settings"]].map(([label, path]) => (
                       <button key={path} onClick={() => { navigate(path); setAvatarOpen(false); }}
                         className="w-full text-left px-3 py-2.5 text-sm text-peak-text-secondary hover:text-peak-text hover:bg-white/5 rounded-xl transition-colors">
                         {label}

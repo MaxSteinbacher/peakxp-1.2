@@ -471,6 +471,9 @@ export default function MyTrips() {
         <button onClick={() => navigate("/agents")} className="border border-white/10 text-peak-text-secondary px-4 py-2 rounded-xl text-sm hover:text-peak-text transition-colors">
           Start with an agent
         </button>
+        <button onClick={() => { setActiveTab("passes"); setShowAddPass(true); }} className="border border-white/10 text-peak-text-secondary px-4 py-2 rounded-xl text-sm hover:text-peak-text transition-colors">
+          Add a season pass
+        </button>
       </div>
 
       {/* Tabs */}
