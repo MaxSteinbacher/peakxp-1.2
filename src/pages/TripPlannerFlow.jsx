@@ -16,6 +16,12 @@ export default function TripPlannerFlow() {
   const { user } = useAppAuth();
   const navigate = useNavigate();
   const [basketOpen, setBasketOpen] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoadingTimeout(true), 2500);
+    return () => clearTimeout(t);
+  }, []);
   const [showLeaveWarning, setShowLeaveWarning] = useState(false);
   const [agentBanner, setAgentBanner] = useState(() => {
     try {
@@ -119,8 +125,17 @@ export default function TripPlannerFlow() {
         <ResortSelectionStep />
       ) : current?.serviceKey ? (
         <ServiceStep serviceKey={current.serviceKey} resortId={current.resortId} agentServiceDetails={agentServiceDetails} />
+      ) : loadingTimeout ? (
+        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+          <p className="text-peak-text font-bold text-xl mb-2">Could not load trip plan</p>
+          <p className="text-peak-text-secondary text-sm mb-6">The trip session may have expired or failed to initialise.</p>
+          <button onClick={() => navigate("/trip-planning")} className="bg-peak-red text-white px-6 py-3 rounded-xl font-semibold">
+            Start a new trip
+          </button>
+        </div>
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+          <div className="w-8 h-8 border-2 border-white/10 border-t-peak-red rounded-full animate-spin mx-auto mb-4" />
           <p className="text-peak-text-secondary">Setting up your trip plan...</p>
         </div>
       )}

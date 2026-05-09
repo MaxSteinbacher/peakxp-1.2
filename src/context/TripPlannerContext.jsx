@@ -23,7 +23,46 @@ export function TripPlannerProvider({ children }) {
     return String(Date.now());
   }
 
+  function normaliseServiceKeys(arr) {
+    if (!arr || !Array.isArray(arr)) return ["ski-pass"];
+    const MAP = {
+      skipass: "ski-pass", skiPass: "ski-pass", liftpass: "ski-pass", liftPass: "ski-pass", lift_pass: "ski-pass", ski_pass: "ski-pass",
+      skischool: "ski-school", skiSchool: "ski-school", ski_school: "ski-school",
+      carrental: "car", carRental: "car", car_rental: "car",
+      hotelaccommodation: "accommodation", hotel: "accommodation",
+    };
+    return arr.map(k => {
+      const lower = k.replace(/_/g, "-").replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+      return MAP[k] || MAP[k.toLowerCase()] || lower;
+    });
+  }
+
+  function computeFirstStep(services, resortsArray) {
+    if (!services || services.length === 0) return null;
+    const serviceOrder = ["ski-pass", "accommodation", "equipment", "ski-school", "dining", "storage", "activities", "childcare"];
+    const globalServices = ["flights", "train", "car"];
+    const resortId = resortsArray?.[0]?.resortId || null;
+
+    // Need resort selection?
+    if (!resortId && services.some(s => !globalServices.includes(s))) {
+      return { serviceKey: "resort-selection", resortId: null, stepIndex: 0 };
+    }
+
+    for (const svc of serviceOrder) {
+      if (services.includes(svc)) return { serviceKey: svc, resortId, stepIndex: 0 };
+    }
+    for (const svc of globalServices) {
+      if (services.includes(svc)) return { serviceKey: svc, resortId: null, stepIndex: 0 };
+    }
+    return null;
+  }
+
   function startTrip(destination, dates, guests, selectedServices, initialResort = null) {
+    const normalisedServices = normaliseServiceKeys(selectedServices);
+    const resortsArray = initialResort
+      ? [{ ...initialResort, resortId: initialResort.resortId || initialResort.id, order: 0 }]
+      : [];
+    const firstStep = computeFirstStep(normalisedServices, resortsArray);
     const newSession = {
       id: generateSessionId(),
       createdAt: new Date().toISOString(),
@@ -31,12 +70,10 @@ export function TripPlannerProvider({ children }) {
       destination,
       dates,
       guests,
-      selectedServices,
-      resorts: initialResort
-        ? [{ ...initialResort, resortId: initialResort.resortId || initialResort.id, order: 0 }]
-        : [],
+      selectedServices: normalisedServices,
+      resorts: resortsArray,
       currentResortIndex: 0,
-      currentStep: null,
+      currentStep: firstStep,
       completedSteps: [],
       basket: [],
     };
@@ -186,52 +223,36 @@ export function TripPlannerProvider({ children }) {
 
   function getNextStep() {
     if (!session) return null;
+    if (!session.selectedServices || session.selectedServices.length === 0) return null;
+
+    const services = session.selectedServices.map(s =>
+      s.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/_/g, "-").toLowerCase()
+    );
 
     const serviceOrder = [
-      "ski-pass",
-      "accommodation",
-      "equipment",
-      "ski-school",
-      "dining",
-      "storage",
-      "activities",
-      "childcare",
-      "flights",
-      "train",
-      "car",
+      "ski-pass", "accommodation", "equipment", "ski-school",
+      "dining", "storage", "activities", "childcare",
+      "flights", "train", "car",
     ];
 
     const globalServices = ["flights", "train", "car"];
 
-    // If ski-pass not selected, skip resort selection
-    if (!session.selectedServices.includes("ski-pass")) {
-      // Go directly to first selected service with null resortId
-      for (const service of serviceOrder) {
-        if (session.selectedServices.includes(service) && !globalServices.includes(service)) {
-          if (!isStepComplete(service, null)) {
-            return {
-              serviceKey: service,
-              resortId: null,
-              label: service.charAt(0).toUpperCase() + service.slice(1),
-              isLastStep: false,
-            };
-          }
-        }
+    // Check if resort selection is needed
+    if (session.resorts.length === 0) {
+      const needsResortSelection = services.some(s => !globalServices.includes(s));
+      if (needsResortSelection) {
+        return { serviceKey: "resort-selection", resortId: null, label: "Choose your ski resort", isLastStep: false };
       }
     }
 
-    // Check if resort selection is needed
-    if (session.destination.type !== "resort" && session.resorts.length === 0) {
-      const needsResortSelection = session.selectedServices.some(
-        (s) => !globalServices.includes(s)
-      );
-      if (needsResortSelection) {
-        return {
-          serviceKey: "resort-selection",
-          resortId: null,
-          label: "Choose your ski resort",
-          isLastStep: false,
-        };
+    // If ski-pass not selected, skip per-resort loop for non-resort services
+    if (!services.includes("ski-pass") && session.resorts.length === 0) {
+      for (const service of serviceOrder) {
+        if (services.includes(service) && !globalServices.includes(service)) {
+          if (!isStepComplete(service, null)) {
+            return { serviceKey: service, resortId: null, label: service.charAt(0).toUpperCase() + service.slice(1), isLastStep: false };
+          }
+        }
       }
     }
 
@@ -239,23 +260,17 @@ export function TripPlannerProvider({ children }) {
     for (let i = 0; i < session.resorts.length; i++) {
       const resort = session.resorts[i];
       for (const service of serviceOrder) {
-        if (!session.selectedServices.includes(service)) continue;
+        if (!services.includes(service)) continue;
         if (globalServices.includes(service)) continue;
-
         if (!isStepComplete(service, resort.resortId)) {
           const isLastResort = i === session.resorts.length - 1;
           const allResortServicesComplete = serviceOrder.every(
-            (s) =>
-              !session.selectedServices.includes(s) ||
-              globalServices.includes(s) ||
-              isStepComplete(s, resort.resortId)
+            s => !services.includes(s) || globalServices.includes(s) || isStepComplete(s, resort.resortId)
           );
-
           return {
-            serviceKey: service,
-            resortId: resort.resortId,
+            serviceKey: service, resortId: resort.resortId,
             label: service.charAt(0).toUpperCase() + service.slice(1),
-            isLastStep: isLastResort && allResortServicesComplete && !session.selectedServices.some((s) => globalServices.includes(s)),
+            isLastStep: isLastResort && allResortServicesComplete && !services.some(s => globalServices.includes(s)),
           };
         }
       }
@@ -263,16 +278,10 @@ export function TripPlannerProvider({ children }) {
 
     // Global steps
     for (const service of serviceOrder) {
-      if (!session.selectedServices.includes(service)) continue;
+      if (!services.includes(service)) continue;
       if (!globalServices.includes(service)) continue;
-
       if (!isStepComplete(service, null)) {
-        return {
-          serviceKey: service,
-          resortId: null,
-          label: service.charAt(0).toUpperCase() + service.slice(1),
-          isLastStep: true,
-        };
+        return { serviceKey: service, resortId: null, label: service.charAt(0).toUpperCase() + service.slice(1), isLastStep: true };
       }
     }
 
