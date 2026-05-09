@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Maximize2, Maximize, Minimize, X, ArrowLeft } from "lucide-react";
+import { ChevronRight, Maximize, Minimize, X, ArrowLeft } from "lucide-react";
 import { resorts } from "../../lib/data";
 
 // ─── Geography data ───────────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ const GEO = {
       bounds: { n: 72, s: 35, e: 45, w: -25 },
       regions: [
         {
-          id: "alps", name: "Alps", lat: 46.5, lon: 10.5,
+          id: "alps", name: "Alps", lat: 46.8, lon: 10.2, bounds: { n: 48.5, s: 43.5, e: 16.5, w: 5.5 },
           subRegions: [
             { id: "austria-tyrol", name: "Austria Tyrol", lat: 47.25, lon: 11.40 },
             { id: "austria-salzburg", name: "Austria Salzburg", lat: 47.55, lon: 13.10 },
@@ -135,6 +135,7 @@ export default function GlobalDiscoveryMap() {
   const projRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
+  const prevTransformRef = useRef("");
 
   const [phase, setPhase] = useState("loading");
   const [landPaths, setLandPaths] = useState([]);
@@ -196,7 +197,7 @@ export default function GlobalDiscoveryMap() {
     return { x: r[0], y: r[1] };
   }
 
-  function getContinentTransform(bounds) {
+  function getContinentTransform(bounds, factor = 0.82) {
     if (!projRef.current) return "";
     const nw = projRef.current([bounds.w, bounds.n]);
     const ne = projRef.current([bounds.e, bounds.n]);
@@ -207,7 +208,7 @@ export default function GlobalDiscoveryMap() {
     const boxCenterY = (nw[1] + se[1]) / 2;
     const boxW = Math.abs(ne[0] - nw[0]);
     const boxH = Math.abs(sw[1] - nw[1]);
-    const S = Math.min(svgSize.w / boxW, svgSize.h / boxH) * 0.82;
+    const S = Math.min(svgSize.w / boxW, svgSize.h / boxH) * factor;
     const tx = svgSize.w / 2 / S - boxCenterX;
     const ty = svgSize.h / 2 / S - boxCenterY;
     return "scale(" + S + ") translate(" + tx + "px, " + ty + "px)";
@@ -227,13 +228,15 @@ export default function GlobalDiscoveryMap() {
     setPhase("region");
     setHoverId(null);
     setTooltip(null);
-    if (projRef.current) {
+    prevTransformRef.current = svgTransform;
+    if (region.bounds) {
+      setSvgTransform(getContinentTransform(region.bounds, 0.78));
+    } else if (projRef.current) {
       const pos = projRef.current([region.lon, region.lat]);
       if (pos) {
-        const rx = pos[0]; const ry = pos[1];
         const S = Math.min(svgSize.w / 280, svgSize.h / 200) * 3.2;
-        const tx = svgSize.w / 2 / S - rx;
-        const ty = svgSize.h / 2 / S - ry;
+        const tx = svgSize.w / 2 / S - pos[0];
+        const ty = svgSize.h / 2 / S - pos[1];
         setSvgTransform("scale(" + S + ") translate(" + tx + "px, " + ty + "px)");
       }
     }
@@ -259,7 +262,7 @@ export default function GlobalDiscoveryMap() {
     } else if (phase === "region") {
       setPhase("continent");
       setActiveRegion(null);
-      if (activeContinent) setSvgTransform(getContinentTransform(activeContinent.bounds));
+      setSvgTransform(prevTransformRef.current || (activeContinent ? getContinentTransform(activeContinent.bounds) : ""));
     } else if (phase === "continent") {
       setPhase("world");
       setActiveContinent(null);
@@ -380,8 +383,33 @@ export default function GlobalDiscoveryMap() {
     return regions.map(r => { const p = project(r.lon, r.lat); return { ...r, px: p.x, py: p.y }; });
   }
 
+  const ALPS_SUBREGION_POSITIONS = {
+    "austria-tyrol":              { x: 720, y: 235 },
+    "austria-salzburg":           { x: 750, y: 220 },
+    "austria-vorarlberg":         { x: 665, y: 230 },
+    "austria-styria":             { x: 775, y: 215 },
+    "austria-carinthia":          { x: 755, y: 245 },
+    "switzerland-valais":         { x: 648, y: 255 },
+    "switzerland-graubuenden":    { x: 690, y: 240 },
+    "switzerland-bernese":        { x: 650, y: 240 },
+    "france-savoie":              { x: 618, y: 258 },
+    "france-haute-savoie":        { x: 620, y: 245 },
+    "france-hautes-alpes":        { x: 625, y: 270 },
+    "italy-alto-adige":           { x: 708, y: 248 },
+    "italy-trentino":             { x: 710, y: 258 },
+    "italy-valle-daosta":         { x: 622, y: 255 },
+    "italy-lombardy":             { x: 690, y: 262 },
+    "italy-veneto":               { x: 725, y: 255 },
+    "italy-piedmont":             { x: 628, y: 268 },
+  };
+
   function getSubRegionPositions(subRegions) {
-    return subRegions.map(sr => { const p = project(sr.lon, sr.lat); return { ...sr, px: p.x, py: p.y }; });
+    return subRegions.map(sr => {
+      const hardcoded = ALPS_SUBREGION_POSITIONS[sr.id];
+      if (hardcoded) return { ...sr, px: hardcoded.x, py: hardcoded.y };
+      const p = project(sr.lon, sr.lat);
+      return { ...sr, px: p.x, py: p.y };
+    });
   }
 
   const svgStyle = {
@@ -539,13 +567,13 @@ export default function GlobalDiscoveryMap() {
                   />
                   <circle cx={sr.px} cy={sr.py} r={4} fill="#3ECF8E" style={{ pointerEvents: "none" }} />
                   <text
-                    x={sr.px} y={sr.py + 16}
+                    x={sr.px} y={sr.py + 22}
                     textAnchor="middle"
                     fill={hovered ? "white" : "rgba(255,255,255,0.7)"}
-                    fontSize={8} fontWeight={600}
+                    fontSize={10} fontWeight={600}
                     style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}
                   >
-                    {sr.name.split(" ").slice(-2).join(" ")}
+                    {sr.name}
                   </text>
                 </g>
               );
@@ -635,12 +663,7 @@ export default function GlobalDiscoveryMap() {
         </button>
       </div>
 
-      {!isFullscreen && phase === "world" && (
-        <button onClick={() => setIsFullscreen(true)} className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 text-white text-sm font-medium px-5 py-2.5 rounded-full hover:border-white/25 transition-colors">
-          <Maximize2 className="h-4 w-4" />
-          Explore full map
-        </button>
-      )}
+
     </div>
   );
 }
