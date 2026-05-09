@@ -14,27 +14,27 @@ const GEO = {
         {
           id: "alps", name: "Alps", lat: 46.5, lon: 10.5,
           subRegions: [
-            { id: "austria-tyrol", name: "Austria Tyrol", lat: 47.3, lon: 11.4 },
-            { id: "austria-salzburg", name: "Austria Salzburg", lat: 47.4, lon: 13.2 },
-            { id: "austria-vorarlberg", name: "Austria Vorarlberg", lat: 47.2, lon: 9.9 },
-            { id: "austria-styria", name: "Austria Styria", lat: 47.4, lon: 14.5 },
-            { id: "austria-carinthia", name: "Austria Carinthia", lat: 46.7, lon: 13.8 },
-            { id: "switzerland-valais", name: "Switzerland Valais", lat: 46.1, lon: 7.5 },
-            { id: "switzerland-graubuenden", name: "Switzerland Graubünden", lat: 46.7, lon: 9.5 },
-            { id: "switzerland-bernese", name: "Switzerland Bernese Oberland", lat: 46.6, lon: 7.9 },
-            { id: "france-savoie", name: "France Savoie", lat: 45.4, lon: 6.5 },
-            { id: "france-haute-savoie", name: "France Haute-Savoie", lat: 46.0, lon: 6.7 },
-            { id: "france-hautes-alpes", name: "France Hautes-Alpes", lat: 44.8, lon: 6.3 },
-            { id: "italy-alto-adige", name: "Italy Alto Adige", lat: 46.7, lon: 11.5 },
-            { id: "italy-trentino", name: "Italy Trentino", lat: 46.1, lon: 11.1 },
-            { id: "italy-valle-daosta", name: "Italy Valle d'Aosta", lat: 45.7, lon: 7.3 },
-            { id: "italy-lombardy", name: "Italy Lombardy", lat: 46.3, lon: 10.2 },
-            { id: "italy-veneto", name: "Italy Veneto", lat: 46.4, lon: 12.1 },
-            { id: "italy-piedmont", name: "Italy Piedmont", lat: 44.9, lon: 6.9 },
+            { id: "austria-tyrol", name: "Austria Tyrol", lat: 47.25, lon: 11.40 },
+            { id: "austria-salzburg", name: "Austria Salzburg", lat: 47.55, lon: 13.10 },
+            { id: "austria-vorarlberg", name: "Austria Vorarlberg", lat: 47.25, lon: 9.85 },
+            { id: "austria-styria", name: "Austria Styria", lat: 47.35, lon: 14.80 },
+            { id: "austria-carinthia", name: "Austria Carinthia", lat: 46.75, lon: 13.90 },
+            { id: "switzerland-valais", name: "Switzerland Valais", lat: 46.20, lon: 7.55 },
+            { id: "switzerland-graubuenden", name: "Switzerland Graubünden", lat: 46.65, lon: 9.55 },
+            { id: "switzerland-bernese", name: "Switzerland Bernese Oberland", lat: 46.55, lon: 7.95 },
+            { id: "france-savoie", name: "France Savoie", lat: 45.50, lon: 6.55 },
+            { id: "france-haute-savoie", name: "France Haute-Savoie", lat: 46.05, lon: 6.75 },
+            { id: "france-hautes-alpes", name: "France Hautes-Alpes", lat: 44.85, lon: 6.35 },
+            { id: "italy-alto-adige", name: "Italy Alto Adige", lat: 46.65, lon: 11.40 },
+            { id: "italy-trentino", name: "Italy Trentino", lat: 46.10, lon: 11.10 },
+            { id: "italy-valle-daosta", name: "Italy Valle d'Aosta", lat: 45.80, lon: 7.35 },
+            { id: "italy-lombardy", name: "Italy Lombardy", lat: 46.20, lon: 10.30 },
+            { id: "italy-veneto", name: "Italy Veneto", lat: 46.45, lon: 12.05 },
+            { id: "italy-piedmont", name: "Italy Piedmont", lat: 44.85, lon: 7.05 },
           ]
         },
         {
-          id: "pyrenees", name: "Pyrenees", lat: 42.7, lon: 1.0,
+          id: "pyrenees", name: "Pyrenees", lat: 42.7, lon: 0.5,
           subRegions: [
             { id: "andorra", name: "Andorra", lat: 42.5, lon: 1.5 },
             { id: "spain-aragon", name: "Spain Aragon", lat: 42.7, lon: -0.4 },
@@ -43,10 +43,10 @@ const GEO = {
             { id: "france-ariege", name: "France Ariège", lat: 42.8, lon: 1.5 },
           ]
         },
-        { id: "scandinavia", name: "Scandinavia", lat: 62, lon: 15, subRegions: [{ id: "scandinavia-main", name: "Scandinavia", lat: 62, lon: 15 }] },
-        { id: "carpathians", name: "Carpathians", lat: 49, lon: 22, subRegions: [{ id: "carpathians-main", name: "Carpathians", lat: 49, lon: 22 }] },
-        { id: "caucasus", name: "Caucasus", lat: 42.5, lon: 44, subRegions: [{ id: "caucasus-main", name: "Caucasus", lat: 42.5, lon: 44 }] },
-        { id: "scottish-highlands", name: "Scottish Highlands", lat: 57, lon: -4, subRegions: [{ id: "scottish-highlands-main", name: "Scottish Highlands", lat: 57, lon: -4 }] },
+        { id: "scandinavia", name: "Scandinavia", lat: 65.0, lon: 17.0, subRegions: [{ id: "scandinavia-main", name: "Scandinavia", lat: 62, lon: 15 }] },
+        { id: "carpathians", name: "Carpathians", lat: 49.5, lon: 23.0, subRegions: [{ id: "carpathians-main", name: "Carpathians", lat: 49, lon: 22 }] },
+        { id: "caucasus", name: "Caucasus", lat: 42.3, lon: 44.5, subRegions: [{ id: "caucasus-main", name: "Caucasus", lat: 42.5, lon: 44 }] },
+        { id: "scottish-highlands", name: "Scottish Highlands", lat: 57.0, lon: -4.5, subRegions: [{ id: "scottish-highlands-main", name: "Scottish Highlands", lat: 57, lon: -4 }] },
       ]
     },
     {
@@ -89,15 +89,7 @@ const GEO = {
   ]
 };
 
-// Europe region manual spread offsets
-const EUROPE_REGION_OFFSETS = {
-  "alps": { dx: 20, dy: 30 },
-  "pyrenees": { dx: -40, dy: 50 },
-  "scandinavia": { dx: 10, dy: -60 },
-  "carpathians": { dx: 80, dy: 20 },
-  "caucasus": { dx: 160, dy: 30 },
-  "scottish-highlands": { dx: -80, dy: -40 },
-};
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -152,7 +144,7 @@ export default function GlobalDiscoveryMap() {
   const [activeContinent, setActiveContinent] = useState(null);
   const [activeRegion, setActiveRegion] = useState(null);
   const [activeSubRegion, setActiveSubRegion] = useState(null);
-  const [zoomTransform, setZoomTransform] = useState({ scale: 1, tx: 0, ty: 0 });
+  const [svgTransform, setSvgTransform] = useState("");
   const [hoverId, setHoverId] = useState(null);
   const [tooltip, setTooltip] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -204,20 +196,21 @@ export default function GlobalDiscoveryMap() {
     return { x: r[0], y: r[1] };
   }
 
-  function getContinentZoom(bounds) {
-    if (!projRef.current) return { scale: 1, tx: 0, ty: 0 };
-    const pad = 30;
+  function getContinentTransform(bounds) {
+    if (!projRef.current) return "";
     const nw = projRef.current([bounds.w, bounds.n]);
+    const ne = projRef.current([bounds.e, bounds.n]);
+    const sw = projRef.current([bounds.w, bounds.s]);
     const se = projRef.current([bounds.e, bounds.s]);
-    if (!nw || !se) return { scale: 1, tx: 0, ty: 0 };
-    const boxX = nw[0] - pad;
-    const boxY = nw[1] - pad;
-    const boxW = se[0] - nw[0] + pad * 2;
-    const boxH = se[1] - nw[1] + pad * 2;
-    const scale = Math.min(svgSize.w / boxW, svgSize.h / boxH) * 0.88;
-    const cx = boxX + boxW / 2;
-    const cy = boxY + boxH / 2;
-    return { scale, tx: svgSize.w / 2 - scale * cx, ty: svgSize.h / 2 - scale * cy };
+    if (!nw || !ne || !sw || !se) return "";
+    const boxCenterX = (nw[0] + se[0]) / 2;
+    const boxCenterY = (nw[1] + se[1]) / 2;
+    const boxW = Math.abs(ne[0] - nw[0]);
+    const boxH = Math.abs(sw[1] - nw[1]);
+    const S = Math.min(svgSize.w / boxW, svgSize.h / boxH) * 0.82;
+    const tx = svgSize.w / 2 / S - boxCenterX;
+    const ty = svgSize.h / 2 / S - boxCenterY;
+    return "scale(" + S + ") translate(" + tx + "px, " + ty + "px)";
   }
 
   // ── Event handlers ───────────────────────────────────────────────────────────
@@ -226,7 +219,7 @@ export default function GlobalDiscoveryMap() {
     setPhase("continent");
     setHoverId(null);
     setTooltip(null);
-    setZoomTransform(getContinentZoom(continent.bounds));
+    setSvgTransform(getContinentTransform(continent.bounds));
   }
 
   function handleRegionClick(region) {
@@ -235,13 +228,14 @@ export default function GlobalDiscoveryMap() {
     setHoverId(null);
     setTooltip(null);
     if (projRef.current) {
-      const base = project(region.lon, region.lat);
-      const offset = (activeContinent?.id === "europe" && EUROPE_REGION_OFFSETS[region.id]) || { dx: 0, dy: 0 };
-      const rx = base.x + offset.dx;
-      const ry = base.y + offset.dy;
-      const cs = zoomTransform.scale;
-      const newScale = cs * 2.5;
-      setZoomTransform({ scale: newScale, tx: svgSize.w / 2 - newScale * rx, ty: svgSize.h / 2 - newScale * ry });
+      const pos = projRef.current([region.lon, region.lat]);
+      if (pos) {
+        const rx = pos[0]; const ry = pos[1];
+        const S = Math.min(svgSize.w / 280, svgSize.h / 200) * 3.2;
+        const tx = svgSize.w / 2 / S - rx;
+        const ty = svgSize.h / 2 / S - ry;
+        setSvgTransform("scale(" + S + ") translate(" + tx + "px, " + ty + "px)");
+      }
     }
   }
 
@@ -265,11 +259,11 @@ export default function GlobalDiscoveryMap() {
     } else if (phase === "region") {
       setPhase("continent");
       setActiveRegion(null);
-      if (activeContinent) setZoomTransform(getContinentZoom(activeContinent.bounds));
+      if (activeContinent) setSvgTransform(getContinentTransform(activeContinent.bounds));
     } else if (phase === "continent") {
       setPhase("world");
       setActiveContinent(null);
-      setZoomTransform({ scale: 1, tx: 0, ty: 0 });
+      setSvgTransform("");
     }
   }
 
@@ -382,45 +376,25 @@ export default function GlobalDiscoveryMap() {
     map.on("idle", () => setMapVisible(true));
   }
 
-  // ── Computed region positions with spread ────────────────────────────────────
   function getRegionPositions(regions) {
-    return regions.map(r => {
-      const base = project(r.lon, r.lat);
-      if (activeContinent?.id === "europe") {
-        const off = EUROPE_REGION_OFFSETS[r.id] || { dx: 0, dy: 0 };
-        return { ...r, px: base.x + off.dx, py: base.y + off.dy };
-      }
-      return { ...r, px: base.x, py: base.y };
-    });
+    return regions.map(r => { const p = project(r.lon, r.lat); return { ...r, px: p.x, py: p.y }; });
   }
 
   function getSubRegionPositions(subRegions) {
-    const raw = subRegions.map(sr => {
-      const p = project(sr.lon, sr.lat);
-      return { ...sr, rawX: p.x, rawY: p.y };
-    });
-    const cx = raw.reduce((s, r) => s + r.rawX, 0) / raw.length;
-    const cy = raw.reduce((s, r) => s + r.rawY, 0) / raw.length;
-    const factor = 2.8;
-    return raw.map(sr => ({
-      ...sr,
-      px: cx + (sr.rawX - cx) * factor,
-      py: cy + (sr.rawY - cy) * factor,
-    }));
+    return subRegions.map(sr => { const p = project(sr.lon, sr.lat); return { ...sr, px: p.x, py: p.y }; });
   }
 
-  // ── SVG transform ────────────────────────────────────────────────────────────
   const svgStyle = {
     position: "absolute", inset: 0, display: "block",
     transformOrigin: "0 0",
-    transform: phase === "world" ? "none" : "translate(" + zoomTransform.tx + "px, " + zoomTransform.ty + "px) scale(" + zoomTransform.scale + ")",
+    transform: svgTransform || "none",
     transition: "transform 0.8s cubic-bezier(0.4,0,0.2,1)",
   };
 
   const containerHeight = isFullscreen ? "100vh" : "520px";
 
   return (
-    <div ref={containerRef} style={{ position: "relative", overflow: "hidden", borderRadius: 16, background: "#070B1E", height: containerHeight }}>
+    <div ref={containerRef} style={{ position: "relative", overflow: "hidden", borderRadius: 16, background: "#070B1E", height: containerHeight, clipPath: "inset(0 round 16px)" }}>
 
       {/* Loading */}
       {phase === "loading" && (
@@ -524,7 +498,7 @@ export default function GlobalDiscoveryMap() {
                   onMouseLeave={handleMarkerMouseLeave}
                 >
                   <circle
-                    cx={region.px} cy={region.py} r={22}
+                    cx={region.px} cy={region.py} r={18}
                     fill={hovered ? "rgba(56,148,227,0.22)" : "rgba(56,148,227,0.1)"}
                     stroke={hovered ? "rgba(56,148,227,0.95)" : "rgba(56,148,227,0.5)"}
                     strokeWidth={1.5}
@@ -557,7 +531,7 @@ export default function GlobalDiscoveryMap() {
                   onMouseLeave={handleMarkerMouseLeave}
                 >
                   <circle
-                    cx={sr.px} cy={sr.py} r={14}
+                    cx={sr.px} cy={sr.py} r={12}
                     fill={hovered ? "rgba(62,207,142,0.22)" : "rgba(62,207,142,0.08)"}
                     stroke={hovered ? "rgba(62,207,142,0.95)" : "rgba(62,207,142,0.45)"}
                     strokeWidth={1.5}
@@ -615,13 +589,13 @@ export default function GlobalDiscoveryMap() {
       {/* Breadcrumb */}
       {phase !== "world" && phase !== "loading" && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-xs whitespace-nowrap">
-          <button onClick={() => { setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setZoomTransform({ scale: 1, tx: 0, ty: 0 }); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">World</button>
+          <button onClick={() => { setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(""); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">World</button>
           {activeContinent && (
             <>
               <ChevronRight className="h-3 w-3 text-white/30" />
               {phase === "continent"
                 ? <span className="text-white font-medium">{activeContinent.name}</span>
-                : <button onClick={() => { setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setZoomTransform(getContinentZoom(activeContinent.bounds)); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
+                : <button onClick={() => { setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(getContinentTransform(activeContinent.bounds)); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
             </>
           )}
           {activeRegion && (
