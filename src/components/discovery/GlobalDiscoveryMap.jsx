@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Maximize2, Maximize, Minimize, X, ArrowLeft } from "lucide-react";
+import { resorts } from "../../lib/data";
 
 // ─── Geography data ───────────────────────────────────────────────────────────
 
@@ -88,11 +89,21 @@ const GEO = {
   ]
 };
 
+// Europe region manual spread offsets
+const EUROPE_REGION_OFFSETS = {
+  "alps": { dx: 20, dy: 30 },
+  "pyrenees": { dx: -40, dy: 50 },
+  "scandinavia": { dx: 10, dy: -60 },
+  "carpathians": { dx: 80, dy: 20 },
+  "caucasus": { dx: 160, dy: 30 },
+  "scottish-highlands": { dx: -80, dy: -40 },
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
     const s = document.createElement("script");
     s.src = src; s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
@@ -111,19 +122,32 @@ function getResortCount(subRegionId) {
   return 2;
 }
 
+function getResortsForSubRegion(subRegion) {
+  if (!subRegion) return [];
+  const nameLower = subRegion.name.toLowerCase();
+  const words = nameLower.split(/[\s\-_]+/).filter(w => w.length > 3);
+  return resorts.filter(r => {
+    const region = (r.region || "").toLowerCase();
+    const country = Array.isArray(r.country) ? r.country.join(" ").toLowerCase() : (r.country || "").toLowerCase();
+    const name = (r.name || "").toLowerCase();
+    return words.some(w => region.includes(w) || country.includes(w) || name.includes(w));
+  }).slice(0, 20);
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function GlobalDiscoveryMap() {
   const navigate = useNavigate();
   const containerRef = useRef(null);
   const worldDataRef = useRef(null);
+  const projRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
 
   const [phase, setPhase] = useState("loading");
-  const [projection, setProjection] = useState(null);
-  const [pathGen, setPathGen] = useState(null);
   const [landPaths, setLandPaths] = useState([]);
+  const [countryBorderPath, setCountryBorderPath] = useState("");
+  const [coastlinePath, setCoastlinePath] = useState("");
   const [svgSize, setSvgSize] = useState({ w: 800, h: 500 });
   const [activeContinent, setActiveContinent] = useState(null);
   const [activeRegion, setActiveRegion] = useState(null);
@@ -134,7 +158,7 @@ export default function GlobalDiscoveryMap() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
 
-  // ── Mount: load D3, TopoJSON, world data ────────────────────────────────────
+  // ── Mount ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function init() {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -151,50 +175,52 @@ export default function GlobalDiscoveryMap() {
       const d3 = window.d3;
       const topojson = window.topojson;
 
-      const landFeature = topojson.feature(data, data.objects.land);
       const proj = d3.geoNaturalEarth1().fitSize([w, h], { type: "Sphere" });
       const pg = d3.geoPath().projection(proj);
+      projRef.current = proj;
 
-      const paths = topojson.feature(data, data.objects.countries).features
-        .map(f => pg(f))
-        .filter(Boolean);
+      // Land fills
+      const lp = topojson.feature(data, data.objects.land).features.map(f => pg(f)).filter(Boolean);
+      setLandPaths(lp);
 
-      setProjection(() => proj);
-      setPathGen(() => pg);
-      setLandPaths(paths);
+      // Country borders (internal only)
+      const borderMesh = topojson.mesh(data, data.objects.countries, (a, b) => a !== b);
+      setCountryBorderPath(pg(borderMesh) || "");
+
+      // Coastlines
+      const coastMesh = topojson.mesh(data, data.objects.countries, (a, b) => a === b);
+      setCoastlinePath(pg(coastMesh) || "");
+
       setPhase("world");
     }
     init();
   }, []);
 
-  // ── Project helper ──────────────────────────────────────────────────────────
+  // ── Projection helpers ───────────────────────────────────────────────────────
   function project(lon, lat) {
-    if (!projection) return { x: 0, y: 0 };
-    const result = projection([lon, lat]);
-    if (!result) return { x: 0, y: 0 };
-    return { x: result[0], y: result[1] };
+    if (!projRef.current) return { x: 0, y: 0 };
+    const r = projRef.current([lon, lat]);
+    if (!r) return { x: 0, y: 0 };
+    return { x: r[0], y: r[1] };
   }
 
-  // ── Compute zoom transform for continent bounds ──────────────────────────────
   function getContinentZoom(bounds) {
-    if (!projection) return { scale: 1, tx: 0, ty: 0 };
+    if (!projRef.current) return { scale: 1, tx: 0, ty: 0 };
     const pad = 30;
-    const nw = projection([bounds.w, bounds.n]);
-    const se = projection([bounds.e, bounds.s]);
+    const nw = projRef.current([bounds.w, bounds.n]);
+    const se = projRef.current([bounds.e, bounds.s]);
     if (!nw || !se) return { scale: 1, tx: 0, ty: 0 };
     const boxX = nw[0] - pad;
     const boxY = nw[1] - pad;
     const boxW = se[0] - nw[0] + pad * 2;
     const boxH = se[1] - nw[1] + pad * 2;
-    const scale = Math.min(svgSize.w / boxW, svgSize.h / boxH) * 0.9;
+    const scale = Math.min(svgSize.w / boxW, svgSize.h / boxH) * 0.88;
     const cx = boxX + boxW / 2;
     const cy = boxY + boxH / 2;
-    const tx = svgSize.w / 2 - scale * cx;
-    const ty = svgSize.h / 2 - scale * cy;
-    return { scale, tx, ty };
+    return { scale, tx: svgSize.w / 2 - scale * cx, ty: svgSize.h / 2 - scale * cy };
   }
 
-  // ── Event handlers (pure React, zero D3) ────────────────────────────────────
+  // ── Event handlers ───────────────────────────────────────────────────────────
   function handleContinentClick(continent) {
     setActiveContinent(continent);
     setPhase("continent");
@@ -208,14 +234,14 @@ export default function GlobalDiscoveryMap() {
     setPhase("region");
     setHoverId(null);
     setTooltip(null);
-    // Zoom into region: centre on it with higher scale
-    if (projection) {
-      const [rx, ry] = projection([region.lon, region.lat]) || [0, 0];
-      const currentScale = zoomTransform.scale;
-      const newScale = currentScale * 3;
-      const tx = svgSize.w / 2 - newScale * rx;
-      const ty = svgSize.h / 2 - newScale * ry;
-      setZoomTransform({ scale: newScale, tx, ty });
+    if (projRef.current) {
+      const base = project(region.lon, region.lat);
+      const offset = (activeContinent?.id === "europe" && EUROPE_REGION_OFFSETS[region.id]) || { dx: 0, dy: 0 };
+      const rx = base.x + offset.dx;
+      const ry = base.y + offset.dy;
+      const cs = zoomTransform.scale;
+      const newScale = cs * 2.5;
+      setZoomTransform({ scale: newScale, tx: svgSize.w / 2 - newScale * rx, ty: svgSize.h / 2 - newScale * ry });
     }
   }
 
@@ -229,13 +255,10 @@ export default function GlobalDiscoveryMap() {
   function handleBack() {
     if (phase === "map3d") {
       setMapVisible(false);
-      setPhase("subregion");
-      if (mapInstanceRef.current) {
-        try { mapInstanceRef.current.remove(); } catch {}
-        markersRef.current.forEach(m => { try { m.remove(); } catch {} });
-        markersRef.current = [];
-        mapInstanceRef.current = null;
-      }
+      markersRef.current.forEach(m => { try { m.remove(); } catch {} });
+      markersRef.current = [];
+      if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; }
+      setPhase("region");
     } else if (phase === "subregion") {
       setPhase("region");
       setActiveSubRegion(null);
@@ -253,7 +276,7 @@ export default function GlobalDiscoveryMap() {
   function handleMarkerMouseEnter(id, name, count, clientX, clientY) {
     setHoverId(id);
     const rect = containerRef.current?.getBoundingClientRect();
-    if (rect) setTooltip({ x: clientX - rect.left, y: clientY - rect.top, text: name, sub: count > 0 ? `${count} resorts` : "" });
+    if (rect) setTooltip({ x: clientX - rect.left, y: clientY - rect.top, text: name, sub: count > 0 ? count + " resorts" : "" });
   }
 
   function handleMarkerMouseLeave() {
@@ -261,14 +284,14 @@ export default function GlobalDiscoveryMap() {
     setTooltip(null);
   }
 
-  // ── MapTiler init ────────────────────────────────────────────────────────────
+  // ── MapTiler ─────────────────────────────────────────────────────────────────
   async function initMapTiler(subRegion) {
     setPhase("map3d");
     await loadScript("https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.umd.min.js");
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.css";
-    if (!document.querySelector(`link[href="${link.href}"]`)) document.head.appendChild(link);
+    if (!document.querySelector('link[href="' + link.href + '"]')) document.head.appendChild(link);
     await new Promise(r => setTimeout(r, 100));
 
     const maptilersdk = window.maptilersdk;
@@ -285,63 +308,123 @@ export default function GlobalDiscoveryMap() {
     mapInstanceRef.current = map;
 
     map.on("load", () => {
+      // Hide native ski resort icons
+      ["ski_resort", "ski-resort", "piste_resort", "ski_resort_point"].forEach(layer => {
+        try { map.setLayoutProperty(layer, "visibility", "none"); } catch {}
+      });
+
+      // Terrain
       try {
         map.addSource("terrain", { type: "raster-dem", url: "https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=lNsV1pOMdNShmVL9tiih" });
         map.setTerrain({ source: "terrain", exaggeration: 1.5 });
       } catch {}
+
+      // Custom resort markers
+      const subResorts = getResortsForSubRegion(subRegion);
+      subResorts.forEach(resort => {
+        if (!resort.coordinates?.lon || !resort.coordinates?.lat) return;
+
+        const markerEl = document.createElement("div");
+        markerEl.style.cssText = "position:relative;cursor:pointer;";
+
+        const badge = document.createElement("div");
+        badge.style.cssText = "width:38px;height:38px;border-radius:50%;background:#070B1E;border:2.5px solid #FB343D;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(251,52,61,0.5);";
+
+        const initials = document.createElement("span");
+        initials.style.cssText = "font-size:11px;font-weight:700;color:white;letter-spacing:0.5px;";
+        initials.textContent = resort.name.substring(0, 2).toUpperCase();
+        badge.appendChild(initials);
+
+        const ptr = document.createElement("div");
+        ptr.style.cssText = "width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #FB343D;margin:0 auto;";
+
+        markerEl.appendChild(badge);
+        markerEl.appendChild(ptr);
+
+        // Tooltip
+        markerEl.addEventListener("mouseenter", function () {
+          const tt = document.createElement("div");
+          tt.id = "resort-tt-" + resort.id;
+          tt.style.cssText = "position:absolute;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(7,11,30,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 14px;min-width:190px;backdrop-filter:blur(12px);pointer-events:none;z-index:100;";
+
+          const statsHtml = (resort.pisteKm ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.pisteKm + 'km</span>' : "") +
+            (resort.lifts ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.lifts + ' lifts</span>' : "") +
+            (resort.altitudeRange ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);">' + resort.altitudeRange + '</span>' : "");
+
+          tt.innerHTML =
+            '<div style="font-weight:700;color:white;font-size:13px;margin-bottom:3px;">' + resort.name + '</div>' +
+            '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:6px;">' + (resort.region || "") + (resort.country ? " · " + resort.country : "") + '</div>' +
+            (statsHtml ? '<div style="margin-bottom:6px;">' + statsHtml + '</div>' : "") +
+            (resort.rating ? '<span style="background:#3894E3;color:white;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;">★ ' + resort.rating + '</span>' : "") +
+            '<div style="color:#FB343D;font-size:11px;font-weight:600;margin-top:8px;">View resort →</div>';
+
+          markerEl.appendChild(tt);
+        });
+
+        markerEl.addEventListener("mouseleave", function () {
+          const tt = document.getElementById("resort-tt-" + resort.id);
+          if (tt) tt.remove();
+        });
+
+        markerEl.addEventListener("click", function () {
+          navigate("/resort/" + resort.id);
+        });
+
+        const marker = new maptilersdk.Marker({ element: markerEl })
+          .setLngLat([resort.coordinates.lon, resort.coordinates.lat])
+          .addTo(map);
+        markersRef.current.push(marker);
+      });
+
       map.addControl(new maptilersdk.NavigationControl(), "bottom-right");
     });
 
     map.on("idle", () => setMapVisible(true));
   }
 
-  // ── SVG transform string ─────────────────────────────────────────────────────
-  const svgTransformStyle = phase === "world"
-    ? "none"
-    : `translate(${zoomTransform.tx}px, ${zoomTransform.ty}px) scale(${zoomTransform.scale})`;
+  // ── Computed region positions with spread ────────────────────────────────────
+  function getRegionPositions(regions) {
+    return regions.map(r => {
+      const base = project(r.lon, r.lat);
+      if (activeContinent?.id === "europe") {
+        const off = EUROPE_REGION_OFFSETS[r.id] || { dx: 0, dy: 0 };
+        return { ...r, px: base.x + off.dx, py: base.y + off.dy };
+      }
+      return { ...r, px: base.x, py: base.y };
+    });
+  }
+
+  function getSubRegionPositions(subRegions) {
+    const raw = subRegions.map(sr => {
+      const p = project(sr.lon, sr.lat);
+      return { ...sr, rawX: p.x, rawY: p.y };
+    });
+    const cx = raw.reduce((s, r) => s + r.rawX, 0) / raw.length;
+    const cy = raw.reduce((s, r) => s + r.rawY, 0) / raw.length;
+    const factor = 2.8;
+    return raw.map(sr => ({
+      ...sr,
+      px: cx + (sr.rawX - cx) * factor,
+      py: cy + (sr.rawY - cy) * factor,
+    }));
+  }
+
+  // ── SVG transform ────────────────────────────────────────────────────────────
+  const svgStyle = {
+    position: "absolute", inset: 0, display: "block",
+    transformOrigin: "0 0",
+    transform: phase === "world" ? "none" : "translate(" + zoomTransform.tx + "px, " + zoomTransform.ty + "px) scale(" + zoomTransform.scale + ")",
+    transition: "transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+  };
 
   const containerHeight = isFullscreen ? "100vh" : "520px";
 
-  // ── Breadcrumb ────────────────────────────────────────────────────────────────
-  function Breadcrumb() {
-    if (phase === "world" || phase === "loading") return null;
-    return (
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-xs whitespace-nowrap">
-        <button onClick={() => { setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setZoomTransform({ scale: 1, tx: 0, ty: 0 }); if (phase === "map3d") handleBack(); }} className="text-white/60 hover:text-white transition-colors">World</button>
-        {activeContinent && (
-          <>
-            <ChevronRight className="h-3 w-3 text-white/30" />
-            {phase === "continent"
-              ? <span className="text-white font-medium">{activeContinent.name}</span>
-              : <button onClick={() => { setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setZoomTransform(getContinentZoom(activeContinent.bounds)); if (phase === "map3d") { setMapVisible(false); if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } } }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
-          </>
-        )}
-        {activeRegion && (
-          <>
-            <ChevronRight className="h-3 w-3 text-white/30" />
-            {phase === "region"
-              ? <span className="text-white font-medium">{activeRegion.name}</span>
-              : <button onClick={() => { setPhase("region"); setActiveSubRegion(null); if (phase === "map3d") { setMapVisible(false); if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } } }} className="text-white/60 hover:text-white transition-colors">{activeRegion.name}</button>}
-          </>
-        )}
-        {activeSubRegion && (
-          <>
-            <ChevronRight className="h-3 w-3 text-white/30" />
-            <span className="text-white font-medium">{activeSubRegion.name}</span>
-          </>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div
-      ref={containerRef}
-      style={{ position: "relative", overflow: "hidden", borderRadius: 16, background: "#070B1E", height: containerHeight }}
-    >
+    <div ref={containerRef} style={{ position: "relative", overflow: "hidden", borderRadius: 16, background: "#070B1E", height: containerHeight }}>
+
       {/* Loading */}
       {phase === "loading" && (
-        <div className="absolute inset-0 flex items-center justify-center z-20">
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-2 border-white/10 border-t-peak-red rounded-full animate-spin" />
             <p className="text-white/40 text-xs">Loading map…</p>
@@ -349,64 +432,79 @@ export default function GlobalDiscoveryMap() {
         </div>
       )}
 
-      {/* SVG layer */}
+      {/* SVG map */}
       {phase !== "map3d" && (
-        <svg
-          width={svgSize.w}
-          height={svgSize.h}
-          style={{
-            position: "absolute", inset: 0, display: "block",
-            transformOrigin: "0 0",
-            transform: svgTransformStyle,
-            transition: "transform 0.8s cubic-bezier(0.4,0,0.2,1)",
-          }}
-        >
-          {/* Land fills */}
+        <svg width={svgSize.w} height={svgSize.h} style={svgStyle}>
+
+          {/* Layer 1: Land fills */}
           <g>
             {landPaths.map((d, i) => (
               <path key={i} d={d} fill="rgba(255,255,255,0.06)" stroke="none" style={{ pointerEvents: "none" }} />
             ))}
           </g>
 
+          {/* Layer 2: Country borders */}
+          {countryBorderPath && (
+            <path d={countryBorderPath} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth={0.4} style={{ pointerEvents: "none" }} />
+          )}
+
+          {/* Layer 3: Coastlines */}
+          {coastlinePath && (
+            <path d={coastlinePath} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={0.7} style={{ pointerEvents: "none" }} />
+          )}
+
           {/* Markers */}
           <g>
             {/* World: continent markers */}
             {phase === "world" && GEO.continents.map(continent => {
               const pos = project(continent.lon, continent.lat);
-              const hovered = hoverId === continent.id;
+              const isEurope = continent.id === "europe";
+              const hovered = hoverId === continent.id && isEurope;
+
+              if (isEurope) {
+                return (
+                  <g
+                    key={continent.id}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleContinentClick(continent)}
+                    onMouseEnter={e => handleMarkerMouseEnter(continent.id, continent.name, 0, e.clientX, e.clientY)}
+                    onMouseLeave={handleMarkerMouseLeave}
+                  >
+                    <circle
+                      cx={pos.x} cy={pos.y} r={44}
+                      fill={hovered ? "rgba(251,52,61,0.2)" : "rgba(251,52,61,0.08)"}
+                      stroke={hovered ? "rgba(251,52,61,0.9)" : "rgba(251,52,61,0.45)"}
+                      strokeWidth={1.5}
+                      style={{ transition: "all 0.25s ease", filter: hovered ? "drop-shadow(0 0 10px rgba(251,52,61,0.6))" : "none" }}
+                    />
+                    <circle cx={pos.x} cy={pos.y} r={6} fill="#FB343D" style={{ pointerEvents: "none" }} />
+                    <text
+                      x={pos.x} y={pos.y + 30}
+                      textAnchor="middle"
+                      fill={hovered ? "white" : "rgba(255,255,255,0.75)"}
+                      fontSize={11} fontWeight={600}
+                      style={{ pointerEvents: "none", transition: "fill 0.2s ease", fontFamily: "var(--font-display)" }}
+                    >
+                      {continent.name}
+                    </text>
+                  </g>
+                );
+              }
+
+              // Non-Europe: coming soon, no hover/click
               return (
-                <g
-                  key={continent.id}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleContinentClick(continent)}
-                  onMouseEnter={e => handleMarkerMouseEnter(continent.id, continent.name, 0, e.clientX, e.clientY)}
-                  onMouseLeave={handleMarkerMouseLeave}
-                >
-                  {/* Glow ring */}
-                  <circle
-                    cx={pos.x} cy={pos.y} r={52}
-                    fill="none"
-                    stroke={hovered ? "rgba(251,52,61,0.5)" : "rgba(251,52,61,0.2)"}
-                    strokeWidth={1}
-                    style={{ transition: "all 0.25s ease", filter: hovered ? "drop-shadow(0 0 10px rgba(251,52,61,0.6))" : "none" }}
-                  />
-                  {/* Fill */}
-                  <circle
-                    cx={pos.x} cy={pos.y} r={44}
-                    fill={hovered ? "rgba(251,52,61,0.2)" : "rgba(251,52,61,0.08)"}
-                    stroke={hovered ? "rgba(251,52,61,0.9)" : "rgba(251,52,61,0.45)"}
-                    strokeWidth={1.5}
-                    style={{ transition: "all 0.25s ease" }}
-                  />
-                  {/* Dot */}
-                  <circle cx={pos.x} cy={pos.y} r={6} fill="#FB343D" style={{ pointerEvents: "none" }} />
-                  {/* Label */}
+                <g key={continent.id} style={{ cursor: "default" }}>
+                  <text x={pos.x} y={pos.y - 35} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={9} fontWeight={500} style={{ pointerEvents: "none" }}>
+                    Coming soon
+                  </text>
+                  <circle cx={pos.x} cy={pos.y} r={44} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} style={{ pointerEvents: "none" }} />
+                  <circle cx={pos.x} cy={pos.y} r={6} fill="rgba(255,255,255,0.3)" style={{ pointerEvents: "none" }} />
                   <text
                     x={pos.x} y={pos.y + 30}
                     textAnchor="middle"
-                    fill={hovered ? "white" : "rgba(255,255,255,0.75)"}
+                    fill="rgba(255,255,255,0.35)"
                     fontSize={11} fontWeight={600}
-                    style={{ pointerEvents: "none", transition: "fill 0.2s ease", fontFamily: "var(--font-display)" }}
+                    style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}
                   >
                     {continent.name}
                   </text>
@@ -415,8 +513,7 @@ export default function GlobalDiscoveryMap() {
             })}
 
             {/* Continent: region markers */}
-            {phase === "continent" && activeContinent?.regions.map(region => {
-              const pos = project(region.lon, region.lat);
+            {phase === "continent" && activeContinent && getRegionPositions(activeContinent.regions).map(region => {
               const hovered = hoverId === region.id;
               return (
                 <g
@@ -427,18 +524,18 @@ export default function GlobalDiscoveryMap() {
                   onMouseLeave={handleMarkerMouseLeave}
                 >
                   <circle
-                    cx={pos.x} cy={pos.y} r={hovered ? 38 : 32}
+                    cx={region.px} cy={region.py} r={22}
                     fill={hovered ? "rgba(56,148,227,0.22)" : "rgba(56,148,227,0.1)"}
                     stroke={hovered ? "rgba(56,148,227,0.95)" : "rgba(56,148,227,0.5)"}
                     strokeWidth={1.5}
                     style={{ transition: "all 0.25s ease", filter: hovered ? "drop-shadow(0 0 8px rgba(56,148,227,0.6))" : "none" }}
                   />
-                  <circle cx={pos.x} cy={pos.y} r={5} fill="#3894E3" style={{ pointerEvents: "none" }} />
+                  <circle cx={region.px} cy={region.py} r={5} fill="#3894E3" style={{ pointerEvents: "none" }} />
                   <text
-                    x={pos.x} y={pos.y + 22}
+                    x={region.px} y={region.py + 20}
                     textAnchor="middle"
                     fill={hovered ? "white" : "rgba(255,255,255,0.75)"}
-                    fontSize={10} fontWeight={600}
+                    fontSize={9} fontWeight={600}
                     style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}
                   >
                     {region.name}
@@ -447,9 +544,8 @@ export default function GlobalDiscoveryMap() {
               );
             })}
 
-            {/* Region: subregion markers */}
-            {phase === "region" && activeRegion?.subRegions.map(sr => {
-              const pos = project(sr.lon, sr.lat);
+            {/* Region: subRegion markers */}
+            {phase === "region" && activeRegion && getSubRegionPositions(activeRegion.subRegions).map(sr => {
               const hovered = hoverId === sr.id;
               const count = getResortCount(sr.id);
               return (
@@ -461,18 +557,18 @@ export default function GlobalDiscoveryMap() {
                   onMouseLeave={handleMarkerMouseLeave}
                 >
                   <circle
-                    cx={pos.x} cy={pos.y} r={hovered ? 30 : 24}
+                    cx={sr.px} cy={sr.py} r={14}
                     fill={hovered ? "rgba(62,207,142,0.22)" : "rgba(62,207,142,0.08)"}
                     stroke={hovered ? "rgba(62,207,142,0.95)" : "rgba(62,207,142,0.45)"}
                     strokeWidth={1.5}
                     style={{ transition: "all 0.25s ease", filter: hovered ? "drop-shadow(0 0 8px rgba(62,207,142,0.5))" : "none" }}
                   />
-                  <circle cx={pos.x} cy={pos.y} r={4} fill="#3ECF8E" style={{ pointerEvents: "none" }} />
+                  <circle cx={sr.px} cy={sr.py} r={4} fill="#3ECF8E" style={{ pointerEvents: "none" }} />
                   <text
-                    x={pos.x} y={pos.y + 18}
+                    x={sr.px} y={sr.py + 16}
                     textAnchor="middle"
                     fill={hovered ? "white" : "rgba(255,255,255,0.7)"}
-                    fontSize={9} fontWeight={600}
+                    fontSize={8} fontWeight={600}
                     style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}
                   >
                     {sr.name.split(" ").slice(-2).join(" ")}
@@ -484,7 +580,7 @@ export default function GlobalDiscoveryMap() {
         </svg>
       )}
 
-      {/* MapTiler container */}
+      {/* MapTiler */}
       <div
         id="maptiler-discovery-container"
         style={{
@@ -497,32 +593,18 @@ export default function GlobalDiscoveryMap() {
 
       {/* Tooltip */}
       {tooltip && (
-        <div
-          style={{
-            position: "absolute",
-            left: tooltip.x + 12,
-            top: tooltip.y - 50,
-            background: "rgba(7,11,30,0.92)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 10,
-            padding: "8px 12px",
-            color: "white",
-            fontSize: 12,
-            fontWeight: 600,
-            pointerEvents: "none",
-            backdropFilter: "blur(12px)",
-            zIndex: 40,
-            whiteSpace: "nowrap",
-          }}
-        >
+        <div style={{
+          position: "absolute", left: tooltip.x + 12, top: tooltip.y - 50,
+          background: "rgba(7,11,30,0.92)", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 10, padding: "8px 12px", color: "white", fontSize: 12, fontWeight: 600,
+          pointerEvents: "none", backdropFilter: "blur(12px)", zIndex: 40, whiteSpace: "nowrap",
+        }}>
           {tooltip.text}
-          {tooltip.sub && (
-            <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 400, marginLeft: 6 }}>{tooltip.sub}</span>
-          )}
+          {tooltip.sub && <span style={{ color: "rgba(255,255,255,0.5)", fontWeight: 400, marginLeft: 6 }}>{tooltip.sub}</span>}
         </div>
       )}
 
-      {/* Section header */}
+      {/* Header */}
       {phase === "world" && (
         <div className="absolute top-6 left-6 z-20 pointer-events-none">
           <h3 className="font-display font-bold text-white text-2xl">Explore the World</h3>
@@ -531,20 +613,43 @@ export default function GlobalDiscoveryMap() {
       )}
 
       {/* Breadcrumb */}
-      <Breadcrumb />
+      {phase !== "world" && phase !== "loading" && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-xs whitespace-nowrap">
+          <button onClick={() => { setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setZoomTransform({ scale: 1, tx: 0, ty: 0 }); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">World</button>
+          {activeContinent && (
+            <>
+              <ChevronRight className="h-3 w-3 text-white/30" />
+              {phase === "continent"
+                ? <span className="text-white font-medium">{activeContinent.name}</span>
+                : <button onClick={() => { setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setZoomTransform(getContinentZoom(activeContinent.bounds)); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
+            </>
+          )}
+          {activeRegion && (
+            <>
+              <ChevronRight className="h-3 w-3 text-white/30" />
+              {phase === "region"
+                ? <span className="text-white font-medium">{activeRegion.name}</span>
+                : <button onClick={() => { setPhase("region"); setActiveSubRegion(null); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">{activeRegion.name}</button>}
+            </>
+          )}
+          {activeSubRegion && (
+            <>
+              <ChevronRight className="h-3 w-3 text-white/30" />
+              <span className="text-white font-medium">{activeSubRegion.name}</span>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Back button */}
       {phase !== "world" && phase !== "loading" && (
-        <button
-          onClick={handleBack}
-          className="absolute bottom-6 left-6 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-white text-xs font-medium hover:border-white/30 transition-colors"
-        >
+        <button onClick={handleBack} className="absolute bottom-6 left-6 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-white text-xs font-medium hover:border-white/30 transition-colors">
           <ArrowLeft className="h-3 w-3" />
           Back
         </button>
       )}
 
-      {/* Fullscreen + explore buttons */}
+      {/* Fullscreen */}
       <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
         {isFullscreen && (
           <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:border-white/25 transition-colors">
@@ -557,10 +662,7 @@ export default function GlobalDiscoveryMap() {
       </div>
 
       {!isFullscreen && phase === "world" && (
-        <button
-          onClick={() => setIsFullscreen(true)}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 text-white text-sm font-medium px-5 py-2.5 rounded-full hover:border-white/25 transition-colors"
-        >
+        <button onClick={() => setIsFullscreen(true)} className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 text-white text-sm font-medium px-5 py-2.5 rounded-full hover:border-white/25 transition-colors">
           <Maximize2 className="h-4 w-4" />
           Explore full map
         </button>
