@@ -6,6 +6,7 @@ import { saveActivity, createActivityId, classifySegment } from "../../lib/activ
 
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
 const MAP_STYLE = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
+// Style URL matches PeakMap standard style
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371000;

@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Edit2, Trash2, Star } from "lucide-react";
+import PeakMap from "../components/shared/PeakMap";
 import BackButton from "../components/shared/BackButton";
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { getActivityById, deleteActivity, exportActivityAsGPX, saveActivity } from "../lib/activities";
 import { toast } from "sonner";
-
-const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
-const MAP_STYLE = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
 function fmtSec(s) {
   if (!s) return "—";
@@ -24,8 +22,6 @@ function speedColor(spd) {
 export default function ActivityDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const mapRef = useRef(null);
-
   const [activity, setActivity] = useState(null);
   const [showDelete, setShowDelete] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -40,47 +36,24 @@ export default function ActivityDetail() {
     setEditNotes(act.notes || "");
   }, [id]);
 
-  useEffect(() => {
-    if (!activity || !mapRef.current) return;
-    const pts = activity.trackPoints || [];
+  function addActivityRouteToMap(map, trackPoints) {
+    const pts = trackPoints || [];
     if (pts.length === 0) return;
-
-    const script = document.createElement("script");
-    script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
-    script.onload = () => {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
-      document.head.appendChild(link);
-      const sdk = window.maptilersdk;
-      sdk.config.apiKey = MAPTILER_KEY;
-      const avgLat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
-      const avgLon = pts.reduce((s, p) => s + p.lon, 0) / pts.length;
-      const map = new sdk.Map({ container: mapRef.current, style: MAP_STYLE, center: [avgLon, avgLat], zoom: 13, pitch: 40 });
-      map.on("load", () => {
-        // Coloured route by speed
-        pts.forEach((pt, i) => {
-          if (i === 0) return;
-          const prev = pts[i - 1];
-          const color = speedColor(pt.speed || 0);
-          map.addSource(`seg-${i}`, { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: [[prev.lon, prev.lat], [pt.lon, pt.lat]] } } });
-          map.addLayer({ id: `seg-${i}`, type: "line", source: `seg-${i}`, paint: { "line-color": color, "line-width": 4 }, layout: { "line-cap": "round" } });
-        });
-
-        // Start marker
-        const startEl = document.createElement("div");
-        startEl.style.cssText = "width:14px;height:14px;background:#22c55e;border-radius:50%;border:2px solid white;";
-        new sdk.Marker({ element: startEl }).setLngLat([pts[0].lon, pts[0].lat]).addTo(map);
-
-        // End marker
-        const endEl = document.createElement("div");
-        endEl.style.cssText = "width:14px;height:14px;background:#FB343D;border:2px solid white;border-radius:2px;";
-        new sdk.Marker({ element: endEl }).setLngLat([pts[pts.length - 1].lon, pts[pts.length - 1].lat]).addTo(map);
-      });
-    };
-    if (!window.maptilersdk) document.head.appendChild(script);
-    else script.onload();
-  }, [activity]);
+    const sdk = window.maptilersdk;
+    pts.forEach((pt, i) => {
+      if (i === 0) return;
+      const prev = pts[i - 1];
+      const color = speedColor(pt.speed || 0);
+      map.addSource(`seg-${i}`, { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: [[prev.lon, prev.lat], [pt.lon, pt.lat]] } } });
+      map.addLayer({ id: `seg-${i}`, type: "line", source: `seg-${i}`, paint: { "line-color": color, "line-width": 4 }, layout: { "line-cap": "round" } });
+    });
+    const startEl = document.createElement("div");
+    startEl.style.cssText = "width:14px;height:14px;background:#22c55e;border-radius:50%;border:2px solid white;";
+    new sdk.Marker({ element: startEl }).setLngLat([pts[0].lon, pts[0].lat]).addTo(map);
+    const endEl = document.createElement("div");
+    endEl.style.cssText = "width:14px;height:14px;background:#FB343D;border:2px solid white;border-radius:2px;";
+    new sdk.Marker({ element: endEl }).setLngLat([pts[pts.length - 1].lon, pts[pts.length - 1].lat]).addTo(map);
+  }
 
   if (!activity) return null;
 
@@ -150,20 +123,31 @@ export default function ActivityDetail() {
       </div>
 
       {/* Map */}
-      {pts.length > 0 && (
-        <div className="relative mb-8">
-          <div ref={mapRef} className="w-full h-96 rounded-2xl overflow-hidden" />
-          {/* Speed legend */}
-          <div className="absolute bottom-4 left-4 bg-peak-bg/80 backdrop-blur-sm rounded-xl p-3 flex flex-col gap-1.5">
-            {[["Slow", "#3894E3"], ["Medium", "#22c55e"], ["Fast", "#eab308"], ["Very fast", "#FB343D"]].map(([label, color]) => (
-              <div key={label} className="flex items-center gap-2">
-                <div className="w-4 h-3 rounded-sm" style={{ background: color }} />
-                <span className="text-peak-text text-xs">{label}</span>
-              </div>
-            ))}
+      {pts.length > 0 && (() => {
+        const avgLat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
+        const avgLon = pts.reduce((s, p) => s + p.lon, 0) / pts.length;
+        return (
+          <div className="relative mb-8">
+            <PeakMap
+              center={[avgLon, avgLat]}
+              zoom={13}
+              pitch={45}
+              bearing={0}
+              height="h-96"
+              onMapLoad={(map) => addActivityRouteToMap(map, pts)}
+            />
+            {/* Speed legend */}
+            <div className="absolute bottom-4 left-4 bg-peak-bg/80 backdrop-blur-sm rounded-xl p-3 flex flex-col gap-1.5 z-10">
+              {[["Slow", "#3894E3"], ["Medium", "#22c55e"], ["Fast", "#eab308"], ["Very fast", "#FB343D"]].map(([label, color]) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className="w-4 h-3 rounded-sm" style={{ background: color }} />
+                  <span className="text-peak-text text-xs">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 my-8">

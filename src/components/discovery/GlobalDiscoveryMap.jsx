@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Maximize, Minimize, X, ArrowLeft } from "lucide-react";
 import { resorts } from "../../lib/data";
+import PeakMap from "../shared/PeakMap";
 
 // ─── Geography data ───────────────────────────────────────────────────────────
 
@@ -149,7 +150,6 @@ export default function GlobalDiscoveryMap() {
   const [hoverId, setHoverId] = useState(null);
   const [tooltip, setTooltip] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [mapVisible, setMapVisible] = useState(false);
 
   // ── Mount ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -242,19 +242,61 @@ export default function GlobalDiscoveryMap() {
     }
   }
 
+  function loadResortMarkersForSubRegion(map, subRegion) {
+    const subResorts = getResortsForSubRegion(subRegion);
+    const maptilersdk = window.maptilersdk;
+    if (!maptilersdk) return;
+    subResorts.forEach(resort => {
+      if (!resort.coordinates?.lon || !resort.coordinates?.lat) return;
+      const markerEl = document.createElement("div");
+      markerEl.style.cssText = "position:relative;cursor:pointer;";
+      const badge = document.createElement("div");
+      badge.style.cssText = "width:38px;height:38px;border-radius:50%;background:#070B1E;border:2.5px solid #FB343D;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(251,52,61,0.5);";
+      const initials = document.createElement("span");
+      initials.style.cssText = "font-size:11px;font-weight:700;color:white;letter-spacing:0.5px;";
+      initials.textContent = resort.name.substring(0, 2).toUpperCase();
+      badge.appendChild(initials);
+      const ptr = document.createElement("div");
+      ptr.style.cssText = "width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #FB343D;margin:0 auto;";
+      markerEl.appendChild(badge);
+      markerEl.appendChild(ptr);
+      markerEl.addEventListener("mouseenter", function () {
+        const tt = document.createElement("div");
+        tt.id = "resort-tt-" + resort.id;
+        tt.style.cssText = "position:absolute;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(7,11,30,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 14px;min-width:190px;backdrop-filter:blur(12px);pointer-events:none;z-index:100;";
+        const statsHtml = (resort.pisteKm ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.pisteKm + 'km</span>' : "") +
+          (resort.lifts ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.lifts + ' lifts</span>' : "");
+        tt.innerHTML = '<div style="font-weight:700;color:white;font-size:13px;margin-bottom:3px;">' + resort.name + '</div>' +
+          '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:6px;">' + (resort.region || "") + '</div>' +
+          (statsHtml ? '<div style="margin-bottom:6px;">' + statsHtml + '</div>' : "") +
+          (resort.rating ? '<span style="background:#3894E3;color:white;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;">★ ' + resort.rating + '</span>' : "") +
+          '<div style="color:#FB343D;font-size:11px;font-weight:600;margin-top:8px;">View resort →</div>';
+        markerEl.appendChild(tt);
+      });
+      markerEl.addEventListener("mouseleave", function () {
+        const tt = document.getElementById("resort-tt-" + resort.id);
+        if (tt) tt.remove();
+      });
+      markerEl.addEventListener("click", function () { navigate("/resort/" + resort.id); });
+      const marker = new maptilersdk.Marker({ element: markerEl })
+        .setLngLat([resort.coordinates.lon, resort.coordinates.lat])
+        .addTo(map);
+      markersRef.current.push(marker);
+    });
+  }
+
   function handleSubRegionClick(subRegion) {
     setActiveSubRegion(subRegion);
     setHoverId(null);
     setTooltip(null);
-    setTimeout(() => initMapTiler(subRegion), 200);
+    setPhase("map3d");
   }
 
   function handleBack() {
     if (phase === "map3d") {
-      setMapVisible(false);
       markersRef.current.forEach(m => { try { m.remove(); } catch {} });
       markersRef.current = [];
-      if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; }
+      mapInstanceRef.current = null;
       setPhase("region");
     } else if (phase === "subregion") {
       setPhase("region");
@@ -279,104 +321,6 @@ export default function GlobalDiscoveryMap() {
   function handleMarkerMouseLeave() {
     setHoverId(null);
     setTooltip(null);
-  }
-
-  // ── MapTiler ─────────────────────────────────────────────────────────────────
-  async function initMapTiler(subRegion) {
-    setPhase("map3d");
-    await loadScript("https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.umd.min.js");
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.0.0/maptiler-sdk.css";
-    if (!document.querySelector('link[href="' + link.href + '"]')) document.head.appendChild(link);
-    await new Promise(r => setTimeout(r, 100));
-
-    const maptilersdk = window.maptilersdk;
-    const container = document.getElementById("maptiler-discovery-container");
-    if (!maptilersdk || !container) return;
-
-    maptilersdk.config.apiKey = "lNsV1pOMdNShmVL9tiih";
-    const map = new maptilersdk.Map({
-      container,
-      style: "https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=lNsV1pOMdNShmVL9tiih",
-      center: [subRegion.lon, subRegion.lat],
-      zoom: 10, pitch: 55, bearing: -15,
-    });
-    mapInstanceRef.current = map;
-
-    map.on("load", () => {
-      // Hide native ski resort icons
-      ["ski_resort", "ski-resort", "piste_resort", "ski_resort_point"].forEach(layer => {
-        try { map.setLayoutProperty(layer, "visibility", "none"); } catch {}
-      });
-
-      // Terrain
-      try {
-        map.addSource("terrain", { type: "raster-dem", url: "https://api.maptiler.com/tiles/terrain-rgb/tiles.json?key=lNsV1pOMdNShmVL9tiih" });
-        map.setTerrain({ source: "terrain", exaggeration: 1.5 });
-      } catch {}
-
-      // Custom resort markers
-      const subResorts = getResortsForSubRegion(subRegion);
-      subResorts.forEach(resort => {
-        if (!resort.coordinates?.lon || !resort.coordinates?.lat) return;
-
-        const markerEl = document.createElement("div");
-        markerEl.style.cssText = "position:relative;cursor:pointer;";
-
-        const badge = document.createElement("div");
-        badge.style.cssText = "width:38px;height:38px;border-radius:50%;background:#070B1E;border:2.5px solid #FB343D;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(251,52,61,0.5);";
-
-        const initials = document.createElement("span");
-        initials.style.cssText = "font-size:11px;font-weight:700;color:white;letter-spacing:0.5px;";
-        initials.textContent = resort.name.substring(0, 2).toUpperCase();
-        badge.appendChild(initials);
-
-        const ptr = document.createElement("div");
-        ptr.style.cssText = "width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #FB343D;margin:0 auto;";
-
-        markerEl.appendChild(badge);
-        markerEl.appendChild(ptr);
-
-        // Tooltip
-        markerEl.addEventListener("mouseenter", function () {
-          const tt = document.createElement("div");
-          tt.id = "resort-tt-" + resort.id;
-          tt.style.cssText = "position:absolute;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(7,11,30,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 14px;min-width:190px;backdrop-filter:blur(12px);pointer-events:none;z-index:100;";
-
-          const statsHtml = (resort.pisteKm ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.pisteKm + 'km</span>' : "") +
-            (resort.lifts ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.lifts + ' lifts</span>' : "") +
-            (resort.altitudeRange ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);">' + resort.altitudeRange + '</span>' : "");
-
-          tt.innerHTML =
-            '<div style="font-weight:700;color:white;font-size:13px;margin-bottom:3px;">' + resort.name + '</div>' +
-            '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:6px;">' + (resort.region || "") + (resort.country ? " · " + resort.country : "") + '</div>' +
-            (statsHtml ? '<div style="margin-bottom:6px;">' + statsHtml + '</div>' : "") +
-            (resort.rating ? '<span style="background:#3894E3;color:white;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;">★ ' + resort.rating + '</span>' : "") +
-            '<div style="color:#FB343D;font-size:11px;font-weight:600;margin-top:8px;">View resort →</div>';
-
-          markerEl.appendChild(tt);
-        });
-
-        markerEl.addEventListener("mouseleave", function () {
-          const tt = document.getElementById("resort-tt-" + resort.id);
-          if (tt) tt.remove();
-        });
-
-        markerEl.addEventListener("click", function () {
-          navigate("/resort/" + resort.id);
-        });
-
-        const marker = new maptilersdk.Marker({ element: markerEl })
-          .setLngLat([resort.coordinates.lon, resort.coordinates.lat])
-          .addTo(map);
-        markersRef.current.push(marker);
-      });
-
-      map.addControl(new maptilersdk.NavigationControl(), "bottom-right");
-    });
-
-    map.on("idle", () => setMapVisible(true));
   }
 
   function getRegionPositions(regions) {
@@ -582,16 +526,22 @@ export default function GlobalDiscoveryMap() {
         </svg>
       )}
 
-      {/* MapTiler */}
-      <div
-        id="maptiler-discovery-container"
-        style={{
-          position: "absolute", inset: 0,
-          opacity: mapVisible ? 1 : 0,
-          transition: "opacity 0.5s ease",
-          pointerEvents: phase === "map3d" ? "all" : "none",
-        }}
-      />
+      {/* PeakMap for map3d phase */}
+      {phase === "map3d" && activeSubRegion && (
+        <div style={{ position: "absolute", inset: 0 }}>
+          <PeakMap
+            center={[activeSubRegion.lon, activeSubRegion.lat]}
+            zoom={10}
+            pitch={55}
+            bearing={0}
+            height="h-full"
+            onMapLoad={(map) => {
+              mapInstanceRef.current = map;
+              loadResortMarkersForSubRegion(map, activeSubRegion);
+            }}
+          />
+        </div>
+      )}
 
       {/* Tooltip */}
       {tooltip && (
@@ -617,13 +567,13 @@ export default function GlobalDiscoveryMap() {
       {/* Breadcrumb */}
       {phase !== "world" && phase !== "loading" && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-xs whitespace-nowrap">
-          <button onClick={() => { setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(""); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">World</button>
+          <button onClick={() => { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; mapInstanceRef.current = null; setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(""); }} className="text-white/60 hover:text-white transition-colors">World</button>
           {activeContinent && (
             <>
               <ChevronRight className="h-3 w-3 text-white/30" />
               {phase === "continent"
                 ? <span className="text-white font-medium">{activeContinent.name}</span>
-                : <button onClick={() => { setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(getContinentTransform(activeContinent.bounds)); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
+                : <button onClick={() => { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; mapInstanceRef.current = null; setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(getContinentTransform(activeContinent.bounds)); }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
             </>
           )}
           {activeRegion && (
@@ -631,7 +581,7 @@ export default function GlobalDiscoveryMap() {
               <ChevronRight className="h-3 w-3 text-white/30" />
               {phase === "region"
                 ? <span className="text-white font-medium">{activeRegion.name}</span>
-                : <button onClick={() => { setPhase("region"); setActiveSubRegion(null); if (phase === "map3d") { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; if (mapInstanceRef.current) { try { mapInstanceRef.current.remove(); } catch {} mapInstanceRef.current = null; } setMapVisible(false); } }} className="text-white/60 hover:text-white transition-colors">{activeRegion.name}</button>}
+                : <button onClick={() => { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; mapInstanceRef.current = null; setPhase("region"); setActiveSubRegion(null); }} className="text-white/60 hover:text-white transition-colors">{activeRegion.name}</button>}
             </>
           )}
           {activeSubRegion && (

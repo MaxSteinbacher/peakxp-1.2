@@ -1,14 +1,26 @@
 import { MapPin, Phone, ExternalLink, Train } from "lucide-react";
-
-const OSM_URL = "https://www.openstreetmap.org/export/embed.html?bbox=12.3713,47.4272,12.4113,47.4672&layer=mapnik&marker=47.4472,12.3913";
+import PeakMap from "../shared/PeakMap";
 
 export default function HotelLocationTab({ hotel }) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${hotel.coordinates.lat},${hotel.coordinates.lon}`;
   return (
     <div className="space-y-6">
-      <div className="h-96 rounded-xl overflow-hidden border border-white/10">
-        <iframe title="Hotel location" src={OSM_URL} className="w-full h-full border-0" />
-      </div>
+      <PeakMap
+        center={[hotel.coordinates.lon, hotel.coordinates.lat]}
+        zoom={14}
+        pitch={45}
+        bearing={0}
+        height="h-96"
+        maxBounds={[
+          [hotel.coordinates.lon - 0.05, hotel.coordinates.lat - 0.05],
+          [hotel.coordinates.lon + 0.05, hotel.coordinates.lat + 0.05]
+        ]}
+        onMapLoad={(map) => {
+          new window.maptilersdk.Marker()
+            .setLngLat([hotel.coordinates.lon, hotel.coordinates.lat])
+            .addTo(map);
+        }}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="bg-peak-card border border-white/5 rounded-xl p-5 space-y-3">
           <h3 className="font-display font-bold text-peak-text text-base">Address and Contact</h3>

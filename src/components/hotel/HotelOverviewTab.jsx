@@ -1,7 +1,6 @@
 import { Phone, Mail, Globe, MapPin, ExternalLink, Waves, Dumbbell, Wifi, UtensilsCrossed, Wine, Car, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-
-const OSM_URL = "https://www.openstreetmap.org/export/embed.html?bbox=12.3713,47.4272,12.4113,47.4672&layer=mapnik&marker=47.4472,12.3913";
+import PeakMap from "../shared/PeakMap";
 
 export default function HotelOverviewTab({ hotel }) {
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -104,9 +103,23 @@ export default function HotelOverviewTab({ hotel }) {
       {/* Mini map */}
       <div>
         <h3 className="font-display font-bold text-peak-text text-base mb-3">Location</h3>
-        <div className="h-64 rounded-xl overflow-hidden border border-white/10">
-          <iframe title="Hotel Kitzhof location" src={OSM_URL} className="w-full h-full border-0" />
-        </div>
+        <PeakMap
+          center={[hotel.coordinates.lon, hotel.coordinates.lat]}
+          zoom={14}
+          pitch={45}
+          bearing={0}
+          height="h-64"
+          maxBounds={[
+            [hotel.coordinates.lon - 0.05, hotel.coordinates.lat - 0.05],
+            [hotel.coordinates.lon + 0.05, hotel.coordinates.lat + 0.05]
+          ]}
+          onMapLoad={(map) => {
+            new window.maptilersdk.Marker()
+              .setLngLat([hotel.coordinates.lon, hotel.coordinates.lat])
+              .addTo(map);
+          }}
+          showRotateControl={false}
+        />
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {hotel.nearbyAttractions?.map(a => (
             <div key={a.name} className="bg-peak-card border border-white/5 rounded-xl p-3">
