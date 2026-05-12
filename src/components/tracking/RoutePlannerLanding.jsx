@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MapPin, Plus, Mountain, Route, Trash2, Download, Map } from "lucide-react";
 import { searchDestinations } from "../../lib/searchIndex";
+import LocationInput from "../shared/LocationInput";
 import { retrieve, persist, KEYS } from "../../lib/persistence";
 import { useAppAuth } from "../../context/AppAuthContext";
 import { getResortById } from "../../lib/data";
@@ -305,12 +306,9 @@ function ResortMapPlanner({ resort, initialRoute, onSave }) {
 export default function RoutePlannerLanding() {
   const { user } = useAppAuth();
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedResort, setSelectedResort] = useState(null);
   const [initialRoute, setInitialRoute] = useState(null);
   const [savedRoutes, setSavedRoutes] = useState([]);
-  const inputRef = useRef(null);
 
   // Load saved routes
   useEffect(() => {
@@ -323,25 +321,11 @@ export default function RoutePlannerLanding() {
     setSavedRoutes(routes);
   }
 
-  function handleQueryChange(e) {
-    const val = e.target.value;
-    setQuery(val);
-    if (val.trim().length > 0) {
-      const results = searchDestinations(val).filter(r => r.type === "resort");
-      setSuggestions(results);
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }
-
   function handleSelectResort(item) {
     const resort = getResortById(item.id);
     setSelectedResort(resort);
     setInitialRoute(null);
     setQuery(item.label);
-    setShowSuggestions(false);
   }
 
   function handleSaveRoute(route) {
@@ -390,7 +374,7 @@ export default function RoutePlannerLanding() {
           <p className="text-peak-text-secondary text-sm mt-0.5">Plan your runs before you ski them</p>
         </div>
         <button
-          onClick={() => { setSelectedResort(null); setInitialRoute(null); setQuery(""); inputRef.current?.focus(); }}
+          onClick={() => { setSelectedResort(null); setInitialRoute(null); setQuery(""); }}
           className="bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-peak-red-hover transition-colors">
           <Plus className="h-4 w-4" />
           New route
@@ -398,38 +382,12 @@ export default function RoutePlannerLanding() {
       </div>
 
       {/* Resort search */}
-      <div className="bg-peak-surface border border-white/10 rounded-2xl px-5 py-4 mb-6 relative">
-        <div className="flex items-center gap-3">
-          <MapPin className="h-5 w-5 text-peak-blue flex-shrink-0" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={handleQueryChange}
-            onFocus={() => query.trim().length > 0 && setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            placeholder="Search for a resort to plan a route..."
-            className="flex-1 bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50"
-          />
-          {query && (
-            <button onClick={() => { setQuery(""); setSelectedResort(null); setInitialRoute(null); setSuggestions([]); }} className="text-peak-text-secondary hover:text-peak-text text-lg leading-none">×</button>
-          )}
-        </div>
-
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-peak-card border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-            {suggestions.map(item => (
-              <button key={item.id} onMouseDown={() => handleSelectResort(item)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-peak-surface transition-colors text-left">
-                <span className="text-lg">{item.flag || "🏔️"}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-peak-text text-sm font-medium truncate">{item.label}</p>
-                  <p className="text-peak-text-secondary text-xs truncate">{item.sublabel}</p>
-                </div>
-                {item.pisteKm && <span className="text-peak-text-secondary text-xs flex-shrink-0">{item.pisteKm} km</span>}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="mb-6">
+        <LocationInput
+          type="resort" context="destination" placeholder="Search for a resort to plan a route..."
+          value={query} onChange={setQuery}
+          onSelect={item => handleSelectResort(item)}
+        />
       </div>
 
       {/* Embedded planner */}

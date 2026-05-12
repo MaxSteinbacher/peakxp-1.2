@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Train, ArrowUpDown, ArrowLeftRight, Leaf, ChevronDown, ChevronUp, MapPin, Wifi, Zap, UtensilsCrossed, Bike, ShoppingBag } from "lucide-react";
+import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
@@ -98,11 +99,12 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const [tripType, setTripType] = useState("Return");
   const [fromVal, setFromVal] = useState("");
   const [toVal, setToVal] = useState("");
+  const [fromStationData, setFromStationData] = useState(null);
+  const [toStationData, setToStationData] = useState(null);
   const [searchForm, setSearchForm] = useState({ depDate: "", depTime: "Morning 05:00–12:00", retDate: "", retTime: "Morning 05:00–12:00", adults: 1, youth: 0, children: 0, infants: 0, railcard: "None" });
   const [filters, setFilters] = useState({ direct: false, ski: false, bike: false, accessible: false });
   const [skiGear, setSkiGear] = useState({ open: false, skiBag: false, bootBag: false, poles: false });
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState("");
+
   const [sortBy, setSortBy] = useState("Cheapest");
   const [priceRange, setPriceRange] = useState([0, 300]);
   const [selectedTrain, setSelectedTrain] = useState(null);
@@ -122,30 +124,14 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const sf = (field, val) => setSearchForm(f => ({ ...f, [field]: val }));
   const totalPax = searchForm.adults + searchForm.youth + searchForm.children;
 
-  function useMyLocation() {
-    setLocationLoading(true);
-    setLocationError("");
-    if (!navigator.geolocation) { setLocationError("Geolocation not supported"); setLocationLoading(false); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude: lat, longitude: lon } = pos.coords;
-        fetch(`https://api.maptiler.com/geocoding/${lon},${lat}.json?key=lNsV1pOMdNShmVL9tiih`)
-          .then(r => r.json())
-          .then(data => {
-            const city = data.features?.[0]?.context?.find(c => c.id?.startsWith("place"))?.text ||
-              data.features?.[0]?.place_name?.split(",")[0] || "";
-            const lookup = city.toLowerCase();
-            const station = Object.entries(CITY_STATION_LOOKUP).find(([k]) => lookup.includes(k))?.[1];
-            setFromVal(station || city || "Unknown");
-            setLocationLoading(false);
-          })
-          .catch(() => { setLocationError("Could not resolve location — enter manually"); setLocationLoading(false); });
-      },
-      () => { setLocationError("Location access denied — enter your city or station manually"); setLocationLoading(false); }
-    );
+  function swapFromTo() {
+    const tmpVal = fromVal;
+    const tmpData = fromStationData;
+    setFromVal(toVal);
+    setFromStationData(toStationData);
+    setToVal(tmpVal);
+    setToStationData(tmpData);
   }
-
-  function swapFromTo() { const tmp = fromVal; setFromVal(toVal); setToVal(tmp); }
 
   const filtered = useMemo(() => {
     let res = [...trainResults];
@@ -204,15 +190,11 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
             <div className="flex items-start gap-3 mb-5">
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">From</label>
-                <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3">
-                  <input value={fromVal} onChange={e => setFromVal(e.target.value)} placeholder="Departure station or city"
-                    className="w-full bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50" />
-                </div>
-                <button onClick={useMyLocation} disabled={locationLoading}
-                  className="mt-1.5 flex items-center gap-1 text-xs text-peak-blue hover:underline disabled:opacity-50">
-                  <MapPin className="h-3 w-3" />{locationLoading ? "Detecting…" : "Use my location"}
-                </button>
-                {locationError && <p className="text-peak-red text-xs mt-1">{locationError}</p>}
+                <LocationInput
+                  type="station" context="departure" placeholder="Departure city or station"
+                  value={fromVal} onChange={setFromVal}
+                  onSelect={s => { setFromStationData(s); setFromVal(s.label); }}
+                />
               </div>
 
               <button onClick={swapFromTo} className="w-10 h-10 mt-7 rounded-full bg-peak-surface border border-white/10 flex items-center justify-center hover:border-white/25 flex-shrink-0 transition-colors">
@@ -221,10 +203,14 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">To</label>
-                <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3">
-                  <input value={toVal} onChange={e => setToVal(e.target.value)} placeholder="Arrival station or resort"
-                    className="w-full bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50" />
-                </div>
+                <LocationInput
+                  type="station" context="destination" placeholder="Destination station or resort"
+                  value={toVal} onChange={setToVal}
+                  onSelect={s => { setToStationData(s); setToVal(s.label); }}
+                />
+                {toStationData?.nearestResort && (
+                  <p className="mt-1.5 text-xs text-peak-green font-medium">{toStationData.nearestResort}{toStationData.transferTime ? ` — ${toStationData.transferTime} from this station` : ""}</p>
+                )}
               </div>
             </div>
 

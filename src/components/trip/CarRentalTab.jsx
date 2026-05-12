@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { ArrowUpDown, AlertTriangle, MapPin, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
+import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
@@ -94,12 +95,12 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   const [pickupVal, setPickupVal] = useState("");
   const [sameReturn, setSameReturn] = useState(true);
   const [returnVal, setReturnVal] = useState("");
+  const [pickupLocationData, setPickupLocationData] = useState(null);
   const [locationType, setLocationType] = useState("Airport");
   const [searchForm, setSearchForm] = useState({ pickupDate: null, pickupTime: "10:00", returnDate: null, returnTime: "10:00", driverAge: "25+", additionalDrivers: 0 });
   const [vehiclePrefs, setVehiclePrefs] = useState([]);
   const [filters, setFilters] = useState({ freeCancel: false, unlimited: false, fullToFull: false });
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState("");
+
   const [sortBy, setSortBy] = useState("Recommended");
   const [priceRange, setPriceRange] = useState([0, 250]);
   const [filterWinter, setFilterWinter] = useState(false);
@@ -126,27 +127,11 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   const sf = (field, val) => setSearchForm(f => ({ ...f, [field]: val }));
   const togglePref = (p) => setVehiclePrefs(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
 
-  function useMyLocation() {
-    setLocationLoading(true);
-    setLocationError("");
-    if (!navigator.geolocation) { setLocationError("Geolocation not supported"); setLocationLoading(false); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude: lat, longitude: lon } = pos.coords;
-        fetch(`https://api.maptiler.com/geocoding/${lon},${lat}.json?key=lNsV1pOMdNShmVL9tiih`)
-          .then(r => r.json())
-          .then(data => {
-            const city = data.features?.[0]?.context?.find(c => c.id?.startsWith("place"))?.text ||
-              data.features?.[0]?.place_name?.split(",")[0] || "";
-            const lookup = city.toLowerCase();
-            const resolved = Object.entries(CITY_AIRPORT_LOOKUP).find(([k]) => lookup.includes(k))?.[1];
-            setPickupVal(resolved ? `${resolved} Airport` : city || "Unknown");
-            setLocationLoading(false);
-          })
-          .catch(() => { setLocationError("Could not resolve location — enter manually"); setLocationLoading(false); });
-      },
-      () => { setLocationError("Location access denied — enter your city or airport manually"); setLocationLoading(false); }
-    );
+  function handlePickupSelect(s) {
+    setPickupLocationData(s);
+    setPickupVal(s.label);
+    if (s.type === "airport") setLocationType("Airport");
+    else if (s.type === "city" || s.type === "resort") setLocationType("Hotel delivery");
   }
 
   const pickupDays = useMemo(() => {
@@ -210,15 +195,11 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <div>
                 <label className="block text-xs text-peak-text-secondary mb-1.5">Pick-up location</label>
-                <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3">
-                  <input value={pickupVal} onChange={e => setPickupVal(e.target.value)} placeholder="Airport, city centre or station"
-                    className="w-full bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50" />
-                </div>
-                <button onClick={useMyLocation} disabled={locationLoading}
-                  className="mt-1.5 flex items-center gap-1 text-xs text-peak-blue hover:underline disabled:opacity-50">
-                  <MapPin className="h-3 w-3" />{locationLoading ? "Detecting..." : "Use my location"}
-                </button>
-                {locationError && <p className="text-peak-red text-xs mt-1">{locationError}</p>}
+                <LocationInput
+                  type="general" context="pickup" placeholder="Airport, city or resort"
+                  value={pickupVal} onChange={setPickupVal}
+                  onSelect={handlePickupSelect}
+                />
                 <div className="flex gap-1.5 mt-2 flex-wrap">
                   {["Airport", "City centre", "Train station", "Hotel delivery"].map(t => (
                     <button key={t} onClick={() => setLocationType(t)}
@@ -236,11 +217,17 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                     <span className="text-xs text-peak-text-secondary">Same as pick-up</span>
                   </label>
                 </div>
-                <div className={`bg-peak-surface border border-white/10 rounded-xl px-4 py-3 ${sameReturn ? "opacity-50" : ""}`}>
-                  <input value={sameReturn ? pickupVal : returnVal} onChange={e => setReturnVal(e.target.value)} disabled={sameReturn}
-                    placeholder="Return location"
-                    className="w-full bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50 disabled:cursor-not-allowed" />
-                </div>
+                {sameReturn ? (
+                  <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 opacity-50">
+                    <p className="text-peak-text text-sm">{pickupVal || "Same as pick-up"}</p>
+                  </div>
+                ) : (
+                  <LocationInput
+                    type="general" context="dropoff" placeholder="Return location"
+                    value={returnVal} onChange={setReturnVal}
+                    onSelect={s => setReturnVal(s.label)}
+                  />
+                )}
               </div>
             </div>
 

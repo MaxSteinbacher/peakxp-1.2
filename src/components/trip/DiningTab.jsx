@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink, Bookmark } from "lucide-react";
+import LocationInput from "../shared/LocationInput";
 import { savePlan } from "../../lib/bookings";
 import { toast } from "sonner";
 import RangeSlider from "../shared/RangeSlider";
@@ -349,20 +350,6 @@ export default function DiningTab({ agentServiceDetails = {} }) {
   const togglePop = (f) => setPopularFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
   const togglePrice = (p) => setPriceFilter(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
 
-  function useMyLocation() {
-    setLocating(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.latitude}&lon=${coords.longitude}&format=json`);
-          const data = await res.json();
-          setLocation(data.address?.city || data.address?.town || data.address?.village || "Current location");
-        } catch { setLocation("Current location"); }
-        setLocating(false);
-      }, () => { setLocating(false); });
-    } else setLocating(false);
-  }
-
   const filtered = useMemo(() => {
     let res = [...RESTAURANTS];
     if (openNowOnly) res = res.filter(r => r.openNow);
@@ -414,13 +401,27 @@ export default function DiningTab({ agentServiceDetails = {} }) {
           <h2 className="font-display font-bold text-2xl text-peak-text mb-1">Where are you eating?</h2>
           <p className="text-peak-text-secondary text-sm mb-6">We'll show restaurants near you on the mountain and in the valley.</p>
           <div className="bg-peak-card border border-white/5 rounded-xl p-6 mb-6 space-y-4">
-            <button onClick={useMyLocation} disabled={locating} className="flex items-center gap-2 text-peak-blue text-sm font-medium hover:underline">
+            <button onClick={() => {
+              if (!navigator.geolocation) return;
+              setLocating(true);
+              navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+                try {
+                  const res = await fetch(`https://api.maptiler.com/geocoding/${coords.longitude},${coords.latitude}.json?key=lNsV1pOMdNShmVL9tiih`);
+                  const data = await res.json();
+                  setLocation(data.features?.[0]?.context?.find(c => c.id?.startsWith("place"))?.text || data.features?.[0]?.place_name?.split(",")[0] || "Current location");
+                } catch { setLocation("Current location"); }
+                setLocating(false);
+              }, () => setLocating(false));
+            }} disabled={locating} className="flex items-center gap-2 text-peak-blue text-sm font-medium hover:underline disabled:opacity-50">
               <MapPin className="h-4 w-4" />{locating ? "Detecting..." : "Use my location"}
             </button>
             <div>
               <label className="block text-xs text-peak-text-secondary mb-1">Or enter a resort, village, or town</label>
-              <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Verbier, Zermatt, Chamonix"
-                className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
+              <LocationInput
+                type="resort" context="destination" placeholder="e.g. Verbier, Zermatt, Chamonix"
+                value={location} onChange={setLocation}
+                onSelect={s => setLocation(s.label || s.name || s.city)}
+              />
             </div>
           </div>
           <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Area scope</p>

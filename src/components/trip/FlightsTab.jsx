@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { Plane, Leaf, ArrowUpDown, SlidersHorizontal, ArrowLeftRight, ChevronDown, ChevronUp, MapPin, AlertTriangle, ShoppingBag } from "lucide-react";
+import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
@@ -124,12 +125,12 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   const [tripType, setTripType] = useState("Round trip");
   const [fromVal, setFromVal] = useState("");
   const [toVal, setToVal] = useState("");
-  const [toSuggestions, setToSuggestions] = useState(false);
+  const [fromAirportData, setFromAirportData] = useState(null);
+  const [toAirportData, setToAirportData] = useState(null);
   const [searchForm, setSearchForm] = useState({ depDate: null, retDate: null, adults: 1, children: 0, infants: 0, cabin: "Economy" });
   const [filters, setFilters] = useState({ directOnly: false, flexible: false, nearbyAirports: false, carbon: false });
   const [skiGear, setSkiGear] = useState({ open: false, skiBag: false, bootBag: false, helmetBag: false, poles: false });
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState("");
+
   const [sortBy, setSortBy] = useState("Cheapest");
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [selectedFlight, setSelectedFlight] = useState(null);
@@ -151,34 +152,13 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   const sf = (field, val) => setSearchForm(f => ({ ...f, [field]: val }));
   const totalPax = searchForm.adults + searchForm.children + searchForm.infants;
 
-  function useMyLocation() {
-    setLocationLoading(true);
-    setLocationError("");
-    if (!navigator.geolocation) { setLocationError("Geolocation not supported"); setLocationLoading(false); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude: lat, longitude: lon } = pos.coords;
-        fetch(`https://api.maptiler.com/geocoding/${lon},${lat}.json?key=lNsV1pOMdNShmVL9tiih`)
-          .then(r => r.json())
-          .then(data => {
-            const city = data.features?.[0]?.context?.find(c => c.id?.startsWith("place"))?.text ||
-              data.features?.[0]?.place_name?.split(",")[0] || "";
-            const lookup = city.toLowerCase();
-            const iata = Object.entries(CITY_AIRPORT_LOOKUP).find(([k]) => lookup.includes(k))?.[1];
-            if (iata) setFromVal(iata);
-            else setFromVal(city || "Unknown");
-            setLocationLoading(false);
-          })
-          .catch(() => { setLocationError("Could not resolve location — enter manually"); setLocationLoading(false); });
-      },
-      () => { setLocationError("Location access denied — enter your city or airport manually"); setLocationLoading(false); }
-    );
-  }
-
   function swapFromTo() {
-    const tmp = fromVal;
-    setFromVal(toVal.split(" —")[0]);
-    setToVal(tmp);
+    const tmpVal = fromVal;
+    const tmpData = fromAirportData;
+    setFromVal(toVal);
+    setFromAirportData(toAirportData);
+    setToVal(tmpVal);
+    setToAirportData(tmpData);
   }
 
   const filtered = useMemo(() => {
@@ -227,15 +207,11 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
             <div className="flex items-start gap-3 mb-5">
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">From</label>
-                <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3">
-                  <input value={fromVal} onChange={e => setFromVal(e.target.value)} placeholder="City or airport — e.g. Barcelona BCN"
-                    className="w-full bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50" />
-                </div>
-                <button onClick={useMyLocation} disabled={locationLoading}
-                  className="mt-1.5 flex items-center gap-1 text-xs text-peak-blue hover:underline disabled:opacity-50">
-                  <MapPin className="h-3 w-3" />{locationLoading ? "Detecting…" : "Use my location"}
-                </button>
-                {locationError && <p className="text-peak-red text-xs mt-1">{locationError}</p>}
+                <LocationInput
+                  type="airport" context="departure" placeholder="City or airport — e.g. Barcelona BCN"
+                  value={fromVal} onChange={setFromVal}
+                  onSelect={s => { setFromAirportData(s); setFromVal(s.label); }}
+                />
               </div>
 
               <button onClick={swapFromTo} className="w-10 h-10 mt-7 rounded-full bg-peak-surface border border-white/10 flex items-center justify-center hover:border-white/25 flex-shrink-0 transition-colors">
@@ -244,25 +220,14 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
 
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">To (airport or city)</label>
-                <div className="relative">
-                  <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3">
-                    <input value={toVal} onChange={e => { setToVal(e.target.value); setToSuggestions(true); }}
-                      onFocus={() => setToSuggestions(true)}
-                      placeholder="Destination airport"
-                      className="w-full bg-transparent text-peak-text text-sm outline-none placeholder-peak-text-secondary/50" />
-                  </div>
-                  {toSuggestions && (
-                    <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-peak-card border border-white/10 rounded-xl overflow-hidden shadow-xl">
-                      {DEST_AIRPORTS.filter(a => !toVal || a.iata.toLowerCase().includes(toVal.toLowerCase()) || a.name.toLowerCase().includes(toVal.toLowerCase())).map(airport => (
-                        <button key={airport.iata} onClick={() => { setToVal(`${airport.iata} — ${airport.name}`); setToSuggestions(false); }}
-                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-peak-surface transition-colors text-left">
-                          <span className="text-peak-text text-sm font-medium">{airport.iata} — {airport.name}</span>
-                          <span className="text-peak-text-secondary text-xs">{airport.transfer}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <LocationInput
+                  type="airport" context="destination" placeholder="Destination airport"
+                  value={toVal} onChange={setToVal}
+                  onSelect={s => { setToAirportData(s); setToVal(s.label); }}
+                />
+                {toAirportData?.nearestResort && (
+                  <p className="mt-1.5 text-xs text-peak-green font-medium">~{toAirportData.transferTime} transfer to {toAirportData.nearestResort}</p>
+                )}
               </div>
             </div>
 
