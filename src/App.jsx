@@ -32,7 +32,9 @@ import TrackingRecord from './components/tracking/TrackingRecord';
 import PeakLog from './components/tracking/PeakLog';
 import PeakVision from './components/tracking/PeakVision';
 import TrackingImport from './components/tracking/TrackingImport';
+import RoutePlannerLanding from './components/tracking/RoutePlannerLanding';
 import { TripPlannerProvider } from './context/TripPlannerContext';
+import { Navigate } from 'react-router-dom';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -75,7 +77,10 @@ const AuthenticatedApp = () => {
           <Route path="log" element={<PeakLog />} />
           <Route path="vision" element={<PeakVision />} />
           <Route path="import" element={<TrackingImport />} />
+          <Route path="routes" element={<RoutePlannerLanding />} />
         </Route>
+        <Route path="/route-planner" element={<Navigate to="/tracking/routes" replace />} />
+        <Route path="/route-planner/:resortId" element={<Navigate to="/tracking/routes" replace />} />
         <Route path="/tracking/activity/:id" element={<ActivityDetail />} />
         <Route path="/book" element={<Booking />} />
         <Route path="/dashboard" element={<Dashboard />} />

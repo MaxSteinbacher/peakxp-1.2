@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Radio, BarChart3, Eye, Upload } from "lucide-react";
+import { Radio, BarChart3, Eye, Upload, Route } from "lucide-react";
 import BackButton from "../components/shared/BackButton";
 import AuthGate from "../components/AuthGate";
 import { useAppAuth } from "../context/AppAuthContext";
@@ -9,6 +9,7 @@ const TABS = [
   { label: "Peak Log", icon: BarChart3, path: "/tracking/log" },
   { label: "Peak Vision AI", icon: Eye, path: "/tracking/vision" },
   { label: "Import", icon: Upload, path: "/tracking/import" },
+  { label: "Route Planner", icon: Route, path: "/tracking/routes" },
 ];
 
 export default function PeakTracking() {
