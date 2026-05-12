@@ -41,6 +41,58 @@ const TRUST = [
   { label: "SSL secured" }, { label: "Skip the station queue" },
 ];
 
+const TRAIN_ROUTES = {
+  "barcelona sants-geneva": { dur: "5h 30m", ops: ["TGV","Renfe"], changes: "1 change · Perpignan" },
+  "london st pancras-geneva": { dur: "7h 15m", ops: ["Eurostar","TGV Lyria"], changes: "1 change · Paris" },
+  "amsterdam centraal-innsbruck": { dur: "9h 00m", ops: ["ICE","ÖBB"], changes: "1 change · Munich" },
+  "paris gare de lyon-geneva": { dur: "3h 10m", ops: ["TGV Lyria","SBB"], changes: "Direct" },
+  "zurich hauptbahnhof-innsbruck": { dur: "3h 30m", ops: ["Railjet","ÖBB"], changes: "Direct" },
+  "munich hauptbahnhof-salzburg": { dur: "1h 35m", ops: ["Railjet"], changes: "Direct" },
+  "munich hauptbahnhof-innsbruck": { dur: "1h 50m", ops: ["Railjet","ÖBB"], changes: "Direct" },
+  "paris gare de lyon-chambery": { dur: "2h 30m", ops: ["TGV"], changes: "Direct" },
+  "paris gare de lyon-bourg-saint-maurice": { dur: "4h 30m", ops: ["TGV Neige"], changes: "Direct" },
+  "amsterdam centraal-geneva": { dur: "7h 45m", ops: ["ICE","TGV Lyria"], changes: "1 change · Basel" },
+};
+
+const RAILCARD_FACTORS = { "None": 1.0, "Senior railcard": 0.8, "Youth (BahnCard 25/50)": 0.75, "Family": 0.85, "Group": 0.9, "Interrail pass": 0.3 };
+
+function trainDurToH(dur) {
+  const m = dur.match(/(\d+)h\s*(\d+)m/);
+  return m ? parseInt(m[1]) + parseInt(m[2]) / 60 : 3;
+}
+
+function normStation(s) { return (s || "").toLowerCase().trim(); }
+
+function generateTrainResults(fromStation, toStation, depDate, retDate, pax, railcard) {
+  if (!fromStation || !toStation) return [];
+  const routeKey = `${normStation(fromStation)}-${normStation(toStation)}`;
+  const route = TRAIN_ROUTES[routeKey];
+  const hours = route ? trainDurToH(route.dur) : 3 + Math.random() * 5;
+  const basePrice = Math.round(40 * hours);
+  const rcFactor = RAILCARD_FACTORS[railcard] || 1.0;
+  const df = !depDate ? 1.0 : (() => { const m = new Date(depDate).getMonth() + 1; return m === 12 ? 1.4 : (m === 1 || m === 2) ? 0.85 : 1.0; })();
+  const operators = route?.ops || ["Railjet","ICE","TGV"];
+  const DEP = ["07:01","10:15","13:30","16:45"];
+  return DEP.slice(0, Math.min(operators.length + 1, 4)).map((dep, i) => {
+    const op = operators[i % operators.length];
+    const varF = 0.9 + i * 0.12;
+    const price = Math.round(basePrice * rcFactor * df * varF);
+    const durH = route ? trainDurToH(route.dur) : hours;
+    const arrMins = parseInt(dep.split(":")[0]) * 60 + parseInt(dep.split(":")[1]) + Math.round(durH * 60);
+    const arr = `${String(Math.floor(arrMins / 60) % 24).padStart(2,"0")}:${String(arrMins % 60).padStart(2,"0")}`;
+    return {
+      id: `tr${i}`, operator: op, code: op.slice(0,3).toUpperCase(),
+      from: fromStation, to: toStation, dep, arr,
+      duration: route?.dur || `${Math.round(hours)}h 00m`,
+      changes: route?.changes || `1 change · connection`,
+      class: i === 0 ? "1st class" : "2nd class",
+      price, refundable: i % 2 === 0, status: i === 1 ? "Few seats" : "Available",
+      skiBag: true, platform: String(i + 3), co2saved: Math.round(durH * 15),
+      amenities: ["WiFi", i < 2 ? "Restaurant" : "Power", "Ski storage"],
+    };
+  });
+}
+
 export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [tripType, setTripType] = useState("Return");
@@ -57,6 +109,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const [expandedTrain, setExpandedTrain] = useState(null);
   const [addons, setAddons] = useState([]);
   const [preFilled, setPreFilled] = useState(false);
+  const [trainResults, setTrainResults] = useState([]);
 
   useEffect(() => {
     const sd = agentServiceDetails?.train;
@@ -95,7 +148,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   function swapFromTo() { const tmp = fromVal; setFromVal(toVal); setToVal(tmp); }
 
   const filtered = useMemo(() => {
-    let res = [...MOCK_TRAINS];
+    let res = [...trainResults];
     if (filters.direct) res = res.filter(t => t.changes === "Direct" || t.changes.startsWith("Direct"));
     if (filters.ski) res = res.filter(t => t.amenities.includes("Ski storage"));
     if (filters.bike) res = res.filter(t => t.amenities.includes("Bike space"));
@@ -105,7 +158,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
     else if (sortBy === "Earliest") res.sort((a, b) => a.dep.localeCompare(b.dep));
     else if (sortBy === "Latest") res.sort((a, b) => b.dep.localeCompare(a.dep));
     return res;
-  }, [filters, priceRange, sortBy]);
+  }, [trainResults, filters, priceRange, sortBy]);
 
   const addonsTotal = addons.reduce((sum, k) => {
     const a = ADDONS_TRAIN.find(x => x.key === k);
@@ -268,7 +321,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
             <p className="text-peak-green text-xs">Train travel produces approximately 90% fewer CO₂ emissions than flying on the same route. Where a direct or one-change train connection exists, we recommend it over flying.</p>
           </div>
 
-          <button onClick={() => setStep(1)} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
+          <button onClick={() => { setTrainResults(generateTrainResults(fromVal, toVal, searchForm.depDate, searchForm.retDate, totalPax, searchForm.railcard)); setStep(1); }} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
             Search trains
           </button>
         </div>
@@ -284,7 +337,11 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <div>
-              <span className="text-peak-text-secondary text-sm">{filtered.length} trains found</span>
+              {!fromVal || !toVal ? (
+                <span className="text-peak-text-secondary text-sm">Please enter departure and destination stations to search</span>
+              ) : (
+                <span className="text-peak-text-secondary text-sm">{filtered.length} trains found from {fromVal} to {toVal}</span>
+              )}
               <span className="text-peak-text-secondary/60 text-xs ml-2">{fromVal} → {toVal} · {searchForm.depDate || "–"} · {totalPax} pax</span>
             </div>
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">

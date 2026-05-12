@@ -53,6 +53,72 @@ const TRUST = [
   { label: "Free cancellation within 24h" }, { label: "SSL secured" },
 ];
 
+// Realistic route data
+const ROUTE_DATA = {
+  "BCN-GVA": { dur: "1h 50m", airlines: ["Vueling","Iberia","easyJet"] },
+  "LHR-GVA": { dur: "2h 00m", airlines: ["British Airways","easyJet","SWISS"] },
+  "LGW-GVA": { dur: "2h 05m", airlines: ["easyJet","British Airways"] },
+  "AMS-MUC": { dur: "1h 30m", airlines: ["KLM","Transavia","Lufthansa"] },
+  "AMS-GVA": { dur: "1h 55m", airlines: ["KLM","easyJet","SWISS"] },
+  "AMS-INN": { dur: "1h 45m", airlines: ["KLM","easyJet"] },
+  "CDG-GVA": { dur: "1h 20m", airlines: ["Air France","easyJet","Transavia"] },
+  "CDG-INN": { dur: "1h 45m", airlines: ["Air France","easyJet"] },
+  "FRA-SZG": { dur: "1h 20m", airlines: ["Lufthansa","easyJet"] },
+  "FRA-INN": { dur: "1h 15m", airlines: ["Lufthansa","Austrian"] },
+  "MUC-INN": { dur: "0h 55m", airlines: ["Lufthansa","Austrian"] },
+  "MUC-GVA": { dur: "1h 15m", airlines: ["Lufthansa","SWISS","easyJet"] },
+};
+
+const CABIN_FACTORS = { Economy: 1.0, "Premium Economy": 1.7, Business: 3.2, First: 5.5 };
+const DEP_TIMES = ["06:30","08:15","10:05","12:45","15:30","18:00"];
+
+function durToMin(dur) {
+  const m = dur.match(/(\d+)h\s*(\d+)m/);
+  if (!m) return 90;
+  return parseInt(m[1]) * 60 + parseInt(m[2]);
+}
+
+function dateFactor(date) {
+  if (!date) return 1.0;
+  const d = new Date(date);
+  const month = d.getMonth() + 1;
+  if (month === 12 || month === 2 || month === 1) return month === 12 ? 1.4 : 0.85;
+  return 1.0;
+}
+
+function generateFlightResults(fromAirport, toAirport, depDate, retDate, pax, cabinClass, skiGear) {
+  if (!fromAirport || !toAirport) return [];
+  const from = fromAirport.split(" ")[0].toUpperCase();
+  const to = toAirport.split(" ")[0].toUpperCase();
+  const routeKey = `${from}-${to}`;
+  const routeData = ROUTE_DATA[routeKey] || { dur: "2h 30m", airlines: ["easyJet","Ryanair","Transavia"] };
+  const durationMin = durToMin(routeData.dur);
+  const basePrice = durationMin < 120 ? 80 : durationMin < 180 ? 130 : 200;
+  const cabinFactor = CABIN_FACTORS[cabinClass] || 1.0;
+  const df = dateFactor(depDate);
+  const count = Math.min(routeData.airlines.length, 5);
+  const times = DEP_TIMES.slice(0, count);
+  return times.map((dep, i) => {
+    const airline = routeData.airlines[i % routeData.airlines.length];
+    const varFactor = 0.85 + (i * 0.08);
+    const price = Math.round(basePrice * cabinFactor * df * varFactor);
+    const [h, m] = dep.split(":").map(Number);
+    const arrMins = h * 60 + m + durationMin;
+    const arrH = Math.floor(arrMins / 60) % 24;
+    const arrM = arrMins % 60;
+    const arr = `${String(arrH).padStart(2,"0")}:${String(arrM).padStart(2,"0")}`;
+    const skiPricing = skiGear ? 35 : 0;
+    return {
+      id: `f${i}`, airline, iata: airline.slice(0,2).toUpperCase(), flightNo: `${airline.slice(0,2).toUpperCase()}${100+i*37}`,
+      from, fromCity: from, to, toCity: to,
+      dep, arr, duration: routeData.dur, stops: "Direct",
+      cabin: cabinClass, price: price + skiPricing, eco: i === 0 ? "Low" : i === count-1 ? "High" : "Medium",
+      co2kg: Math.round(durationMin * 0.9), refundable: i % 2 === 0,
+      baggage: cabinClass === "Economy" ? "1× cabin bag" : "2× checked bags", checkedBag: cabinClass !== "Economy",
+    };
+  }).sort((a, b) => a.price - b.price);
+}
+
 export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [tripType, setTripType] = useState("Round trip");
@@ -71,6 +137,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   const [insurance, setInsurance] = useState(null);
   const [skiInsurance, setSkiInsurance] = useState(false);
   const [preFilled, setPreFilled] = useState(false);
+  const [flightResults, setFlightResults] = useState([]);
 
   useEffect(() => {
     const sd = agentServiceDetails?.flights;
@@ -115,7 +182,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   }
 
   const filtered = useMemo(() => {
-    let res = [...MOCK_FLIGHTS];
+    let res = [...flightResults];
     if (filters.directOnly) res = res.filter(f => f.stops === "Direct");
     res = res.filter(f => f.price >= priceRange[0] && f.price <= priceRange[1]);
     if (sortBy === "Cheapest") res.sort((a, b) => a.price - b.price);
@@ -123,7 +190,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
     else if (sortBy === "Departure") res.sort((a, b) => a.dep.localeCompare(b.dep));
     else if (sortBy === "Arrival") res.sort((a, b) => a.arr.localeCompare(b.arr));
     return res;
-  }, [filters, priceRange, sortBy]);
+  }, [flightResults, filters, priceRange, sortBy]);
 
   const skiBagCount = Object.entries(skiGear).filter(([k, v]) => k !== "open" && v).length;
   const insurancePrice = insurance ? INSURANCE_TIERS.find(t => t.key === insurance)?.price || 0 : 0;
@@ -268,7 +335,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
             )}
           </div>
 
-          <button onClick={() => setStep(1)} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
+          <button onClick={() => { setFlightResults(generateFlightResults(fromVal, toVal, searchForm.depDate, searchForm.retDate, totalPax, searchForm.cabin, Object.values(skiGear).some(Boolean))); setStep(1); }} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
             Search flights
           </button>
         </div>
@@ -300,7 +367,11 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
           {/* Results header + sort */}
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <div>
-              <span className="text-peak-text-secondary text-sm">{filtered.length} flights found</span>
+              {!fromVal || !toVal ? (
+                <span className="text-peak-text-secondary text-sm">Please enter departure and destination airports to search</span>
+              ) : (
+                <span className="text-peak-text-secondary text-sm">{filtered.length} flights found from {fromVal.split(" ")[0]} to {toVal.split(" ")[0]}</span>
+              )}
               <span className="text-peak-text-secondary/60 text-xs ml-2">{fromVal} → {toVal} · {fmtDate(searchForm.depDate) || "–"} · {totalPax} pax · {searchForm.cabin}</span>
             </div>
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">

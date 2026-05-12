@@ -50,6 +50,45 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   return `${h}:${m}`;
 });
 
+const RENTAL_COMPANIES_AIRPORT = ["Sixt","Hertz","Avis","Enterprise","Europcar","Budget"];
+const RENTAL_COMPANIES_CITY = ["Europcar","Hertz","Avis","Local Rentals"];
+const RENTAL_COMPANIES_STATION = ["Europcar","Sixt"];
+
+const VEHICLE_TEMPLATES = [
+  { name: "Volkswagen Golf", category: "Compact", seats: 5, doors: 5, boot: "Medium", fuel: "Petrol", basePpd: 45, winter: [], transmission: "Manual" },
+  { name: "Seat Leon", category: "Compact", seats: 5, doors: 5, boot: "Medium", fuel: "Diesel", basePpd: 48, winter: [], transmission: "Manual" },
+  { name: "Volkswagen Tiguan", category: "SUV", seats: 5, doors: 5, boot: "Large", fuel: "Diesel", basePpd: 75, winter: ["Winter tyres","4WD"], transmission: "Automatic" },
+  { name: "Skoda Kodiaq", category: "SUV", seats: 7, doors: 5, boot: "Large", fuel: "Diesel", basePpd: 82, winter: ["Winter tyres","4WD"], transmission: "Automatic" },
+  { name: "BMW X5", category: "Luxury", seats: 5, doors: 5, boot: "Large", fuel: "Diesel", basePpd: 140, winter: ["Winter tyres","4WD","Ski rack"], transmission: "Automatic" },
+  { name: "Ford Galaxy", category: "Van", seats: 7, doors: 5, boot: "Very large", fuel: "Diesel", basePpd: 85, winter: ["Winter tyres"], transmission: "Manual" },
+  { name: "Renault Zoe", category: "Compact", seats: 5, doors: 5, boot: "Medium", fuel: "Electric", basePpd: 55, winter: [], transmission: "Automatic" },
+];
+
+function generateCarResults(pickupLocation, pickupDate, returnDate, driverAge, prefs, days) {
+  if (!pickupLocation) return [];
+  const loc = pickupLocation.toLowerCase();
+  const companies = loc.includes("airport") || /^[A-Z]{3}$/.test(pickupLocation.trim())
+    ? RENTAL_COMPANIES_AIRPORT
+    : loc.includes("station") ? RENTAL_COMPANIES_STATION : RENTAL_COMPANIES_CITY;
+  const df = (() => { if (!pickupDate) return 1.0; const m = new Date(pickupDate).getMonth() + 1; return m === 12 ? 1.4 : (m === 1 || m === 2) ? 0.85 : 1.0; })();
+  const youngDriver = driverAge && !driverAge.includes("25") && !driverAge.includes("30");
+  const youngSurcharge = youngDriver ? 18 : 0;
+  const wantAWD = prefs.includes("4WD / AWD") || prefs.includes("Snow-ready");
+  const templates = wantAWD ? VEHICLE_TEMPLATES.filter(v => v.winter.some(w => w.includes("4WD"))) : VEHICLE_TEMPLATES;
+  return templates.slice(0, Math.min(companies.length, 5)).map((tpl, i) => {
+    const company = companies[i % companies.length];
+    const ppd = Math.round((tpl.basePpd + youngSurcharge) * df * (0.9 + i * 0.05));
+    return {
+      id: `car${i}`, name: tpl.name, category: tpl.category, seats: tpl.seats, doors: tpl.doors,
+      boot: tpl.boot, transmission: tpl.transmission, fuel: tpl.fuel, winter: tpl.winter,
+      company, location: pickupLocation, locationDist: "On-site desk",
+      pricePerDay: ppd, mileage: "Unlimited", fuel_policy: "Full-to-full",
+      cancellation: i % 2 === 0 ? "Free cancellation" : "Non-refundable",
+      included: ["CDW","TPL"], rating: 4.2 + Math.round(i * 0.15 * 10) / 10, status: i === 2 ? "Limited" : "Available",
+    };
+  });
+}
+
 export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   const [step, setStep] = useState(0);
   const [pickupVal, setPickupVal] = useState("");
@@ -69,6 +108,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   const [expandedCar, setExpandedCar] = useState(null);
   const [addons, setAddons] = useState([]);
   const [preFilled, setPreFilled] = useState(false);
+  const [carResults, setCarResults] = useState([]);
 
   useEffect(() => {
     const sd = agentServiceDetails?.car;
@@ -116,7 +156,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   }, [searchForm.pickupDate, searchForm.returnDate]);
 
   const filtered = useMemo(() => {
-    let res = [...MOCK_CARS];
+    let res = [...carResults];
     if (filterWinter) res = res.filter(c => c.winter.length > 0);
     if (filterAuto) res = res.filter(c => c.transmission === "Automatic");
     if (filters.freeCancel) res = res.filter(c => c.cancellation === "Free cancellation");
@@ -134,7 +174,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
     else if (sortBy === "Best rated") res.sort((a, b) => b.rating - a.rating);
     else if (sortBy === "Luxury first") res.sort((a, b) => b.pricePerDay - a.pricePerDay);
     return res;
-  }, [filterWinter, filterAuto, filters, vehiclePrefs, priceRange, sortBy]);
+  }, [carResults, filterWinter, filterAuto, filters, vehiclePrefs, priceRange, sortBy]);
 
   const addonsTotal = addons.reduce((sum, k) => {
     const a = ADDONS_CAR.find(x => x.key === k);
@@ -283,7 +323,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             <p className="text-peak-blue text-xs">For Alpine roads Dec-Apr, AWD or winter tyres are a minimum requirement. Snow chains may be legally required on certain mountain passes.</p>
           </div>
 
-          <button onClick={() => setStep(1)} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
+          <button onClick={() => { setCarResults(generateCarResults(pickupVal, searchForm.pickupDate, searchForm.returnDate, searchForm.driverAge, vehiclePrefs, pickupDays)); setStep(1); }} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
             Search vehicles
           </button>
         </div>
@@ -294,7 +334,11 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <div>
-              <span className="text-peak-text-secondary text-sm">{filtered.length} vehicles found</span>
+              {!pickupVal ? (
+                <span className="text-peak-text-secondary text-sm">Please enter a pick-up location to search</span>
+              ) : (
+                <span className="text-peak-text-secondary text-sm">{filtered.length} vehicles available at {pickupVal} — {pickupDays} day rental</span>
+              )}
               <span className="text-peak-text-secondary/60 text-xs ml-2">{pickupVal} · {pickupDays} day{pickupDays !== 1 ? "s" : ""} · {fmtDate(searchForm.pickupDate) || "-"} to {fmtDate(searchForm.returnDate) || "-"}</span>
             </div>
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">

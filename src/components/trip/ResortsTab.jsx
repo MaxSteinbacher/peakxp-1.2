@@ -1,401 +1,268 @@
-import { useState, useMemo } from "react";
-import DateRangePicker from "../shared/DateRangePicker";
-import { ArrowUpDown, SlidersHorizontal, Star } from "lucide-react";
-import RangeSlider from "../shared/RangeSlider";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { resorts } from "../../lib/data";
+import { X, SlidersHorizontal } from "lucide-react";
+import DateRangePicker from "../shared/DateRangePicker";
+import RangeSlider from "../shared/RangeSlider";
+import { useTripPlanner } from "../../context/TripPlannerContext";
+import { resorts, SEASON_PASSES } from "../../lib/data";
+import { sortByProximity, getNearestResorts, getResortsInDestination } from "../../lib/proximity";
 
-const sortOptions = [
-  { key: "relevance", label: "Relevance" },
-  { key: "price", label: "Price" },
-  { key: "rating", label: "Rating" },
-  { key: "altitude", label: "Altitude" },
-];
+const SORT_OPTIONS = ["Recommended", "Closest first", "Price ↑", "Price ↓", "Rating", "Most pistes", "Most lifts"];
 
-const popularFilterDefs = [
-  { key: "beginner", label: "Beginner friendly" },
-  { key: "family", label: "Family resort" },
-  { key: "terrain_park", label: "Snow park" },
-  { key: "night_skiing", label: "Night skiing" },
-  { key: "free_parking", label: "Free parking" },
-  { key: "apres_ski", label: "Après-ski" },
-];
-
-const countries = ["Switzerland", "France", "Austria", "Italy", "Andorra", "Spain", "Norway", "Slovenia"];
-const slopeSizes = [
-  { key: "small", label: "Small (<50km)" },
-  { key: "medium", label: "Medium (50–150km)" },
-  { key: "large", label: "Large (150–300km)" },
-  { key: "vast", label: "Vast (300km+)" },
-];
-const slopeOfferings = ["Beginner", "Intermediate", "Expert", "Freeride", "Off-piste"];
-const facilitiesChecks = [
-  { key: "kids_area", label: "Kids area" },
-  { key: "childcare", label: "Childcare / crèche" },
-  { key: "gastronomy", label: "Gastronomy" },
-  { key: "apres_ski", label: "Après-ski" },
-  { key: "eco", label: "Environmental friendliness" },
-];
-
-function PillToggle({ label, active, onToggle }) {
-  return (
-    <button
-      onClick={onToggle}
-      className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors whitespace-nowrap ${
-        active
-          ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue"
-          : "border-white/10 text-peak-text-secondary hover:text-peak-text"
-      }`}
-    >
-      {label}
-    </button>
-  );
+function recommendedScore(r) {
+  const prox = r.distanceKm != null ? Math.max(0, 1 - r.distanceKm / 500) : 0.5;
+  const rating = ((r.rating || 7) - 5) / 5;
+  const pistes = Math.min(1, (r.pisteKm || 0) / 600);
+  return prox * 0.4 + rating * 0.35 + pistes * 0.25;
 }
 
-function Section({ title, children }) {
-  return (
-    <div className="mb-5 border-b border-white/5 pb-5">
-      <h4 className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">{title}</h4>
-      {children}
-    </div>
-  );
-}
+function ActiveChips({ filters, onRemove, onClearAll }) {
+  const chips = [];
+  if (filters.distanceKm < 150) chips.push({ key: "distanceKm", label: `Within ${filters.distanceKm}km` });
+  if (filters.countries.length) chips.push(...filters.countries.map(c => ({ key: `country:${c}`, label: c })));
+  if (filters.priceRange[0] > 0 || filters.priceRange[1] < 150) chips.push({ key: "price", label: `€${filters.priceRange[0]}–€${filters.priceRange[1]}/day` });
+  if (filters.pisteRange[0] > 0 || filters.pisteRange[1] < 600) chips.push({ key: "piste", label: `${filters.pisteRange[0]}–${filters.pisteRange[1]}km pistes` });
+  if (filters.altRange[0] > 1000 || filters.altRange[1] < 4000) chips.push({ key: "alt", label: `${filters.altRange[0]}–${filters.altRange[1]}m` });
+  if (filters.minRating) chips.push({ key: "rating", label: `${filters.minRating}+ rating` });
+  if (filters.facilities.length) chips.push(...filters.facilities.map(f => ({ key: `fac:${f}`, label: f })));
+  if (filters.passes.length) chips.push(...filters.passes.map(p => ({ key: `pass:${p}`, label: p })));
 
-function StarSelector({ value, onChange }) {
+  if (!chips.length) return null;
   return (
-    <div className="flex gap-1">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button key={n} onClick={() => onChange(value === n ? 0 : n)}>
-          <Star className={`h-5 w-5 ${n <= value ? "fill-yellow-400 text-yellow-400" : "text-peak-text-secondary"}`} />
-        </button>
+    <div className="flex flex-wrap gap-2 mb-4 items-center">
+      {chips.map(c => (
+        <span key={c.key} className="bg-peak-surface border border-white/10 rounded-full px-3 py-1 text-peak-text text-xs flex items-center gap-1.5">
+          {c.label}
+          <button onClick={() => onRemove(c.key)} className="text-peak-text-secondary hover:text-peak-red transition-colors"><X className="h-3 w-3" /></button>
+        </span>
       ))}
+      <button onClick={onClearAll} className="text-peak-blue text-xs hover:underline">Clear all</button>
     </div>
   );
 }
 
-function toggle(arr, val) {
-  return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
-}
+function FilterSidebar({ baseList, filters, setFilters, showDistance, destination }) {
+  const countries = useMemo(() => [...new Set(baseList.map(r => Array.isArray(r.country) ? r.country[0] : r.country).filter(Boolean))].sort(), [baseList]);
+  const allFacilities = ["Kids area", "Night skiing", "Snow park", "Après-ski", "Free parking", "Ski-in ski-out", "Cross-country", "Glacier skiing", "Car-free village"];
+  const activeFacilities = useMemo(() => allFacilities.filter(f => {
+    const key = f.toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_");
+    return baseList.filter(r => r.facilities?.includes(key) || r.facilities?.includes(f.toLowerCase())).length >= 3;
+  }), [baseList]);
+  const passOptions = useMemo(() => {
+    const set = new Set();
+    baseList.forEach(r => (r.seasonPasses || []).forEach(p => set.add(p)));
+    return [...set];
+  }, [baseList]);
 
-function getSizeKey(km) {
-  if (km < 50) return "small";
-  if (km < 150) return "medium";
-  if (km < 300) return "large";
-  return "vast";
-}
-
-export default function ResortsTab() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const query = urlParams.get("q") || "";
-
-  const [sortBy, setSortBy] = useState("relevance");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-
-  // Filters state
-  const [popularFilters, setPopularFilters] = useState([]);
-  const [selectedCountries, setSelectedCountries] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 200]);
-  const [sizes, setSizes] = useState([]);
-  const [minAlt, setMinAlt] = useState([500]);
-  const [maxAlt, setMaxAlt] = useState([4000]);
-  const [liftsMax, setLiftsMax] = useState([100]);
-  const [slopeOffer, setSlopeOffer] = useState([]);
-  const [groomingMin, setGroomingMin] = useState(0);
-  const [snowMin, setSnowMin] = useState(0);
-  const [snowPark, setSnowPark] = useState(false);
-  const [crossCountry, setCrossCountry] = useState(false);
-  const [nightSkiing, setNightSkiing] = useState(false);
-  const [facilities, setFacilities] = useState([]);
-  const [parking, setParking] = useState("any");
-  const [arrivalDate, setArrivalDate] = useState(null);
-  const [departureDate, setDepartureDate] = useState(null);
-
-  const filteredResorts = useMemo(() => {
-    let results = [...resorts];
-
-    if (query) {
-      results = results.filter((r) =>
-        r.name.toLowerCase().includes(query.toLowerCase()) ||
-        r.country.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-
-    if (selectedCountries.length > 0) {
-      results = results.filter((r) => selectedCountries.includes(r.country));
-    }
-
-    results = results.filter(
-      (r) => r.priceFrom >= priceRange[0] && r.priceFrom <= priceRange[1]
-    );
-
-    if (sizes.length > 0) {
-      results = results.filter((r) => sizes.includes(getSizeKey(r.pisteKm)));
-    }
-
-    results = results.filter(
-      (r) => r.maxAltitude >= minAlt[0] && r.maxAltitude <= (maxAlt[0] >= 4000 ? Infinity : maxAlt[0])
-    );
-
-    if (liftsMax[0] < 100) {
-      results = results.filter((r) => r.lifts <= liftsMax[0]);
-    }
-
-    if (slopeOffer.length > 0) {
-      results = results.filter((r) =>
-        slopeOffer.some((s) => r.difficulty?.map((d) => d.toLowerCase()).includes(s.toLowerCase()))
-      );
-    }
-
-    if (snowPark || popularFilters.includes("terrain_park")) {
-      results = results.filter((r) => r.facilities?.includes("terrain_park"));
-    }
-    if (nightSkiing || popularFilters.includes("night_skiing")) {
-      results = results.filter((r) => r.facilities?.includes("night_skiing"));
-    }
-    if (popularFilters.includes("beginner")) {
-      results = results.filter((r) => r.difficulty?.includes("beginner"));
-    }
-
-    switch (sortBy) {
-      case "price": results.sort((a, b) => a.priceFrom - b.priceFrom); break;
-      case "rating": results.sort((a, b) => b.rating - a.rating); break;
-      case "altitude": results.sort((a, b) => b.maxAltitude - a.maxAltitude); break;
-      default: break;
-    }
-
-    return results;
-  }, [query, sortBy, popularFilters, selectedCountries, priceRange, sizes, minAlt, maxAlt, liftsMax, slopeOffer, snowPark, nightSkiing, facilities, parking]);
-
-  const filterPanel = (
-    <div className="w-64 flex-shrink-0">
-      {/* Popular filters */}
-      <Section title="Popular filters">
-        <div className="flex flex-wrap gap-2">
-          {popularFilterDefs.map((f) => (
-            <PillToggle
-              key={f.key}
-              label={f.label}
-              active={popularFilters.includes(f.key)}
-              onToggle={() => setPopularFilters((prev) => toggle(prev, f.key))}
-            />
-          ))}
-        </div>
-      </Section>
-
-      {/* Location */}
-      <Section title="Location">
-        <div className="space-y-2">
-          {countries.map((c) => (
-            <label key={c} className="flex items-center gap-2 cursor-pointer group">
-              <Checkbox
-                checked={selectedCountries.includes(c)}
-                onCheckedChange={() => setSelectedCountries((prev) => toggle(prev, c))}
-                className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue"
-              />
-              <span className="text-sm text-peak-text-secondary group-hover:text-peak-text transition-colors">{c}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
-
-      {/* Price */}
-      <Section title={`Price per day: €${priceRange[0]} – €${priceRange[1]} / day`}>
-        <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={200} step={5} formatLabel={n => '€' + n} />
-      </Section>
-
-      {/* Mountain */}
-      <Section title="Mountain">
-        <div className="mb-4">
-          <p className="text-xs text-peak-text-secondary mb-2">Ski resort size</p>
-          <div className="flex flex-wrap gap-2">
-            {slopeSizes.map((s) => (
-              <PillToggle
-                key={s.key}
-                label={s.label}
-                active={sizes.includes(s.key)}
-                onToggle={() => setSizes((prev) => toggle(prev, s.key))}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="mb-4">
-          <p className="text-xs text-peak-text-secondary mb-2">Minimum altitude: {minAlt[0]}m</p>
-          <RangeSlider value={minAlt} onValueChange={setMinAlt} min={500} max={2000} step={100} formatLabel={n => n + 'm'} />
-        </div>
-        <div className="mb-4">
-          <p className="text-xs text-peak-text-secondary mb-2">Maximum altitude: {maxAlt[0] >= 4000 ? "4000m+" : `${maxAlt[0]}m`}</p>
-          <RangeSlider value={maxAlt} onValueChange={setMaxAlt} min={2000} max={4000} step={100} formatLabel={n => n + 'm'} />
-        </div>
-        <div>
-          <p className="text-xs text-peak-text-secondary mb-2">Ski lifts: up to {liftsMax[0] >= 100 ? "100+" : liftsMax[0]}</p>
-          <RangeSlider value={liftsMax} onValueChange={setLiftsMax} min={0} max={100} step={5} formatLabel={String} />
-        </div>
-      </Section>
-
-      {/* Slopes */}
-      <Section title="Slopes">
-        <div className="mb-4">
-          <p className="text-xs text-peak-text-secondary mb-2">Slope offering</p>
-          <div className="flex flex-wrap gap-2">
-            {slopeOfferings.map((s) => (
-              <PillToggle
-                key={s}
-                label={s}
-                active={slopeOffer.includes(s)}
-                onToggle={() => setSlopeOffer((prev) => toggle(prev, s))}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="mb-3">
-          <p className="text-xs text-peak-text-secondary mb-2">Slope grooming (min)</p>
-          <StarSelector value={groomingMin} onChange={setGroomingMin} />
-        </div>
-        <div className="mb-3">
-          <p className="text-xs text-peak-text-secondary mb-2">Snow reliability (min)</p>
-          <StarSelector value={snowMin} onChange={setSnowMin} />
-        </div>
-        <div className="space-y-2 mt-3">
-          {[
-            { label: "Snow parks", checked: snowPark, set: setSnowPark },
-            { label: "Cross-country skiing", checked: crossCountry, set: setCrossCountry },
-            { label: "Night skiing", checked: nightSkiing, set: setNightSkiing },
-          ].map(({ label, checked, set }) => (
-            <label key={label} className="flex items-center gap-2 cursor-pointer group">
-              <Checkbox
-                checked={checked}
-                onCheckedChange={set}
-                className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue"
-              />
-              <span className="text-sm text-peak-text-secondary group-hover:text-peak-text transition-colors">{label}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
-
-      {/* Facilities */}
-      <Section title="Facilities & Services">
-        <div className="space-y-2">
-          {facilitiesChecks.map((f) => (
-            <label key={f.key} className="flex items-center gap-2 cursor-pointer group">
-              <Checkbox
-                checked={facilities.includes(f.key)}
-                onCheckedChange={() => setFacilities((prev) => toggle(prev, f.key))}
-                className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue"
-              />
-              <span className="text-sm text-peak-text-secondary group-hover:text-peak-text transition-colors">{f.label}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
-
-      {/* Parking */}
-      <Section title="Parking">
-        <div className="space-y-2">
-          {["Any", "Free", "Included in ski pass", "Paid (charged)"].map((opt) => (
-            <label key={opt} className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="radio"
-                name="parking"
-                checked={parking === opt.toLowerCase()}
-                onChange={() => setParking(opt.toLowerCase())}
-                className="accent-peak-blue"
-              />
-              <span className="text-sm text-peak-text-secondary group-hover:text-peak-text transition-colors">{opt}</span>
-            </label>
-          ))}
-        </div>
-      </Section>
-    </div>
-  );
+  function toggle(key, arr, setArr) {
+    setFilters(f => ({ ...f, [key]: arr.includes(setArr) ? arr.filter(x => x !== setArr) : [...arr, setArr] }));
+  }
 
   return (
-    <div>
-      {/* Date picker */}
-      <div className="mb-5 max-w-sm">
-        <DateRangePicker
-          startDate={arrivalDate} endDate={departureDate}
-          onStartChange={setArrivalDate} onEndChange={setDepartureDate}
-          context="general"
-          placeholder={{ start: "Arrival", end: "Departure" }}
-        />
+    <div className="space-y-5 w-64 flex-shrink-0">
+      {showDistance && (
+        <div className="border-b border-white/5 pb-5">
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Distance: {filters.distanceKm < 150 ? `≤ ${filters.distanceKm}km` : "Any"}</p>
+          <RangeSlider value={[filters.distanceKm]} onValueChange={([v]) => setFilters(f => ({ ...f, distanceKm: v }))} min={5} max={150} step={5} formatLabel={n => n + "km"} />
+        </div>
+      )}
+      {countries.length > 1 && (
+        <div className="border-b border-white/5 pb-5">
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Country</p>
+          <div className="space-y-1.5">
+            {countries.map(c => (
+              <label key={c} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="accent-peak-blue" checked={filters.countries.includes(c)}
+                  onChange={() => setFilters(f => ({ ...f, countries: f.countries.includes(c) ? f.countries.filter(x => x !== c) : [...f.countries, c] }))} />
+                <span className="text-sm text-peak-text-secondary">{c}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="border-b border-white/5 pb-5">
+        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Daily lift pass: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
+        <RangeSlider value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={0} max={150} step={5} formatLabel={n => "€" + n} />
       </div>
-
-      {/* Sort bar */}
-      <div className="flex items-center justify-between mb-6 gap-3">
-        <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
-          {sortOptions.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => setSortBy(opt.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap ${
-                sortBy === opt.key
-                  ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue"
-                  : "border-white/10 text-peak-text-secondary hover:text-peak-text"
-              }`}
-            >
-              <ArrowUpDown className="h-3 w-3" />
-              {opt.label}
+      <div className="border-b border-white/5 pb-5">
+        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Terrain</p>
+        <p className="text-xs text-peak-text-secondary mb-1">Piste km: {filters.pisteRange[0]}–{filters.pisteRange[1]}km</p>
+        <RangeSlider value={filters.pisteRange} onValueChange={v => setFilters(f => ({ ...f, pisteRange: v }))} min={0} max={600} step={10} formatLabel={n => n + "km"} />
+        <p className="text-xs text-peak-text-secondary mb-1 mt-3">Summit altitude: {filters.altRange[0]}–{filters.altRange[1]}m</p>
+        <RangeSlider value={filters.altRange} onValueChange={v => setFilters(f => ({ ...f, altRange: v }))} min={1000} max={4000} step={100} formatLabel={n => n + "m"} />
+        <p className="text-xs text-peak-text-secondary mb-1 mt-3">Vertical drop: {filters.vertRange[0]}–{filters.vertRange[1]}m</p>
+        <RangeSlider value={filters.vertRange} onValueChange={v => setFilters(f => ({ ...f, vertRange: v }))} min={200} max={2500} step={50} formatLabel={n => n + "m"} />
+        <p className="text-xs text-peak-text-secondary mb-1 mt-3">Lifts: up to {filters.liftsMax[0] >= 200 ? "200+" : filters.liftsMax[0]}</p>
+        <RangeSlider value={filters.liftsMax} onValueChange={v => setFilters(f => ({ ...f, liftsMax: v }))} min={0} max={200} step={5} formatLabel={String} />
+      </div>
+      <div className="border-b border-white/5 pb-5">
+        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Rating</p>
+        <div className="flex flex-wrap gap-1.5">
+          {["Any", "7+", "8+", "8.5+", "9+"].map(r => (
+            <button key={r} onClick={() => setFilters(f => ({ ...f, minRating: r === "Any" ? null : parseFloat(r) }))}
+              className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${(filters.minRating?.toString() + "+") === r || (r === "Any" && !filters.minRating) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
+              {r}
             </button>
           ))}
         </div>
-        <button
-          onClick={() => setFiltersOpen(!filtersOpen)}
-          className="lg:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-peak-text-secondary border border-white/10 rounded-lg hover:text-peak-text"
-        >
-          <SlidersHorizontal className="h-3 w-3" />
-          Filters
+      </div>
+      {activeFacilities.length > 0 && (
+        <div className="border-b border-white/5 pb-5">
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Facilities</p>
+          <div className="space-y-1.5">
+            {activeFacilities.map(f => (
+              <label key={f} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="accent-peak-blue" checked={filters.facilities.includes(f)}
+                  onChange={() => setFilters(prev => ({ ...prev, facilities: prev.facilities.includes(f) ? prev.facilities.filter(x => x !== f) : [...prev.facilities, f] }))} />
+                <span className="text-sm text-peak-text-secondary">{f}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+      {passOptions.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Season Passes</p>
+          <div className="space-y-1.5">
+            {passOptions.map(p => (
+              <label key={p} className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="accent-peak-blue" checked={filters.passes.includes(p)}
+                  onChange={() => setFilters(prev => ({ ...prev, passes: prev.passes.includes(p) ? prev.passes.filter(x => x !== p) : [...prev.passes, p] }))} />
+                <span className="text-sm text-peak-text-secondary">{SEASON_PASSES[p]?.name || p}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const DEFAULT_FILTERS = { distanceKm: 150, countries: [], priceRange: [0, 150], pisteRange: [0, 600], altRange: [1000, 4000], vertRange: [200, 2500], liftsMax: [200], minRating: null, facilities: [], passes: [] };
+
+export default function ResortsTab() {
+  const { session } = useTripPlanner();
+  const destination = session?.destination || null;
+  const [sortBy, setSortBy] = useState("Recommended");
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [arrivalDate, setArrivalDate] = useState(null);
+  const [departureDate, setDepartureDate] = useState(null);
+
+  const showDistance = destination?.type === "resort" || destination?.type === "region";
+
+  const baseList = useMemo(() => {
+    if (!destination || destination.type === "resort") {
+      const nearestList = destination?.id ? getNearestResorts(resorts, destination.id, 12) : [];
+      const main = destination?.id ? resorts.find(r => r.id === destination.id) : null;
+      const combined = main
+        ? [{ ...main, distanceKm: 0 }, ...nearestList]
+        : getResortsInDestination(resorts, destination);
+      return combined;
+    }
+    return getResortsInDestination(resorts, destination);
+  }, [destination]);
+
+  function clearAllFilters() { setFilters(DEFAULT_FILTERS); }
+
+  function removeFilter(key) {
+    if (key === "distanceKm") setFilters(f => ({ ...f, distanceKm: 150 }));
+    else if (key.startsWith("country:")) setFilters(f => ({ ...f, countries: f.countries.filter(c => c !== key.slice(8)) }));
+    else if (key === "price") setFilters(f => ({ ...f, priceRange: [0, 150] }));
+    else if (key === "piste") setFilters(f => ({ ...f, pisteRange: [0, 600] }));
+    else if (key === "alt") setFilters(f => ({ ...f, altRange: [1000, 4000] }));
+    else if (key === "rating") setFilters(f => ({ ...f, minRating: null }));
+    else if (key.startsWith("fac:")) setFilters(f => ({ ...f, facilities: f.facilities.filter(x => x !== key.slice(4)) }));
+    else if (key.startsWith("pass:")) setFilters(f => ({ ...f, passes: f.passes.filter(x => x !== key.slice(5)) }));
+  }
+
+  const results = useMemo(() => {
+    let list = [...baseList];
+    if (showDistance && filters.distanceKm < 150) list = list.filter(r => (r.distanceKm || 0) <= filters.distanceKm);
+    if (filters.countries.length) list = list.filter(r => {
+      const c = Array.isArray(r.country) ? r.country[0] : r.country;
+      return filters.countries.includes(c);
+    });
+    list = list.filter(r => (r.priceFrom || 0) >= filters.priceRange[0] && (r.priceFrom || 999) <= filters.priceRange[1]);
+    list = list.filter(r => (r.pisteKm || 0) >= filters.pisteRange[0] && (r.pisteKm || 0) <= filters.pisteRange[1]);
+    list = list.filter(r => (r.maxAltitude || 0) >= filters.altRange[0] && (r.maxAltitude || 9999) <= filters.altRange[1]);
+    list = list.filter(r => (r.lifts || 0) <= (filters.liftsMax[0] >= 200 ? 9999 : filters.liftsMax[0]));
+    if (filters.minRating) list = list.filter(r => (r.rating || 0) >= filters.minRating);
+    if (filters.passes.length) list = list.filter(r => filters.passes.some(p => (r.seasonPasses || []).includes(p)));
+
+    if (sortBy === "Recommended") list.sort((a, b) => recommendedScore(b) - recommendedScore(a));
+    else if (sortBy === "Closest first") list.sort((a, b) => (a.distanceKm || 999) - (b.distanceKm || 999));
+    else if (sortBy === "Price ↑") list.sort((a, b) => (a.priceFrom || 0) - (b.priceFrom || 0));
+    else if (sortBy === "Price ↓") list.sort((a, b) => (b.priceFrom || 0) - (a.priceFrom || 0));
+    else if (sortBy === "Rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (sortBy === "Most pistes") list.sort((a, b) => (b.pisteKm || 0) - (a.pisteKm || 0));
+    else if (sortBy === "Most lifts") list.sort((a, b) => (b.lifts || 0) - (a.lifts || 0));
+
+    return list;
+  }, [baseList, filters, sortBy, showDistance]);
+
+  return (
+    <div>
+      <div className="mb-5 max-w-sm">
+        <DateRangePicker startDate={arrivalDate} endDate={departureDate} onStartChange={setArrivalDate} onEndChange={setDepartureDate} context="general" placeholder={{ start: "Arrival", end: "Departure" }} />
+      </div>
+
+      {/* Sort bar */}
+      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar mb-3 pb-1">
+        {SORT_OPTIONS.map(opt => (
+          <button key={opt} onClick={() => setSortBy(opt)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${sortBy === opt ? "bg-peak-red text-white" : "bg-peak-surface border border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+            {opt}
+          </button>
+        ))}
+        <button onClick={() => setFiltersOpen(o => !o)} className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-peak-text-secondary border border-white/10 rounded-full ml-auto flex-shrink-0">
+          <SlidersHorizontal className="h-3 w-3" /> Filters
         </button>
       </div>
 
-      <div className="flex gap-8">
-        {/* Desktop filter panel */}
-        <div className="hidden lg:block">{filterPanel}</div>
+      {destination?.type === "resort" && (
+        <p className="text-peak-text-secondary text-sm mb-3">Resorts near <span className="text-peak-text font-medium">{destination.label}</span></p>
+      )}
 
-        {/* Mobile filter drawer */}
+      <ActiveChips filters={filters} onRemove={removeFilter} onClearAll={clearAllFilters} />
+
+      <div className="flex gap-8">
+        <div className="hidden lg:block">{<FilterSidebar baseList={baseList} filters={filters} setFilters={setFilters} showDistance={showDistance} destination={destination} />}</div>
+
         {filtersOpen && (
           <>
             <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setFiltersOpen(false)} />
             <div className="fixed inset-y-0 left-0 z-50 w-80 bg-peak-surface border-r border-white/5 overflow-y-auto p-5 pt-20 lg:hidden">
-              {filterPanel}
+              <FilterSidebar baseList={baseList} filters={filters} setFilters={setFilters} showDistance={showDistance} destination={destination} />
             </div>
           </>
         )}
 
-        {/* Results */}
         <div className="flex-1">
-          <p className="text-peak-text-secondary text-sm mb-4">
-            {filteredResorts.length} resort{filteredResorts.length !== 1 ? "s" : ""} found
-          </p>
-          {filteredResorts.length === 0 ? (
+          <p className="text-peak-text-secondary text-sm mb-4">{results.length} resort{results.length !== 1 ? "s" : ""} found</p>
+          {results.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-peak-text-secondary text-lg">No resorts match your filters.</p>
+              <p className="text-peak-text-secondary text-lg mb-3">No resorts match your filters.</p>
+              <button onClick={clearAllFilters} className="text-peak-blue hover:underline text-sm">Clear all filters</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {filteredResorts.map((resort) => (
-                <Link
-                  key={resort.id}
-                  to={`/resort/${resort.id}`}
-                  className="group bg-peak-card border border-white/5 hover:border-peak-blue/30 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                >
+              {results.map(resort => (
+                <Link key={resort.id} to={`/resort/${resort.id}`}
+                  className="group bg-peak-card border border-white/5 hover:border-peak-blue/30 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1">
                   <div className="relative h-44 overflow-hidden">
-                    <img
-                      src={resort.image}
-                      alt={resort.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <img src={resort.image} alt={resort.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 left-3 bg-peak-bg/80 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-medium text-peak-text">
-                      {resort.flag} {resort.country}
+                      {resort.flag} {Array.isArray(resort.country) ? resort.country[0] : resort.country}
                     </div>
-                    <div className="absolute top-3 right-3 bg-peak-blue text-white text-xs font-bold px-2 py-0.5 rounded">
-                      {resort.rating}
-                    </div>
+                    <div className="absolute top-3 right-3 bg-peak-blue text-white text-xs font-bold px-2 py-0.5 rounded">{resort.rating}</div>
                   </div>
                   <div className="p-5">
                     <h3 className="font-display font-bold text-peak-text text-lg">{resort.name}</h3>
-                    <p className="text-peak-text-secondary text-sm mt-0.5 mb-3">{resort.pisteKm}km pistes · {resort.lifts} lifts · {resort.maxAltitude}m</p>
+                    <p className="text-peak-text-secondary text-sm mt-0.5 mb-1">{resort.pisteKm}km pistes · {resort.lifts} lifts · {resort.maxAltitude}m</p>
+                    {resort.distanceKm != null && destination?.type === "resort" && (
+                      <p className="text-peak-text-secondary text-xs mb-2">{resort.distanceKm} km away</p>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-peak-text-secondary">{resort.ratingLabel}</span>
                       <span className="text-peak-text font-bold">€{resort.priceFrom}<span className="text-peak-text-secondary text-xs font-normal">/day</span></span>
