@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mountain, Calendar, TrendingUp, Zap, Timer, MapPin, MoreVertical, BarChart3 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
@@ -34,7 +34,17 @@ function fmtDur(s) {
 export default function PeakLog() {
   const { user } = useAppAuth();
   const navigate = useNavigate();
-  const allActivities = getUserActivities(user?.id);
+  const [allActivities, setAllActivities] = useState(() => getUserActivities(user?.id));
+
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') {
+        setAllActivities(getUserActivities(user?.id));
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [user?.id]);
 
   const seasons = useMemo(() => {
     const s = new Set(allActivities.map(a => seasonLabel(a.date)));

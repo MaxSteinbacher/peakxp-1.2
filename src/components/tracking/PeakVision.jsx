@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { Eye, CheckCircle, TrendingUp, Dumbbell, Video } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "../../api/base44Client";
+import { useAppAuth } from "../../context/AppAuthContext";
+import { persist, retrieve, KEYS } from "../../lib/persistence";
 
 const FOCUS_AREAS = ["Carving technique", "Body position", "Speed control", "Turn initiation", "Weight distribution", "Overall assessment"];
 const SKILL_LEVELS = ["Beginner", "Intermediate", "Advanced", "Expert"];
@@ -42,6 +44,7 @@ function ScoreGauge({ score }) {
 }
 
 export default function PeakVision() {
+  const { user } = useAppAuth();
   const fileRef = useRef(null);
   const [videoFile, setVideoFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
@@ -50,9 +53,7 @@ export default function PeakVision() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [result, setResult] = useState(null);
-  const [savedAnalyses, setSavedAnalyses] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("peakxp_vision_analyses") || "[]"); } catch { return []; }
-  });
+  const [savedAnalyses, setSavedAnalyses] = useState(() => retrieve(KEYS.VISION_ANALYSES, null, []));
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [dragging, setDragging] = useState(false);
 
@@ -130,14 +131,14 @@ export default function PeakVision() {
     };
     const updated = [entry, ...savedAnalyses];
     setSavedAnalyses(updated);
-    localStorage.setItem("peakxp_vision_analyses", JSON.stringify(updated));
+    persist(KEYS.VISION_ANALYSES, updated, user?.id || null);
     toast.success("Analysis saved!");
   }
 
   function deleteAnalysis(id) {
     const updated = savedAnalyses.filter(a => a.id !== id);
     setSavedAnalyses(updated);
-    localStorage.setItem("peakxp_vision_analyses", JSON.stringify(updated));
+    persist(KEYS.VISION_ANALYSES, updated, user?.id || null);
   }
 
   const STEPS = ["Extracting frames for analysis...", "AI is reviewing your technique...", "Generating coaching feedback..."];

@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useAppAuth } from "./AppAuthContext";
+import { persist, retrieve, remove, KEYS } from "../lib/persistence";
 
 const TripPlannerContext = createContext(null);
 
@@ -7,17 +8,29 @@ export function TripPlannerProvider({ children }) {
   const { user } = useAppAuth();
   const [session, setSession] = useState(null);
 
-  // Load draft on mount if logged in
+  const saveTimeoutRef = useRef(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  // Load draft on mount
   useEffect(() => {
-    if (user) {
-      const draft = localStorage.getItem("peakxp_trip_draft");
-      if (draft) {
-        try {
-          setSession(JSON.parse(draft));
-        } catch {}
-      }
+    const draft = retrieve(KEYS.TRIP_DRAFT, user?.id || null, null)
+      || retrieve(KEYS.TRIP_DRAFT, null, null);
+    if (draft && draft.status === "in-progress" &&
+        (draft.basket?.length > 0 || draft.selectedServices?.length > 0)) {
+      setSession(draft);
+      setDraftRestored(true);
     }
   }, [user]);
+
+  // Auto-save on session change (debounced 500ms)
+  useEffect(() => {
+    if (!session || session.status !== "in-progress") return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      persist(KEYS.TRIP_DRAFT, session, user?.id || null);
+    }, 500);
+    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
+  }, [session]);
 
   function generateSessionId() {
     return String(Date.now());
@@ -78,46 +91,25 @@ export function TripPlannerProvider({ children }) {
       basket: [],
     };
     setSession(newSession);
-    if (user) {
-      localStorage.setItem("peakxp_trip_draft", JSON.stringify(newSession));
-    }
   }
 
   function addResort(resortObject) {
-    setSession((prev) => {
-      const updated = {
-        ...prev,
-        resorts: [
-          ...prev.resorts,
-          { ...resortObject, order: prev.resorts.length },
-        ],
-      };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
-    });
+    setSession((prev) => ({
+      ...prev,
+      resorts: [...prev.resorts, { ...resortObject, order: prev.resorts.length }],
+    }));
   }
 
   function removeResort(resortId) {
-    setSession((prev) => {
-      const updated = {
-        ...prev,
-        resorts: prev.resorts.filter((r) => r.resortId !== resortId),
-        basket: prev.basket.filter((item) => item.resortId !== resortId),
-      };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
-    });
+    setSession((prev) => ({
+      ...prev,
+      resorts: prev.resorts.filter((r) => r.resortId !== resortId),
+      basket: prev.basket.filter((item) => item.resortId !== resortId),
+    }));
   }
 
   function setCurrentStep(serviceKey, resortId = null) {
-    setSession((prev) => {
-      const updated = {
-        ...prev,
-        currentStep: { serviceKey, resortId, stepIndex: 0 },
-      };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
-    });
+    setSession((prev) => ({ ...prev, currentStep: { serviceKey, resortId, stepIndex: 0 } }));
   }
 
   function markStepComplete(serviceKey, resortId = null) {
@@ -125,17 +117,10 @@ export function TripPlannerProvider({ children }) {
       const alreadyExists = prev.completedSteps.some(
         (s) => s.serviceKey === serviceKey && s.resortId === resortId
       );
-      const updated = {
+      return alreadyExists ? prev : {
         ...prev,
-        completedSteps: alreadyExists
-          ? prev.completedSteps
-          : [
-              ...prev.completedSteps,
-              { serviceKey, resortId, completed: true, skipped: false },
-            ],
+        completedSteps: [...prev.completedSteps, { serviceKey, resortId, completed: true, skipped: false }],
       };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
     });
   }
 
@@ -144,69 +129,39 @@ export function TripPlannerProvider({ children }) {
       const alreadyExists = prev.completedSteps.some(
         (s) => s.serviceKey === serviceKey && s.resortId === resortId
       );
-      const updated = {
+      return alreadyExists ? prev : {
         ...prev,
-        completedSteps: alreadyExists
-          ? prev.completedSteps
-          : [
-              ...prev.completedSteps,
-              { serviceKey, resortId, completed: false, skipped: true },
-            ],
+        completedSteps: [...prev.completedSteps, { serviceKey, resortId, completed: false, skipped: true }],
       };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
     });
   }
 
   function addToBasket(item) {
-    setSession((prev) => {
-      const updated = {
-        ...prev,
-        basket: [...prev.basket, { ...item, itemId: String(Date.now()) }],
-      };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
-    });
+    setSession((prev) => ({ ...prev, basket: [...prev.basket, { ...item, itemId: String(Date.now()) }] }));
   }
 
   function removeFromBasket(itemId) {
-    setSession((prev) => {
-      const updated = {
-        ...prev,
-        basket: prev.basket.filter((item) => item.itemId !== itemId),
-      };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
-    });
+    setSession((prev) => ({ ...prev, basket: prev.basket.filter((item) => item.itemId !== itemId) }));
   }
 
   function updateBasketItem(itemId, changes) {
-    setSession((prev) => {
-      const updated = {
-        ...prev,
-        basket: prev.basket.map((item) =>
-          item.itemId === itemId ? { ...item, ...changes } : item
-        ),
-      };
-      if (user) localStorage.setItem("peakxp_trip_draft", JSON.stringify(updated));
-      return updated;
-    });
+    setSession((prev) => ({
+      ...prev,
+      basket: prev.basket.map((item) => item.itemId === itemId ? { ...item, ...changes } : item),
+    }));
   }
 
   function clearTrip() {
     setSession(null);
-    localStorage.removeItem("peakxp_trip_draft");
+    setDraftRestored(false);
+    remove(KEYS.TRIP_DRAFT, user?.id || null);
+    remove(KEYS.TRIP_DRAFT, null);
   }
 
   function loadDraft() {
-    if (user) {
-      const draft = localStorage.getItem("peakxp_trip_draft");
-      if (draft) {
-        try {
-          setSession(JSON.parse(draft));
-        } catch {}
-      }
-    }
+    const draft = retrieve(KEYS.TRIP_DRAFT, user?.id || null, null)
+      || retrieve(KEYS.TRIP_DRAFT, null, null);
+    if (draft) setSession(draft);
   }
 
   function isStepComplete(serviceKey, resortId = null) {
@@ -292,6 +247,8 @@ export function TripPlannerProvider({ children }) {
     <TripPlannerContext.Provider
       value={{
         session,
+        draftRestored,
+        setDraftRestored,
         startTrip,
         addResort,
         removeResort,

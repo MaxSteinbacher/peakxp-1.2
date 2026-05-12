@@ -170,6 +170,7 @@ export default function Community() {
   const [feed, setFeed] = useState(INITIAL_FEED);
   const [feedNav, setFeedNav] = useState("For you");
   const [postText, setPostText] = useState("");
+  const [draftRestored, setDraftRestored] = useState(false);
   const [logActivityOpen, setLogActivityOpen] = useState(false);
   const [activity, setActivity] = useState({ sport: "Skiing", resort: "", date: "", duration: "", vertical: "", runs: "", distance: "", maxSpeed: "", conditions: "Groomed", mood: "Great" });
 
@@ -332,6 +333,9 @@ export default function Community() {
                   Post
                 </button>
               </div>
+              {draftRestored && (
+                <p className="text-peak-text-secondary text-xs mt-1 ml-12">Draft restored · <button onClick={() => { setPostText(""); setDraftRestored(false); }} className="text-peak-blue hover:underline">Clear</button></p>
+              )}
               {logActivityOpen && (
                 <div className="mt-4 border-t border-white/5 pt-4 space-y-3">
                   <div className="grid grid-cols-2 gap-3">

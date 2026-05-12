@@ -1,31 +1,29 @@
-const STORAGE_KEY = "peakxp_activities";
+import { persist, retrieve, KEYS } from './persistence.js';
 
-export function saveActivity(activity) {
-  const existing = getAllActivities();
+export function saveActivity(activity, userId) {
+  const existing = getAllActivities(userId);
   const idx = existing.findIndex(a => a.id === activity.id);
   if (idx >= 0) existing[idx] = activity;
   else existing.unshift(activity);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+  persist(KEYS.ACTIVITIES, existing, userId);
   return activity;
 }
 
-function getAllActivities() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  } catch { return []; }
+function getAllActivities(userId) {
+  return retrieve(KEYS.ACTIVITIES, userId, []);
 }
 
 export function getUserActivities(userId) {
-  return getAllActivities().filter(a => !userId || a.userId === userId);
+  return getAllActivities(userId);
 }
 
-export function getActivityById(id) {
-  return getAllActivities().find(a => a.id === id) || null;
+export function getActivityById(id, userId) {
+  return getAllActivities(userId).find(a => a.id === id) || null;
 }
 
-export function deleteActivity(id) {
-  const filtered = getAllActivities().filter(a => a.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+export function deleteActivity(id, userId) {
+  const filtered = getAllActivities(userId).filter(a => a.id !== id);
+  persist(KEYS.ACTIVITIES, filtered, userId);
 }
 
 export function exportActivityAsGPX(activity) {

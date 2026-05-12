@@ -8,11 +8,11 @@ import LeaveWarningModal from "../components/trip/LeaveWarningModal";
 import ResortSelectionStep from "../components/trip/steps/ResortSelectionStep";
 import ServiceStep from "../components/trip/steps/ServiceStep";
 import CompletionPanel from "../components/trip/CompletionPanel";
-import { MapPin, ArrowRight, Bot, X, CheckCircle, ShoppingBag } from "lucide-react";
+import { MapPin, ArrowRight, Bot, X, CheckCircle, ShoppingBag, Clock } from "lucide-react";
 import { Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car } from "lucide-react";
 
 export default function TripPlannerFlow() {
-  const { session, setCurrentStep, getNextStep } = useTripPlanner();
+  const { session, setCurrentStep, getNextStep, draftRestored, setDraftRestored, clearTrip } = useTripPlanner();
   const { user } = useAppAuth();
   const navigate = useNavigate();
   const [basketOpen, setBasketOpen] = useState(false);
@@ -93,6 +93,15 @@ export default function TripPlannerFlow() {
   return (
     <div className="min-h-screen bg-peak-bg">
       <PlannerHeader onOpenBasket={() => setBasketOpen(true)} onLogoClick={handleLogoClick} />
+
+      {draftRestored && (
+        <div className="bg-peak-blue/10 border-b border-peak-blue/20 px-6 py-2 flex items-center gap-3">
+          <Clock className="h-4 w-4 text-peak-blue flex-shrink-0" />
+          <p className="text-peak-blue text-xs font-medium flex-1">We restored your trip plan from your last session</p>
+          <button onClick={() => { clearTrip(); window.location.reload(); }} className="text-xs text-peak-blue border border-peak-blue/30 rounded-full px-3 py-1 hover:bg-peak-blue/10 transition-colors mr-2">Start fresh</button>
+          <button onClick={() => setDraftRestored(false)} className="text-peak-text-secondary hover:text-peak-text"><X className="h-3.5 w-3.5" /></button>
+        </div>
+      )}
 
       {agentBanner && (
         <div className="bg-peak-blue/10 border-b border-peak-blue/20 px-6 py-2 flex items-center gap-3">

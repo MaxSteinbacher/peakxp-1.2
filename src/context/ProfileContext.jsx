@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useAppAuth } from "./AppAuthContext";
+import { persist, retrieve, KEYS } from "../lib/persistence";
 
 const ProfileContext = createContext(null);
 
@@ -25,16 +26,14 @@ export function ProfileProvider({ children }) {
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    try {
-      const stored = localStorage.getItem("peakxp_profile");
-      if (stored) setProfile({ ...DEFAULT_PROFILE, ...JSON.parse(stored) });
-    } catch {}
+    const stored = retrieve(KEYS.PROFILE, null, null);
+    if (stored) setProfile({ ...DEFAULT_PROFILE, ...stored });
   }, [isLoggedIn]);
 
   function updateProfile(partialUpdate) {
     setProfile(prev => {
       const updated = { ...prev, ...partialUpdate };
-      localStorage.setItem("peakxp_profile", JSON.stringify(updated));
+      persist(KEYS.PROFILE, updated, null);
       return updated;
     });
   }

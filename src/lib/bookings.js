@@ -1,17 +1,18 @@
-const SAVED_PLANS_KEY = "peakxp_saved_plans";
-const SEASON_PASSES_KEY = "peakxp_season_passes";
+import { persist, retrieve, KEYS } from './persistence.js';
 
 // ─── Saved Plans ───────────────────────────────────────────────────────────────
 
+function getAllSavedPlans() {
+  return retrieve(KEYS.SAVED_PLANS, null, []);
+}
+
 export function getSavedPlans(userId) {
-  try {
-    const all = JSON.parse(localStorage.getItem(SAVED_PLANS_KEY) || "[]");
-    return userId ? all.filter(p => p.userId === userId) : all;
-  } catch { return []; }
+  const all = getAllSavedPlans();
+  return userId ? all.filter(p => p.userId === userId) : all;
 }
 
 export function savePlan(userId, planData) {
-  const all = getSavedPlans();
+  const all = getAllSavedPlans();
   const plan = {
     id: Date.now().toString(),
     userId: userId || "guest",
@@ -23,7 +24,7 @@ export function savePlan(userId, planData) {
     ...planData,
   };
   const updated = [plan, ...all];
-  localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(updated));
+  persist(KEYS.SAVED_PLANS, updated, null);
   return plan;
 }
 
@@ -32,15 +33,15 @@ export function getUserSavedPlans(userId) {
 }
 
 export function deleteSavedPlan(id) {
-  const updated = getSavedPlans().filter(p => p.id !== id);
-  localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(updated));
+  const updated = getAllSavedPlans().filter(p => p.id !== id);
+  persist(KEYS.SAVED_PLANS, updated, null);
 }
 
 export function updateSavedPlan(id, changes) {
-  const updated = getSavedPlans().map(p =>
+  const updated = getAllSavedPlans().map(p =>
     p.id === id ? { ...p, ...changes, updatedAt: new Date().toISOString() } : p
   );
-  localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(updated));
+  persist(KEYS.SAVED_PLANS, updated, null);
 }
 
 export function addSavedPlanToBasket(planId, addToBasket) {
@@ -65,26 +66,28 @@ export const PASS_REGISTRY = [
   { key: "livigno", name: "Livigno Card", region: "Livigno, Italy", color: "bg-green-500", textColor: "text-white", price: "~€260/season" },
 ];
 
+function getAllSeasonPasses() {
+  return retrieve(KEYS.SEASON_PASSES, null, []);
+}
+
 export function getSeasonPasses(userId) {
-  try {
-    const all = JSON.parse(localStorage.getItem(SEASON_PASSES_KEY) || "[]");
-    return userId ? all.filter(p => p.userId === userId) : all;
-  } catch { return []; }
+  const all = getAllSeasonPasses();
+  return userId ? all.filter(p => p.userId === userId) : all;
 }
 
 export function addSeasonPass(userId, passData) {
-  const all = getSeasonPasses();
+  const all = getAllSeasonPasses();
   const pass = {
     id: Date.now().toString(),
     userId: userId || "guest",
     createdAt: new Date().toISOString(),
     ...passData,
   };
-  localStorage.setItem(SEASON_PASSES_KEY, JSON.stringify([pass, ...all]));
+  persist(KEYS.SEASON_PASSES, [pass, ...all], null);
   return pass;
 }
 
 export function removeSeasonPass(id) {
-  const updated = getSeasonPasses().filter(p => p.id !== id);
-  localStorage.setItem(SEASON_PASSES_KEY, JSON.stringify(updated));
+  const updated = getAllSeasonPasses().filter(p => p.id !== id);
+  persist(KEYS.SEASON_PASSES, updated, null);
 }
