@@ -3,7 +3,150 @@ import { X, ChevronRight, Send } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAppAuth } from "../../context/AppAuthContext";
 import AgentOptionsPanel from "./AgentOptionsPanel";
+import AgentQuestionCard from "./AgentQuestionCard";
 
+// ─── Question sequences ────────────────────────────────────────────────────
+const AGENT_QUESTIONS = {
+  "family-trip-agent": [
+    {
+      key: "children_ages",
+      question: "How many children are coming, and what are their ages?",
+      options: ["Under 3 only", "Mix of under 3 and older", "Ages 3 to 8", "Ages 8 to 14", "Teenagers (14+)", "No children — adults only"],
+    },
+    {
+      key: "children_skill",
+      question: "What is the children's skiing experience?",
+      options: ["Complete first-timers", "Had 1-2 lessons before", "Can ski easy blue runs", "Can ski reds independently", "Mixed levels in the group"],
+    },
+    {
+      key: "accommodation",
+      question: "What type of accommodation works best for your family?",
+      options: ["Ski-in ski-out hotel (most convenient)", "Hotel near slopes with shuttle", "Self-catered apartment", "Luxury hotel with kids club", "Flexible — show me options"],
+    },
+    {
+      key: "budget",
+      question: "What is your approximate total budget for the group?",
+      options: ["Under €3,000", "€3,000–€6,000", "€6,000–€10,000", "Over €10,000", "Prefer not to say"],
+    },
+    {
+      key: "travel_dates",
+      question: "When are you thinking of travelling?",
+      options: ["December (early season)", "January (quiet and affordable)", "February (school holidays)", "March (best snow, longer days)", "April (late season deals)", "Flexible on dates"],
+    },
+  ],
+  "luxury-skiing-agent": [
+    {
+      key: "experience_type",
+      question: "What kind of luxury skiing experience are you after?",
+      options: ["Five-star hotel with Michelin dining", "Private chalet with chef", "Premium resort — quality over exclusivity", "Heli-skiing and off-piste adventure", "Whatever is the absolute best"],
+    },
+    {
+      key: "resorts",
+      question: "Which resorts are on your radar?",
+      options: ["Courchevel", "Verbier", "Zermatt", "St Moritz", "Val d'Isère", "Surprise me with the best"],
+    },
+    {
+      key: "priorities",
+      question: "What matters most beyond the skiing?",
+      options: ["World-class spa and wellness", "Michelin-starred restaurants", "Vibrant après-ski", "Private instruction and guides", "Exclusive access and privacy", "All of the above"],
+    },
+    {
+      key: "budget",
+      question: "What is your investment range for this trip?",
+      options: ["€10,000–€25,000", "€25,000–€50,000", "€50,000+", "Prefer to discuss after seeing options"],
+    },
+  ],
+  "budget-experience-agent": [
+    {
+      key: "date_flexibility",
+      question: "How flexible are your travel dates?",
+      options: ["Very flexible — I want the cheapest possible dates", "Somewhat flexible — 2-3 week window", "Fixed dates I cannot change", "January specifically (cheapest month)"],
+    },
+    {
+      key: "destination",
+      question: "Where are you happy to ski?",
+      options: ["Austria (best value overall)", "France (bigger areas)", "Italy (great food, good value)", "Switzerland (if budget allows)", "Wherever is cheapest"],
+    },
+    {
+      key: "budget",
+      question: "What is your total budget for the whole group?",
+      options: ["Under €1,500", "€1,500–€3,000", "€3,000–€5,000", "€5,000–€8,000"],
+    },
+    {
+      key: "accommodation",
+      question: "What accommodation are you comfortable with?",
+      options: ["Self-catered apartment (cheapest)", "Budget hotel", "Hostel or shared", "Best value for money — any type"],
+    },
+  ],
+  "advanced-skiing-agent": [
+    {
+      key: "terrain",
+      question: "What terrain are you chasing?",
+      options: ["Steep groomed blacks and moguls", "Lift-accessed off-piste powder", "Guided backcountry touring", "Freeride competition zones", "Glacier high-altitude runs", "All of the above"],
+    },
+    {
+      key: "offpiste_experience",
+      question: "What is your off-piste experience?",
+      options: ["Never skied off-piste", "A few times with a guide", "Regular off-piste skier", "Experienced — ski tours and serious terrain", "Expert — I guide others"],
+    },
+    {
+      key: "guide",
+      question: "Do you need a guide?",
+      options: ["Yes — book me a private mountain guide", "Group guiding is fine", "I am experienced enough to go independently", "Unsure — recommend what suits my level"],
+    },
+    {
+      key: "resorts",
+      question: "Which resorts interest you?",
+      options: ["La Grave (most extreme)", "Chamonix (world-class alpinism)", "Verbier (off-piste + luxury)", "Val d'Isère (best all-round expert)", "Surprise me with a hidden gem"],
+    },
+  ],
+  "beginner-experience-agent": [
+    {
+      key: "first_time",
+      question: "Is this your very first time on skis or snowboard?",
+      options: ["Absolute first timer — never been on snow", "Had 1-2 lessons a while ago", "Can get down easy slopes but want to improve", "Skiing for a friend/partner who is a beginner"],
+    },
+    {
+      key: "discipline",
+      question: "Skiing or snowboarding?",
+      options: ["Skiing", "Snowboarding", "Not sure yet — what do you recommend?", "One of each (mixed group)"],
+    },
+    {
+      key: "priorities",
+      question: "What matters most for your first trip?",
+      options: ["A resort where I won't feel intimidated", "The best ski school reputation", "Being close to the slopes from my accommodation", "Good nightlife even if I'm not skiing all day", "Value for money"],
+    },
+    {
+      key: "duration",
+      question: "How many days do you have?",
+      options: ["3 days (weekend)", "4-5 days", "7 days", "More than a week"],
+    },
+  ],
+  "new-horizons-agent": [
+    {
+      key: "escape_from",
+      question: "What are you trying to get away from?",
+      options: ["Crowds and lift queues", "Generic resorts everyone goes to", "Overpriced well-known destinations", "All of the above — I want something truly different"],
+    },
+    {
+      key: "logistics",
+      question: "How adventurous are you with logistics?",
+      options: ["Happy with complex transfers for the right destination", "Prefer easy access but open to unusual places", "Need good transport links", "Completely open — best place wins"],
+    },
+    {
+      key: "hidden_gem_type",
+      question: "What kind of hidden gem appeals to you?",
+      options: ["A tiny village that gets 10m of snow (Warth, Damüls)", "Extreme freeride with no crowds (La Grave, Alagna)", "Authentic local culture, no tourists", "Emerging destination before it gets discovered", "A resort with a unique non-skiing attraction"],
+    },
+    {
+      key: "skill_level",
+      question: "What is your skiing level?",
+      options: ["Beginner or progressing", "Intermediate", "Advanced", "Expert", "Mixed group"],
+    },
+  ],
+};
+
+// ─── Sub-components ────────────────────────────────────────────────────────
 function TypingIndicator({ agent }) {
   return (
     <div className="flex items-start gap-3">
@@ -34,23 +177,13 @@ function MessageBubble({ msg, agent, userInitials }) {
           {userInitials}
         </div>
       )}
-      <div className={`max-w-[80%] ${isAgent ? "rounded-2xl rounded-tl-sm bg-peak-surface border border-white/5" : "rounded-2xl rounded-tr-sm bg-peak-red/10 border border-peak-red/20"} px-4 py-3`}>
+      <div className={`max-w-[80%] ${isAgent
+        ? "rounded-2xl rounded-tl-sm bg-peak-surface border border-white/5"
+        : "rounded-2xl rounded-tr-sm bg-peak-red/10 border border-peak-red/20"
+        } px-4 py-3`}>
         <p className="text-peak-text text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
         <p className="text-peak-text-secondary text-xs mt-1">{msg.time}</p>
       </div>
-    </div>
-  );
-}
-
-function QuickReplies({ chips, onSelect }) {
-  return (
-    <div className="flex flex-wrap gap-2 mt-3 pl-11">
-      {chips.map(chip => (
-        <button key={chip} onClick={() => onSelect(chip)}
-          className="px-3 py-1.5 bg-peak-surface border border-white/10 rounded-full text-peak-text text-xs cursor-pointer hover:border-white/25 hover:bg-white/5 transition-colors">
-          {chip}
-        </button>
-      ))}
     </div>
   );
 }
@@ -59,6 +192,7 @@ function now() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+// ─── Main component ────────────────────────────────────────────────────────
 export default function AgentChat({ agent, isOpen, onClose }) {
   const { user } = useAppAuth();
 
@@ -66,33 +200,51 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   const [history, setHistory] = useState([]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
-  const [quickReplies, setQuickReplies] = useState([]);
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState(null);
   const [visible, setVisible] = useState(false);
+
+  // Question phase state
+  const [questionPhase, setQuestionPhase] = useState(true);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [collectedAnswers, setCollectedAnswers] = useState({});
+  const [showQuestionCard, setShowQuestionCard] = useState(false);
+
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
 
-  const userInitials = user ? (user.firstName?.[0] || "") + (user.lastName?.[0] || "") : "G";
+  const userInitials = user ? (user.firstName?.[0] || user.full_name?.[0] || "G") : "G";
+  const questionCards = agent ? (AGENT_QUESTIONS[agent.key] || []) : [];
+  const totalQuestions = questionCards.length;
 
+  // Reset on open
   useEffect(() => {
     if (isOpen && agent) {
       setVisible(true);
       setMessages([{ role: "assistant", content: agent.introMessage, time: now() }]);
       setHistory([]);
       setPlan(null);
-      setQuickReplies(agent.quickReplies || []);
       setError(null);
+      setInput("");
+      setQuestionPhase(true);
+      setCurrentQuestionIndex(0);
+      setCollectedAnswers({});
+      // Show first question card after short delay
+      setShowQuestionCard(false);
+      if (AGENT_QUESTIONS[agent.key]?.length) {
+        setTimeout(() => setShowQuestionCard(true), 400);
+      }
     } else {
       setTimeout(() => setVisible(false), 400);
     }
   }, [isOpen, agent]);
 
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, typing]);
+  }, [messages, typing, showQuestionCard, currentQuestionIndex]);
 
   function handleTextareaInput(e) {
     setInput(e.target.value);
@@ -104,16 +256,108 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     setMessages([{ role: "assistant", content: agent.introMessage, time: now() }]);
     setHistory([]);
     setPlan(null);
-    setQuickReplies(agent.quickReplies || []);
     setError(null);
+    setInput("");
+    setQuestionPhase(true);
+    setCurrentQuestionIndex(0);
+    setCollectedAnswers({});
+    setShowQuestionCard(false);
+    if (AGENT_QUESTIONS[agent.key]?.length) {
+      setTimeout(() => setShowQuestionCard(true), 400);
+    }
+  }
+
+  // Called when user selects a card option or submits custom text
+  function handleQuestionAnswer(answer) {
+    const q = questionCards[currentQuestionIndex];
+    const newAnswers = { ...collectedAnswers, [q.key]: answer };
+    setCollectedAnswers(newAnswers);
+
+    // Add user message bubble
+    setMessages(prev => [...prev, { role: "user", content: answer, time: now() }]);
+
+    const nextIndex = currentQuestionIndex + 1;
+
+    if (nextIndex >= totalQuestions) {
+      // All questions answered — send to AI
+      setShowQuestionCard(false);
+      setQuestionPhase(false);
+      setTimeout(() => sendCollectedAnswers(newAnswers), 400);
+    } else {
+      // Show next question card
+      setShowQuestionCard(false);
+      setCurrentQuestionIndex(nextIndex);
+      setTimeout(() => setShowQuestionCard(true), 400);
+    }
+  }
+
+  function handleQuestionSkip() {
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex >= totalQuestions) {
+      setShowQuestionCard(false);
+      setQuestionPhase(false);
+      setTimeout(() => sendCollectedAnswers(collectedAnswers), 400);
+    } else {
+      setShowQuestionCard(false);
+      setCurrentQuestionIndex(nextIndex);
+      setTimeout(() => setShowQuestionCard(true), 400);
+    }
+  }
+
+  async function sendCollectedAnswers(answers) {
+    const keys = Object.keys(answers);
+    if (keys.length === 0) {
+      // No answers collected — just go straight to free-form
+      return;
+    }
+    const summary = keys.map(k => `${k}: ${answers[k]}`).join(", ");
+    const profileMessage = `User profile: ${summary}`;
+
+    const newHistory = [{ role: "user", content: profileMessage }];
+    setHistory(newHistory);
+    setTyping(true);
+
+    try {
+      const promptText = `${agent.systemPrompt}\n\nUser profile summary (from structured intake):\n${profileMessage}\n\nBased on this profile, generate a personalised trip plan. Acknowledge their preferences briefly, then output your options.\n\nAssistant:`;
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: promptText,
+        model: "claude_sonnet_4_6",
+      });
+
+      const rawContent = typeof response === "string" ? response : response?.text || response?.content || JSON.stringify(response);
+      let displayContent = rawContent;
+      let parsedPlan = null;
+
+      if (rawContent.includes("[PLAN_READY]")) {
+        const jsonMatch = rawContent.match(/```json\n?([\s\S]*?)\n?```/);
+        if (jsonMatch) {
+          try { parsedPlan = JSON.parse(jsonMatch[1]); } catch {}
+        }
+        displayContent = rawContent.replace("[PLAN_READY]", "").replace(/```json[\s\S]*?```/, "").trim();
+      }
+
+      setMessages(prev => [...prev, { role: "assistant", content: displayContent, time: now() }]);
+      setHistory(prev => [...prev, { role: "assistant", content: displayContent }]);
+      setTyping(false);
+      if (parsedPlan) setPlan(parsedPlan);
+    } catch {
+      setTyping(false);
+      setError("Something went wrong. Please try again.");
+    }
   }
 
   async function sendMessage(text) {
     if (!text.trim() || typing) return;
+
+    // If user types during question phase, bypass the cards
+    if (questionPhase) {
+      setShowQuestionCard(false);
+      setQuestionPhase(false);
+    }
+
     const userMsg = { role: "user", content: text.trim(), time: now() };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
-    setQuickReplies([]);
     setError(null);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 
@@ -140,14 +384,10 @@ export default function AgentChat({ agent, isOpen, onClose }) {
         displayContent = rawContent.replace("[PLAN_READY]", "").replace(/```json[\s\S]*?```/, "").trim();
       }
 
-      const assistantMsg = { role: "assistant", content: displayContent, time: now() };
-      setMessages(prev => [...prev, assistantMsg]);
+      setMessages(prev => [...prev, { role: "assistant", content: displayContent, time: now() }]);
       setHistory(prev => [...prev, { role: "assistant", content: displayContent }]);
       setTyping(false);
-
-      if (parsedPlan) {
-        setPlan(parsedPlan);
-      }
+      if (parsedPlan) setPlan(parsedPlan);
     } catch {
       setTyping(false);
       setError("Something went wrong. Please try again.");
@@ -159,6 +399,8 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   const panelClass = isOpen
     ? "translate-x-0 translate-y-0"
     : "translate-x-full translate-y-full sm:translate-y-0";
+
+  const currentQuestion = questionCards[currentQuestionIndex];
 
   return (
     <>
@@ -188,14 +430,11 @@ export default function AgentChat({ agent, isOpen, onClose }) {
         </div>
         <div className="h-px flex-shrink-0" style={{ background: `linear-gradient(to right, transparent, ${agent.glowColor || "rgba(56,148,227,0.4)"}, transparent)` }} />
 
-        {/* Messages */}
+        {/* Messages + Question Card */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
           {messages.map((msg, i) => (
             <div key={i}>
               <MessageBubble msg={msg} agent={agent} userInitials={userInitials} />
-              {msg.role === "assistant" && i === messages.length - 1 && quickReplies.length > 0 && !plan && (
-                <QuickReplies chips={quickReplies} onSelect={(c) => sendMessage(c)} />
-              )}
               {msg.role === "assistant" && plan && i === messages.length - 1 && (
                 <AgentOptionsPanel
                   options={plan.options || []}
@@ -207,6 +446,23 @@ export default function AgentChat({ agent, isOpen, onClose }) {
               )}
             </div>
           ))}
+
+          {/* Inline question card — appears after messages */}
+          {questionPhase && showQuestionCard && currentQuestion && !typing && !plan && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <AgentQuestionCard
+                question={currentQuestion.question}
+                options={currentQuestion.options}
+                stepIndex={currentQuestionIndex + 1}
+                totalSteps={totalQuestions}
+                onSelect={handleQuestionAnswer}
+                onSkip={handleQuestionSkip}
+                onCustom={handleQuestionAnswer}
+                allowMultiple={currentQuestion.allowMultiple || false}
+              />
+            </div>
+          )}
+
           {typing && <TypingIndicator agent={agent} />}
           {error && (
             <div className="flex items-start gap-3">
@@ -230,8 +486,8 @@ export default function AgentChat({ agent, isOpen, onClose }) {
               value={input}
               onChange={handleTextareaInput}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
-              placeholder={`Message ${agent.name}...`}
-              className="flex-1 bg-transparent text-peak-text text-sm outline-none resize-none leading-relaxed placeholder:text-peak-text-secondary/60"
+              placeholder={questionPhase && showQuestionCard ? "Or reply directly..." : `Message ${agent.name}...`}
+              className="flex-1 bg-transparent text-peak-text text-sm outline-none resize-none leading-relaxed placeholder:text-peak-text-secondary/40"
               style={{ maxHeight: 120 }}
             />
             <button
