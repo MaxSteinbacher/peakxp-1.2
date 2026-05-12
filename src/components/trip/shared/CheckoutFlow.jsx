@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, RefreshCw, Lock, ShoppingBag, Bookmark } from "lucide-react";
+import { ShieldCheck, RefreshCw, Lock, Zap, ShoppingBag, Bookmark } from "lucide-react";
 import StepIndicator from "./StepIndicator";
 import { savePlan } from "../../../lib/bookings";
 import { toast } from "sonner";
@@ -14,19 +14,20 @@ function Input({ label, value, onChange, placeholder, type = "text" }) {
   );
 }
 
-export function TrustBadges({ badges }) {
-  const iconMap = { ShieldCheck, RefreshCw, Lock };
+export function TrustBadges() {
   return (
-    <div className="flex flex-wrap gap-4 mt-4">
-      {badges.map(({ icon, label }) => {
-        const Icon = iconMap[icon] || ShieldCheck;
-        return (
-          <div key={label} className="flex items-center gap-2 text-xs text-peak-text-secondary">
-            <Icon className="h-3.5 w-3.5 text-peak-green" />
-            <span>{label}</span>
-          </div>
-        );
-      })}
+    <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
+      {[
+        [ShieldCheck, "Price guarantee"],
+        [Zap, "Instant confirmation"],
+        [RefreshCw, "Free cancellation on eligible items"],
+        [Lock, "SSL secured"],
+      ].map(([Icon, label]) => (
+        <div key={label} className="flex items-center gap-1.5 text-peak-text-secondary text-xs">
+          <Icon className="h-3.5 w-3.5" />
+          <span>{label}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -56,7 +57,7 @@ export default function CheckoutFlow({ summary, guestFields, trustBadges, onComp
               <span className="text-peak-text font-bold text-xl">{"€" + totalPrice}</span>
             </div>
           </div>
-          <TrustBadges badges={trustBadges} />
+          <TrustBadges />
           <button onClick={() => setStep(1)} className="mt-6 px-8 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">Continue</button>
         </div>
       )}
@@ -71,7 +72,7 @@ export default function CheckoutFlow({ summary, guestFields, trustBadges, onComp
                 onChange={(v) => setGuestData([{ ...guestData[0], [f.key]: v }])} />
             ))}
           </div>
-          <TrustBadges badges={trustBadges} />
+          <TrustBadges />
           <div className="flex gap-3 mt-6 flex-wrap">
             <button onClick={() => setStep(0)} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
             <button onClick={() => onComplete?.(guestData[0])}

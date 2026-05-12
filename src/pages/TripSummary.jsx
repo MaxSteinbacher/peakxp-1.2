@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useTripPlanner, useUnsavedTripWarning } from "../context/TripPlannerContext";
 import { useAppAuth } from "../context/AppAuthContext";
 import { ArrowLeft, ChevronDown, ChevronUp, Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car, X, Pencil, Plus, CreditCard, Shield, Check, Clock, AlertCircle, TriangleAlert } from "lucide-react";
+import BackButton from "../components/shared/BackButton";
 import DateRangePicker from "../components/shared/DateRangePicker";
 
 const SERVICE_ICONS = {
@@ -224,9 +225,7 @@ export default function TripSummary() {
     return (
       <div className="min-h-screen bg-peak-bg">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <button onClick={() => setShowCheckout(false)} className="flex items-center gap-1.5 text-peak-text-secondary text-sm hover:text-peak-text mb-6 transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Back to summary
-          </button>
+          <BackButton onClick={() => setShowCheckout(false)} label="Back to summary" className="mb-6" />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
@@ -326,9 +325,7 @@ export default function TripSummary() {
   return (
     <div className="min-h-screen bg-peak-bg">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <Link to="/plan" className="flex items-center gap-1.5 text-peak-text-secondary text-sm hover:text-peak-text mb-6 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Continue planning
-        </Link>
+        <BackButton to="/plan" label="Continue planning" className="mb-6" />
 
         <h1 className="font-display font-extrabold text-3xl text-peak-text mb-2">Your trip summary</h1>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import BackButton from "../components/shared/BackButton";
 import { useAppAuth } from "../context/AppAuthContext";
 import { useProfile } from "../context/ProfileContext";
 import AuthGate from "../components/AuthGate";
@@ -50,6 +51,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <BackButton to="/" className="mb-6" />
       {/* Header */}
       <div className="bg-peak-card border border-white/5 rounded-2xl p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink, Bookmark } from "lucide-react";
 import { savePlan } from "../../lib/bookings";
 import { toast } from "sonner";
-import { Slider } from "@/components/ui/slider";
+import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STEPS = ["Location", "Restaurants", "Reserve"];
@@ -403,7 +403,7 @@ export default function DiningTab({ agentServiceDetails = {} }) {
         </div>
       )}
       {step > 0 && (
-        <button onClick={goBack} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
+        <button onClick={goBack} className="flex items-center gap-2 text-peak-text-secondary hover:text-peak-text transition-colors cursor-pointer text-sm font-medium w-fit mb-6">
           ← Back
         </button>
       )}
@@ -486,8 +486,7 @@ export default function DiningTab({ agentServiceDetails = {} }) {
               </div>
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Min rating: {minRating > 0 ? minRating + "+" : "Any"}</p>
-                <Slider value={[minRating]} onValueChange={([v]) => setMinRating(v)} min={0} max={5} step={0.5}
-                  className="[&_[role=slider]]:bg-peak-blue [&_[role=slider]]:border-peak-blue" />
+                <RangeSlider value={[minRating]} onValueChange={([v]) => setMinRating(v)} min={0} max={5} step={0.5} formatLabel={String} />
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox checked={openNowOnly} onCheckedChange={setOpenNowOnly}

@@ -5,7 +5,7 @@ import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
 import CheckoutFlow from "./shared/CheckoutFlow";
-import { Slider } from "@/components/ui/slider";
+import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STEPS = ["Location", "Preferences", "Choose facility", "Confirm & pay"];
@@ -338,8 +338,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/day: {"\u20ac" + priceRange[0]}–{"\u20ac" + priceRange[1]}</p>
-                <Slider value={priceRange} onValueChange={setPriceRange} min={0} max={30} step={1}
-                  className="[&_[role=slider]]:bg-peak-red [&_[role=slider]]:border-peak-red" />
+                <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={30} step={1} formatLabel={n => '€' + n} />
               </div>
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Location type</p>

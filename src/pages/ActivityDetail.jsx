@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Share2, Edit2, Trash2, Star } from "lucide-react";
+import BackButton from "../components/shared/BackButton";
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { getActivityById, deleteActivity, exportActivityAsGPX, saveActivity } from "../lib/activities";
 import { toast } from "sonner";
@@ -127,10 +128,7 @@ export default function ActivityDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20">
-      {/* Back */}
-      <button onClick={() => navigate("/tracking/log")} className="flex items-center gap-2 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Peak Log
-      </button>
+      <BackButton to="/tracking/log" label="Peak Log" className="mb-6" />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">

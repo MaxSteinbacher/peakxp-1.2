@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { savePlan } from "../lib/bookings";
+import BackButton from "../components/shared/BackButton";
 import { useNavigate, Link } from "react-router-dom";
 import {
   CheckCircle, Bookmark, Ticket, Clock, X, Bot, Calendar, Plus, Heart,
@@ -438,6 +439,7 @@ export default function MyTrips() {
 
   return (
     <div className="min-h-screen pt-24 pb-16 max-w-5xl mx-auto px-4 sm:px-6">
+      <BackButton to="/" className="mb-4" />
       <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text mb-6">My Trips</h1>
 
       {/* Stats strip */}

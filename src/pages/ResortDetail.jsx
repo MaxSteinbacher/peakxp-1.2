@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Mountain, ArrowLeft, Heart, Share2, ChevronLeft, ChevronRight, MapPin, Snowflake, Thermometer, Car } from "lucide-react";
+import BackButton from "../components/shared/BackButton";
 import { getResortById, SEASON_PASSES } from "../lib/data";
 import ReviewCard from "../components/ReviewCard";
 import InstructorCard from "../components/InstructorCard";
@@ -41,9 +42,7 @@ export default function ResortDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
-      <Link to="/search" className="inline-flex items-center gap-1.5 text-peak-text-secondary text-sm hover:text-peak-text mb-6 transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to results
-      </Link>
+      <BackButton className="mb-6" />
 
       {/* Image carousel */}
       <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 lg:h-[420px] mb-8 group">

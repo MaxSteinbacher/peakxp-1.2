@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAppAuth } from "../context/AppAuthContext";
+import BackButton from "../components/shared/BackButton";
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Bookmark, Send, BarChart3, MapPin, Camera, Video, Tag } from "lucide-react";
 import AuthGate from "../components/AuthGate";
@@ -240,6 +241,7 @@ export default function Community() {
   return (
     <div className="min-h-screen pt-20 bg-peak-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BackButton to="/" className="mb-4" />
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-6">
 
           {/* LEFT COLUMN */}

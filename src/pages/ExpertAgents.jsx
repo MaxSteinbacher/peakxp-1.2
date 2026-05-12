@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Users, Star, DollarSign, TrendingUp, Compass, Sunrise } from "lucide-react";
+import BackButton from "../components/shared/BackButton";
 import AgentChat from "../components/agents/AgentChat";
 
 const agents = [
@@ -101,6 +102,7 @@ export default function ExpertAgents() {
   return (
     <>
       <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <BackButton to="/" className="mb-6" />
         <div className="mb-12 text-center">
           <span className="inline-block text-peak-blue text-xs font-semibold uppercase tracking-widest mb-3">AI-powered</span>
           <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-peak-text mb-4">Expert Agents</h1>

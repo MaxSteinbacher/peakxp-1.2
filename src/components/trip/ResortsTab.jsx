@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import DateRangePicker from "../shared/DateRangePicker";
 import { ArrowUpDown, SlidersHorizontal, Star } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
+import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { resorts } from "../../lib/data";
@@ -201,14 +201,7 @@ export default function ResortsTab() {
 
       {/* Price */}
       <Section title={`Price per day: €${priceRange[0]} – €${priceRange[1]} / day`}>
-        <Slider
-          value={priceRange}
-          onValueChange={setPriceRange}
-          min={0}
-          max={200}
-          step={5}
-          className="[&_[role=slider]]:bg-peak-blue [&_[role=slider]]:border-peak-blue [&_.bg-primary]:bg-peak-blue"
-        />
+        <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={200} step={5} formatLabel={n => '€' + n} />
       </Section>
 
       {/* Mountain */}
@@ -228,18 +221,15 @@ export default function ResortsTab() {
         </div>
         <div className="mb-4">
           <p className="text-xs text-peak-text-secondary mb-2">Minimum altitude: {minAlt[0]}m</p>
-          <Slider value={minAlt} onValueChange={setMinAlt} min={500} max={2000} step={100}
-            className="[&_[role=slider]]:bg-peak-blue [&_[role=slider]]:border-peak-blue [&_.bg-primary]:bg-peak-blue" />
+          <RangeSlider value={minAlt} onValueChange={setMinAlt} min={500} max={2000} step={100} formatLabel={n => n + 'm'} />
         </div>
         <div className="mb-4">
           <p className="text-xs text-peak-text-secondary mb-2">Maximum altitude: {maxAlt[0] >= 4000 ? "4000m+" : `${maxAlt[0]}m`}</p>
-          <Slider value={maxAlt} onValueChange={setMaxAlt} min={2000} max={4000} step={100}
-            className="[&_[role=slider]]:bg-peak-blue [&_[role=slider]]:border-peak-blue [&_.bg-primary]:bg-peak-blue" />
+          <RangeSlider value={maxAlt} onValueChange={setMaxAlt} min={2000} max={4000} step={100} formatLabel={n => n + 'm'} />
         </div>
         <div>
           <p className="text-xs text-peak-text-secondary mb-2">Ski lifts: up to {liftsMax[0] >= 100 ? "100+" : liftsMax[0]}</p>
-          <Slider value={liftsMax} onValueChange={setLiftsMax} min={0} max={100} step={5}
-            className="[&_[role=slider]]:bg-peak-blue [&_[role=slider]]:border-peak-blue [&_.bg-primary]:bg-peak-blue" />
+          <RangeSlider value={liftsMax} onValueChange={setLiftsMax} min={0} max={100} step={5} formatLabel={String} />
         </div>
       </Section>
 

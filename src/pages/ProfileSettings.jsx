@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import BackButton from "../components/shared/BackButton";
 import { useAppAuth } from "../context/AppAuthContext";
 import { useProfile } from "../context/ProfileContext";
 import AuthGate from "../components/AuthGate";
@@ -64,6 +65,7 @@ export default function ProfileSettings() {
           {toast}
         </div>
       )}
+      <BackButton to="/profile" className="mb-4" />
       <h1 className="font-display font-extrabold text-2xl text-peak-text mb-6">Settings</h1>
       <div className="flex gap-6">
         <div className="hidden sm:block w-48 flex-shrink-0">

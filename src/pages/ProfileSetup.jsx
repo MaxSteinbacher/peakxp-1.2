@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import BackButton from "../components/shared/BackButton";
 import { useAppAuth } from "../context/AppAuthContext";
 import { useProfile } from "../context/ProfileContext";
 
@@ -72,6 +73,7 @@ export default function ProfileSetup() {
   return (
     <div className="min-h-screen bg-peak-bg flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-lg bg-peak-card border border-white/5 rounded-2xl p-8">
+        <BackButton to="/" label="Skip for now" className="mb-4" />
         <h1 className="font-display font-extrabold text-2xl text-peak-text mb-1">Set up your profile</h1>
         <p className="text-peak-text-secondary text-sm mb-6">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
 

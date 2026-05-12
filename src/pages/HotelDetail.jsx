@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import DateRangePicker from "../components/shared/DateRangePicker";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Star, MapPin, CheckCircle, Shield, ChevronLeft, ChevronRight, Users, Minus, Plus, Calendar } from "lucide-react";
+import BackButton from "../components/shared/BackButton";
 import { getHotelById } from "../lib/hotels";
 import HotelOverviewTab from "../components/hotel/HotelOverviewTab";
 import HotelRoomsTab from "../components/hotel/HotelRoomsTab";
@@ -115,10 +116,7 @@ export default function HotelDetail() {
         {/* Search / booking bar — absolutely on top of carousel */}
         <div className="absolute top-0 left-0 right-0 z-20 bg-peak-bg/80 backdrop-blur-md px-4 py-3">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
-            <Link to="/trip-planning" className="flex items-center gap-1 text-peak-text-secondary hover:text-peak-text transition-colors text-sm flex-shrink-0">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Accommodation</span>
-            </Link>
+            <BackButton to="/trip-planning" label="Accommodation" />
             <div className="w-px h-5 bg-white/10 hidden sm:block" />
             <div className="flex items-center gap-1.5 text-peak-text-secondary text-sm">
               <MapPin className="h-3.5 w-3.5" />

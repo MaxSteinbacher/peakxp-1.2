@@ -4,7 +4,7 @@ import { ArrowUpDown, AlertTriangle, MapPin, ChevronDown, ChevronUp, ShoppingBag
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
-import { Slider } from "@/components/ui/slider";
+import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const STEPS = ["Search", "Results", "Checkout"];
@@ -312,8 +312,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/day: {"\u20ac"}{priceRange[0]}-{"\u20ac"}{priceRange[1]}</p>
-                <Slider value={priceRange} onValueChange={setPriceRange} min={0} max={250} step={5}
-                  className="[&_[role=slider]]:bg-peak-blue [&_[role=slider]]:border-peak-blue [&_.bg-primary]:bg-peak-blue" />
+                <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={250} step={5} formatLabel={n => '€' + n} />
               </div>
               {[{ state: filterWinter, set: setFilterWinter, label: "Winter-ready only" }, { state: filterAuto, set: setFilterAuto, label: "Automatic only" }].map(({ state, set, label }) => (
                 <label key={label} className="flex items-center gap-2 cursor-pointer">

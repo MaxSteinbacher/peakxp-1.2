@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Radio, BarChart3, Eye, Upload } from "lucide-react";
+import BackButton from "../components/shared/BackButton";
 import AuthGate from "../components/AuthGate";
 import { useAppAuth } from "../context/AppAuthContext";
 
@@ -25,6 +26,9 @@ export default function PeakTracking() {
 
   return (
     <div className="min-h-screen bg-peak-bg pt-16 flex flex-col">
+      <div className="px-6 pt-4">
+        <BackButton to="/" className="mb-1" />
+      </div>
       {/* Sub-nav */}
       <div className="sticky top-16 z-40 bg-peak-surface border-b border-white/5 px-6 flex gap-1 overflow-x-auto hide-scrollbar">
         {TABS.map(tab => {

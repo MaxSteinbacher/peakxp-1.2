@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import BackButton from "../components/shared/BackButton";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useAppAuth } from "../context/AppAuthContext";
 
@@ -201,6 +202,7 @@ export default function Auth() {
         </div>
       )}
       <div className="w-full max-w-md bg-peak-card border border-white/5 rounded-2xl p-8">
+        <BackButton to="/" label="Back to home" className="mb-4" />
         <div className="text-center mb-6">
           <h1 className="font-display font-extrabold text-2xl text-peak-text">PEAK<span className="text-peak-red">XP</span></h1>
           <p className="text-peak-text-secondary text-sm mt-1">The mountain, unified.</p>
