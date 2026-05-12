@@ -164,7 +164,8 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   const filtered = useMemo(() => {
     let res = [...flightResults];
     if (filters.directOnly) res = res.filter(f => f.stops === "Direct");
-    res = res.filter(f => f.price >= priceRange[0] && f.price <= priceRange[1]);
+    const [prLow, prHigh] = Array.isArray(priceRange) ? priceRange : [0, priceRange];
+  res = res.filter(f => f.price >= prLow && f.price <= prHigh);
     if (sortBy === "Cheapest") res.sort((a, b) => a.price - b.price);
     else if (sortBy === "Fastest") res.sort((a, b) => a.duration.localeCompare(b.duration));
     else if (sortBy === "Departure") res.sort((a, b) => a.dep.localeCompare(b.dep));
@@ -354,7 +355,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/person: €{priceRange[0]}–€{priceRange[1]}</p>
-                <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={500} step={10} formatLabel={n => '€' + n} />
+                <RangeSlider mode="dual" value={priceRange} onValueChange={setPriceRange} min={0} max={500} step={10} formatLabel={n => '€' + n} />
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest">Stops</p>

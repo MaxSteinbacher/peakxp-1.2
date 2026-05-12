@@ -154,7 +154,8 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
       if (p === "Luxury") return c.category === "Luxury";
       return true;
     }));
-    res = res.filter(c => c.pricePerDay >= priceRange[0] && c.pricePerDay <= priceRange[1]);
+    const [crLow, crHigh] = Array.isArray(priceRange) ? priceRange : [0, priceRange];
+  res = res.filter(c => c.pricePerDay >= crLow && c.pricePerDay <= crHigh);
     if (sortBy === "Cheapest") res.sort((a, b) => a.pricePerDay - b.pricePerDay);
     else if (sortBy === "Best rated") res.sort((a, b) => b.rating - a.rating);
     else if (sortBy === "Luxury first") res.sort((a, b) => b.pricePerDay - a.pricePerDay);
@@ -343,7 +344,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/day: {"\u20ac"}{priceRange[0]}-{"\u20ac"}{priceRange[1]}</p>
-                <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={250} step={5} formatLabel={n => '€' + n} />
+                <RangeSlider mode="dual" value={priceRange} onValueChange={setPriceRange} min={0} max={250} step={5} formatLabel={n => '€' + n} />
               </div>
               {[{ state: filterWinter, set: setFilterWinter, label: "Winter-ready only" }, { state: filterAuto, set: setFilterAuto, label: "Automatic only" }].map(({ state, set, label }) => (
                 <label key={label} className="flex items-center gap-2 cursor-pointer">

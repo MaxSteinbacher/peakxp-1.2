@@ -141,11 +141,11 @@ export default function AccommodationTab() {
       <div className="hidden lg:block w-64 flex-shrink-0 space-y-5">
         <div className="border-b border-white/5 pb-5">
           <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Distance from resort: {filters.distanceKm < 50 ? `≤ ${filters.distanceKm}km` : "Any"}</p>
-          <RangeSlider value={[filters.distanceKm]} onValueChange={([v]) => setFilters(f => ({ ...f, distanceKm: v }))} min={0} max={50} step={1} formatLabel={n => n + "km"} />
+          <RangeSlider mode="single" value={filters.distanceKm} onValueChange={v => setFilters(f => ({ ...f, distanceKm: typeof v === "number" ? v : v[0] }))} min={0} max={50} step={1} formatLabel={n => n + "km"} />
         </div>
         <div className="border-b border-white/5 pb-5">
           <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/night: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
-          <RangeSlider value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={50} max={1000} step={10} formatLabel={n => "€" + n} />
+          <RangeSlider mode="dual" value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={50} max={1000} step={10} formatLabel={n => "€" + n} />
         </div>
         <div className="border-b border-white/5 pb-5">
           <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Stars</p>

@@ -22,7 +22,8 @@ function ActiveChips({ filters, onRemove, onClearAll }) {
   if (filters.countries.length) chips.push(...filters.countries.map(c => ({ key: `country:${c}`, label: c })));
   if (filters.priceRange[0] > 0 || filters.priceRange[1] < 150) chips.push({ key: "price", label: `€${filters.priceRange[0]}–€${filters.priceRange[1]}/day` });
   if (filters.pisteRange[0] > 0 || filters.pisteRange[1] < 600) chips.push({ key: "piste", label: `${filters.pisteRange[0]}–${filters.pisteRange[1]}km pistes` });
-  if (filters.altRange[0] > 1000 || filters.altRange[1] < 4000) chips.push({ key: "alt", label: `${filters.altRange[0]}–${filters.altRange[1]}m` });
+  if (filters.altRange[0] > 0 || filters.altRange[1] < 5000) chips.push({ key: "alt", label: `${filters.altRange[0]}–${filters.altRange[1]}m` });
+  if (filters.liftsMin > 0) chips.push({ key: "lifts", label: `Min ${filters.liftsMin} lifts` });
   if (filters.minRating) chips.push({ key: "rating", label: `${filters.minRating}+ rating` });
   if (filters.facilities.length) chips.push(...filters.facilities.map(f => ({ key: `fac:${f}`, label: f })));
   if (filters.passes.length) chips.push(...filters.passes.map(p => ({ key: `pass:${p}`, label: p })));
@@ -66,7 +67,7 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
       {showDistance && (
         <div className="border-b border-white/5 pb-5">
           <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Distance: {filters.distanceKm < 150 ? `≤ ${filters.distanceKm}km` : "Any"}</p>
-          <RangeSlider value={[filters.distanceKm]} onValueChange={([v]) => setFilters(f => ({ ...f, distanceKm: v }))} min={5} max={150} step={5} formatLabel={n => n + "km"} />
+          <RangeSlider mode="single" value={filters.distanceKm} onValueChange={v => setFilters(f => ({ ...f, distanceKm: typeof v === "number" ? v : v[0] }))} min={5} max={150} step={5} formatLabel={n => n + "km"} />
         </div>
       )}
       {countries.length > 1 && (
@@ -85,18 +86,16 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
       )}
       <div className="border-b border-white/5 pb-5">
         <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Daily lift pass: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
-        <RangeSlider value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={0} max={150} step={5} formatLabel={n => "€" + n} />
+        <RangeSlider mode="dual" value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={0} max={150} step={5} formatLabel={n => "€" + n} />
       </div>
       <div className="border-b border-white/5 pb-5">
-        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Terrain</p>
-        <p className="text-xs text-peak-text-secondary mb-1">Piste km: {filters.pisteRange[0]}–{filters.pisteRange[1]}km</p>
-        <RangeSlider value={filters.pisteRange} onValueChange={v => setFilters(f => ({ ...f, pisteRange: v }))} min={0} max={600} step={10} formatLabel={n => n + "km"} />
-        <p className="text-xs text-peak-text-secondary mb-1 mt-3">Summit altitude: {filters.altRange[0]}–{filters.altRange[1]}m</p>
-        <RangeSlider value={filters.altRange} onValueChange={v => setFilters(f => ({ ...f, altRange: v }))} min={1000} max={4000} step={100} formatLabel={n => n + "m"} />
-        <p className="text-xs text-peak-text-secondary mb-1 mt-3">Vertical drop: {filters.vertRange[0]}–{filters.vertRange[1]}m</p>
-        <RangeSlider value={filters.vertRange} onValueChange={v => setFilters(f => ({ ...f, vertRange: v }))} min={200} max={2500} step={50} formatLabel={n => n + "m"} />
-        <p className="text-xs text-peak-text-secondary mb-1 mt-3">Lifts: up to {filters.liftsMax[0] >= 200 ? "200+" : filters.liftsMax[0]}</p>
-        <RangeSlider value={filters.liftsMax} onValueChange={v => setFilters(f => ({ ...f, liftsMax: v }))} min={0} max={200} step={5} formatLabel={String} />
+        <p className="text-xs font-semibold text-peak-text-secondary uppercase tracking-wider mb-3">Terrain altitude</p>
+        <p className="text-peak-text text-sm font-medium mb-1">{filters.altRange[0]}m – {filters.altRange[1]}m</p>
+        <RangeSlider mode="dual" value={filters.altRange} onValueChange={v => setFilters(f => ({ ...f, altRange: v }))} min={0} max={5000} step={50} formatLabel={n => n + "m"} />
+        <p className="text-xs text-peak-text-secondary mb-1 mt-4">Piste km: {filters.pisteRange[0]}–{filters.pisteRange[1]}km</p>
+        <RangeSlider mode="dual" value={filters.pisteRange} onValueChange={v => setFilters(f => ({ ...f, pisteRange: v }))} min={0} max={600} step={10} formatLabel={n => n + "km"} />
+        <p className="text-xs text-peak-text-secondary mb-1 mt-4">Minimum lifts: {filters.liftsMin >= 200 ? "200+" : filters.liftsMin}</p>
+        <RangeSlider mode="single" value={filters.liftsMin} onValueChange={v => setFilters(f => ({ ...f, liftsMin: typeof v === "number" ? v : v[0] }))} min={0} max={200} step={5} formatLabel={String} />
       </div>
       <div className="border-b border-white/5 pb-5">
         <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Rating</p>
@@ -141,7 +140,7 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
   );
 }
 
-const DEFAULT_FILTERS = { distanceKm: 150, countries: [], priceRange: [0, 150], pisteRange: [0, 600], altRange: [1000, 4000], vertRange: [200, 2500], liftsMax: [200], minRating: null, facilities: [], passes: [] };
+const DEFAULT_FILTERS = { distanceKm: 150, countries: [], priceRange: [0, 150], pisteRange: [0, 600], altRange: [0, 5000], liftsMin: 0, minRating: null, facilities: [], passes: [] };
 
 export default function ResortsTab() {
   const { session } = useTripPlanner();
@@ -173,7 +172,8 @@ export default function ResortsTab() {
     else if (key.startsWith("country:")) setFilters(f => ({ ...f, countries: f.countries.filter(c => c !== key.slice(8)) }));
     else if (key === "price") setFilters(f => ({ ...f, priceRange: [0, 150] }));
     else if (key === "piste") setFilters(f => ({ ...f, pisteRange: [0, 600] }));
-    else if (key === "alt") setFilters(f => ({ ...f, altRange: [1000, 4000] }));
+    else if (key === "alt") setFilters(f => ({ ...f, altRange: [0, 5000] }));
+    else if (key === "lifts") setFilters(f => ({ ...f, liftsMin: 0 }));
     else if (key === "rating") setFilters(f => ({ ...f, minRating: null }));
     else if (key.startsWith("fac:")) setFilters(f => ({ ...f, facilities: f.facilities.filter(x => x !== key.slice(4)) }));
     else if (key.startsWith("pass:")) setFilters(f => ({ ...f, passes: f.passes.filter(x => x !== key.slice(5)) }));
@@ -188,8 +188,8 @@ export default function ResortsTab() {
     });
     list = list.filter(r => (r.priceFrom || 0) >= filters.priceRange[0] && (r.priceFrom || 999) <= filters.priceRange[1]);
     list = list.filter(r => (r.pisteKm || 0) >= filters.pisteRange[0] && (r.pisteKm || 0) <= filters.pisteRange[1]);
-    list = list.filter(r => (r.maxAltitude || 0) >= filters.altRange[0] && (r.maxAltitude || 9999) <= filters.altRange[1]);
-    list = list.filter(r => (r.lifts || 0) <= (filters.liftsMax[0] >= 200 ? 9999 : filters.liftsMax[0]));
+    list = list.filter(r => (r.altitude?.summit || r.maxAltitude || 0) >= filters.altRange[0] && (r.altitude?.base || 0) <= filters.altRange[1]);
+    list = list.filter(r => (r.lifts || 0) >= filters.liftsMin);
     if (filters.minRating) list = list.filter(r => (r.rating || 0) >= filters.minRating);
     if (filters.passes.length) list = list.filter(r => filters.passes.some(p => (r.seasonPasses || []).includes(p)));
 
