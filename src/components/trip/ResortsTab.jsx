@@ -46,7 +46,10 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
   const allFacilities = ["Kids area", "Night skiing", "Snow park", "Après-ski", "Free parking", "Ski-in ski-out", "Cross-country", "Glacier skiing", "Car-free village"];
   const activeFacilities = useMemo(() => allFacilities.filter(f => {
     const key = f.toLowerCase().replace(/-/g, "_").replace(/\s+/g, "_");
-    return baseList.filter(r => r.facilities?.includes(key) || r.facilities?.includes(f.toLowerCase())).length >= 3;
+    return baseList.filter(r => {
+      const facs = Array.isArray(r.facilities) ? r.facilities : [];
+      return facs.includes(key) || facs.includes(f.toLowerCase());
+    }).length >= 3;
   }), [baseList]);
   const passOptions = useMemo(() => {
     const set = new Set();
