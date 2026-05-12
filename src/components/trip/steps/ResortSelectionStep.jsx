@@ -1,26 +1,46 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { resorts as allResorts } from "../../../lib/data";
 import { useTripPlanner } from "../../../context/TripPlannerContext";
+import { getNearestResorts, getResortsInDestination, sortByProximity } from "../../../lib/proximity";
 import { MapPin, Plus, ArrowRight, Check } from "lucide-react";
 
 export default function ResortSelectionStep() {
   const { session, addResort, markStepComplete, setCurrentStep, getNextStep } = useTripPlanner();
   const [showPrompt, setShowPrompt] = useState(false);
+  const [filteredResorts, setFilteredResorts] = useState([]);
   const dest = session.destination;
 
-  const filtered = useMemo(() => {
-    return allResorts.filter(r => {
-      if (!dest) return true;
-      if (dest.type === "country") {
-        const countryName = dest.label;
-        return (Array.isArray(r.country) ? r.country.includes(countryName) : r.country === countryName)
-          || (dest.countryCode && r.countryCode === dest.countryCode);
+  useEffect(() => {
+    if (!dest) {
+      const sorted = [...allResorts].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      setFilteredResorts(sorted.map(r => ({ ...r, distanceKm: null, badge: null })));
+      return;
+    }
+
+    if (dest.type === "resort") {
+      // Find anchor resort by id or name
+      let anchor = allResorts.find(r => r.id === dest.id || r.id === dest.resortId)
+        || allResorts.find(r => r.name.toLowerCase() === (dest.label || "").toLowerCase());
+
+      // Fallback: use lat/lon to find nearest
+      if (!anchor && dest.lat && dest.lon) {
+        const sorted = sortByProximity(allResorts, dest.lat, dest.lon);
+        anchor = sorted[0];
       }
-      if (dest.type === "region") {
-        return r.region === dest.region || r.region === dest.label;
+
+      if (anchor) {
+        const nearest = getNearestResorts(allResorts, anchor.id, 11);
+        setFilteredResorts([
+          { ...anchor, distanceKm: 0, badge: "Your selection" },
+          ...nearest,
+        ]);
+      } else {
+        setFilteredResorts(allResorts.map(r => ({ ...r, distanceKm: null, badge: null })));
       }
-      return true;
-    });
+    } else {
+      const result = getResortsInDestination(allResorts, dest);
+      setFilteredResorts(result.map(r => ({ ...r, badge: null })));
+    }
   }, [dest]);
 
   const selectedIds = session.resorts.map(r => r.resortId);
@@ -46,10 +66,16 @@ export default function ResortSelectionStep() {
     setShowPrompt(false);
   }
 
+  const subheading = dest?.type === "resort"
+    ? `Showing ${dest.label} and nearby resorts`
+    : dest?.label
+    ? `Showing resorts in ${dest.label}`
+    : "Showing all resorts";
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
       <h2 className="font-display font-extrabold text-2xl text-peak-text mb-1">Choose your ski resort</h2>
-      <p className="text-peak-text-secondary text-sm mb-6">Showing resorts in {dest?.label || "the Alps"}</p>
+      <p className="text-peak-text-secondary text-sm mb-6">{subheading}</p>
 
       {/* Selected resorts badges */}
       {session.resorts.length > 0 && (
@@ -80,7 +106,7 @@ export default function ResortSelectionStep() {
       {/* Resort grid */}
       {(!showPrompt || session.resorts.length === 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(resort => {
+          {filteredResorts.map(resort => {
             const isSelected = selectedIds.includes(resort.id);
             const passPrice = resort.liftPasses?.[0]?.adult ?? resort.priceFrom;
             return (
@@ -97,7 +123,14 @@ export default function ResortSelectionStep() {
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-display font-bold text-peak-text text-lg">{resort.name}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-display font-bold text-peak-text text-lg">{resort.name}</h3>
+                    {resort.badge === "Your selection" ? (
+                      <span className="bg-peak-red/20 text-peak-red text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">Your selection</span>
+                    ) : resort.distanceKm != null && resort.distanceKm > 0 ? (
+                      <span className="text-peak-text-secondary text-xs whitespace-nowrap flex-shrink-0">{resort.distanceKm} km away</span>
+                    ) : null}
+                  </div>
                   <p className="text-peak-text-secondary text-sm mb-2">{resort.flag} {resort.country}</p>
                   <div className="flex items-center gap-3 text-xs text-peak-text-secondary mb-3">
                     <span>{resort.pisteKm}km pistes</span>
@@ -117,7 +150,7 @@ export default function ResortSelectionStep() {
               </div>
             );
           })}
-          {filtered.length === 0 && (
+          {filteredResorts.length === 0 && (
             <div className="col-span-full text-center py-16">
               <MapPin className="h-10 w-10 text-peak-text-secondary/30 mx-auto mb-3" />
               <p className="text-peak-text-secondary">No resorts found for this destination.</p>

@@ -4,6 +4,7 @@ import { Search, MapPin, CalendarDays, Users, Plus, Check, Globe, Map, X } from 
 import DateRangePicker, { fmtDate } from "./shared/DateRangePicker";
 import { searchDestinations, searchIndex } from "../lib/searchIndex";
 import { useTripPlanner } from "../context/TripPlannerContext";
+import { resorts as allResorts } from "../lib/data";
 import { toast } from "sonner";
 
 const SERVICE_KEYS = [
@@ -114,13 +115,24 @@ export default function SearchBar() {
     setDestError("");
     if (!searchStart) toast("Adding dates helps us show accurate availability", { icon: "📅" });
 
+    // For resort type, enrich with coordinates for proximity engine
+    let resortCoords = {};
+    if (selectedDest.type === "resort") {
+      const matchedResort = allResorts.find(r => r.id === selectedDest.id || r.name.toLowerCase() === selectedDest.label.toLowerCase());
+      if (matchedResort?.coordinates) {
+        resortCoords = { lat: matchedResort.coordinates.lat, lon: matchedResort.coordinates.lon };
+      }
+    }
+
     const destination = {
       type: selectedDest.type,
       label: selectedDest.label,
       id: selectedDest.id,
+      resortId: selectedDest.type === "resort" ? selectedDest.id : undefined,
       countryCode: Array.isArray(selectedDest.countryCode) ? selectedDest.countryCode[0] : selectedDest.countryCode,
       region: selectedDest.region || null,
       flag: selectedDest.flag || "",
+      ...resortCoords,
     };
     const nights = searchStart && searchEnd ? Math.round((new Date(searchEnd) - new Date(searchStart)) / 86400000) : null;
     const dates = {
