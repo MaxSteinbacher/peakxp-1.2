@@ -359,7 +359,7 @@ export const austrianResorts = [
     ],
     videos: [
       {
-        url: "https://media.base44.com/videos/public/6a058497bdc3421cd2bb6205/c187d7527_02-ClipBBWK.mp4",
+        url: "https://media.base44.com/videos/public/6a058497bdc3421cd2bb6205/5672e0645_01-ClipBBWK.mp4",
         type: "promotional",
         label: "SkiWelt Wilder Kaiser-Brixental — Official Resort Film",
         autoplay: false,
