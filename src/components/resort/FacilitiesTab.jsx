@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 
 function Section({ title, badge, children }) {
   return (
@@ -69,6 +70,17 @@ export default function FacilitiesTab({ resort }) {
         <Row label="Ski storage" value={f.skiStorage ? `Yes — from €${f.skiStorageFrom}/day` : "No"} highlight={f.skiStorage} />
         <Row label="Boot dryers" value={f.bootDryers ? "Yes" : "No"} highlight={f.bootDryers} />
         <Row label="Location" value="Base station + mid-mountain" />
+        {resort.skiDepotUrl && (
+          <a
+            href={resort.skiDepotUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-peak-blue text-sm hover:underline mt-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View all ski depot locations
+          </a>
+        )}
         <Link to="/trip-planning" className="mt-3 inline-block text-xs text-peak-blue hover:underline">Reserve storage in Storage tab →</Link>
       </Section>
 

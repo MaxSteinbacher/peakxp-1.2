@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Mountain, ArrowLeft, Heart, Share2, ChevronLeft, ChevronRight, MapPin, Snowflake, Thermometer, Car } from "lucide-react";
+import { Mountain, ArrowLeft, Heart, Share2, ChevronLeft, ChevronRight, MapPin, Snowflake, Thermometer, Car, Play, ExternalLink } from "lucide-react";
 import BackButton from "../components/shared/BackButton";
 import { getResortById, SEASON_PASSES } from "../lib/data";
 import ReviewCard from "../components/ReviewCard";
@@ -76,6 +76,18 @@ export default function ResortDetail() {
         {/* Left: name, country, status */}
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap mb-2">
+            {resort.logo && (
+              <div
+                className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10"
+                style={{ background: resort.logoBackground === 'red' ? 'white' : '#1a1f35' }}
+              >
+                <img
+                  src={resort.logo}
+                  alt={resort.name + ' logo'}
+                  className="w-full h-full object-contain p-1"
+                />
+              </div>
+            )}
             <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text">{resort.name}</h1>
             <span className="bg-peak-blue text-white text-sm font-bold px-3 py-1 rounded-lg">{resort.rating}</span>
             <span className="text-peak-text-secondary text-sm">{resort.ratingLabel}</span>
