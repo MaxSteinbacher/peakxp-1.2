@@ -383,8 +383,8 @@ export const austrianResorts = [
     employees: { winter: 500, summer: 250 },
     airports: [
       { airport: "Innsbruck", iata: "INN", driveTime: "1h" },
-      { airport: "Munich", iata: "MUC", driveTime: "1h" },
-      { airport: "Salzburg", iata: "SZG", driveTime: "1h" }
+      { airport: "Munich", iata: "MUC", driveTime: "1h 20m" },
+      { airport: "Salzburg", iata: "SZG", driveTime: "1h 30m" }
     ],
     nearestStation: "Worgl",
     distanceFromStation: 15,

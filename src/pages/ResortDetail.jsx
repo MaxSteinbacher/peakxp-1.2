@@ -137,11 +137,11 @@ export default function ResortDetail() {
           <div className="flex gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 bg-peak-blue/10 text-peak-blue px-3 py-1.5 rounded-lg text-xs font-semibold">
               <Snowflake className="h-3.5 w-3.5" />
-              {resort.snowDepthTop || resort.weather.snowDepth || 180}cm base
+              {resort.snowDepthTop || 145}cm base
             </div>
             <div className="flex items-center gap-1.5 bg-peak-blue/10 text-peak-blue px-3 py-1.5 rounded-lg text-xs font-semibold">
               <Thermometer className="h-3.5 w-3.5" />
-              {resort.weather.temp}°C
+              {resort.weather?.temp || -3}°C
             </div>
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${resort.roadStatus === "clear" ? "bg-peak-green/10 text-peak-green" : resort.roadStatus === "chains" ? "bg-yellow-500/10 text-yellow-400" : "bg-peak-red/10 text-peak-red"}`}>
               <Car className="h-3.5 w-3.5" />
