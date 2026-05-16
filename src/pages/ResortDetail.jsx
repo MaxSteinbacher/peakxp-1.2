@@ -44,32 +44,54 @@ export default function ResortDetail() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
       <BackButton className="mb-6" />
 
-      {/* Image carousel */}
-      <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 lg:h-[420px] mb-8 group">
-        <img src={resort.images[imageIdx]} alt={resort.name} className="w-full h-full object-cover transition-all duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-peak-bg/70 to-transparent" />
-        <button onClick={() => setImageIdx(p => p === 0 ? resort.images.length - 1 : p - 1)}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button onClick={() => setImageIdx(p => p === resort.images.length - 1 ? 0 : p + 1)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80">
-          <ChevronRight className="h-5 w-5" />
-        </button>
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {resort.images.map((_, i) => (
-            <button key={i} onClick={() => setImageIdx(i)} className={`w-2 h-2 rounded-full transition-colors ${i === imageIdx ? "bg-white" : "bg-white/40"}`} />
-          ))}
+      {/* Video Hero or Image Carousel */}
+      {resort.videos && resort.videos.length > 0 ? (
+        <div className="relative w-full overflow-hidden rounded-2xl mb-8" style={{ height: '70vh', maxHeight: '600px' }}>
+          <video
+            src={resort.videos[0].url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-peak-bg/80 via-transparent to-transparent" />
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button onClick={() => setSaved(!saved)} className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
+              <Heart className={`h-5 w-5 ${saved ? "fill-peak-red text-peak-red" : ""}`} />
+            </button>
+            <button className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
+              <Share2 className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-        <div className="absolute top-4 right-4 flex gap-2">
-          <button onClick={() => setSaved(!saved)} className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
-            <Heart className={`h-5 w-5 ${saved ? "fill-peak-red text-peak-red" : ""}`} />
+      ) : (
+        <div className="relative rounded-2xl overflow-hidden h-64 sm:h-80 lg:h-[420px] mb-8 group">
+          <img src={resort.images[imageIdx]} alt={resort.name} className="w-full h-full object-cover transition-all duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-t from-peak-bg/70 to-transparent" />
+          <button onClick={() => setImageIdx(p => p === 0 ? resort.images.length - 1 : p - 1)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80">
+            <ChevronLeft className="h-5 w-5" />
           </button>
-          <button className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
-            <Share2 className="h-5 w-5" />
+          <button onClick={() => setImageIdx(p => p === resort.images.length - 1 ? 0 : p + 1)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-peak-bg/60 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-peak-bg/80">
+            <ChevronRight className="h-5 w-5" />
           </button>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {resort.images.map((_, i) => (
+              <button key={i} onClick={() => setImageIdx(i)} className={`w-2 h-2 rounded-full transition-colors ${i === imageIdx ? "bg-white" : "bg-white/40"}`} />
+            ))}
+          </div>
+          <div className="absolute top-4 right-4 flex gap-2">
+            <button onClick={() => setSaved(!saved)} className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
+              <Heart className={`h-5 w-5 ${saved ? "fill-peak-red text-peak-red" : ""}`} />
+            </button>
+            <button className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
+              <Share2 className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Resort header */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
@@ -77,14 +99,12 @@ export default function ResortDetail() {
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap mb-2">
             {resort.logo && (
-              <div
-                className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-white/10"
-                style={{ background: resort.logoBackground === 'red' ? 'white' : '#1a1f35' }}
-              >
+              <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center flex-shrink-0 overflow-hidden p-1 border border-white/10">
                 <img
                   src={resort.logo}
-                  alt={resort.name + ' logo'}
-                  className="w-full h-full object-contain p-1"
+                  alt={resort.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
             )}

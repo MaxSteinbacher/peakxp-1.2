@@ -104,28 +104,6 @@ export default function OverviewTab({ resort }) {
             </p>
           </div>
 
-          {/* Resort Video */}
-          {resort.videos && resort.videos.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-display font-bold text-peak-text text-lg mb-3 flex items-center gap-2">
-                <Play className="w-5 h-5 text-peak-red" />
-                Resort Film
-              </h3>
-              <div className="relative w-full rounded-2xl overflow-hidden bg-peak-surface" style={{ paddingBottom: '56.25%' }}>
-                <video
-                  src={resort.videos[0].url}
-                  controls
-                  loop={resort.videos[0].loop}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  poster={resort.images?.[0]}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-              <p className="text-peak-text-secondary text-xs mt-2">{resort.videos[0].label}</p>
-            </div>
-          )}
-
           {/* Interactive 3D Map */}
           <div className="mb-8">
             <h2 className="font-display font-bold text-peak-text text-xl mb-2">Interactive Resort Map</h2>
