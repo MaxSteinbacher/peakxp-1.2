@@ -19,17 +19,22 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://picsum.photos/seed/alpshero/1920/1080"
-            alt="Alpine mountains"
-            className="w-full h-full object-cover" />
-          
-          <div className="absolute inset-0 bg-peak-bg/80 backdrop-blur-sm" />
-          <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/40 to-transparent" />
+        <div className="absolute inset-0 bg-peak-bg">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: 0 }}
+          >
+            <source src="https://media.base44.com/videos/public/6a058497bdc3421cd2bb6205/c187d7527_02-ClipBBWK.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/45" style={{ zIndex: 1 }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/20 to-transparent" style={{ zIndex: 1 }} />
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" style={{ zIndex: 2 }}>
           <h1 className="font-display font-extrabold text-5xl sm:text-7xl lg:text-8xl tracking-tight leading-none mb-4">
             <span className="text-peak-text">THE MOUNTAIN.</span><br />
             <span className="text-peak-red">UNIFIED.</span>
