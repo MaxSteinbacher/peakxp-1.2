@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Ticket, Navigation, BarChart3, ArrowRight } from "lucide-react";
+import { useT } from "../lib/i18n";
 import GlobalDiscoveryMap from "../components/discovery/GlobalDiscoveryMap";
 import DayTrips from "../components/DayTrips";
 import SearchBar from "../components/SearchBar";
@@ -13,6 +14,7 @@ const pillars = [
 
 
 export default function Home() {
+  const t = useT();
   return (
     <div className="min-h-screen">
       {/* Hero */}

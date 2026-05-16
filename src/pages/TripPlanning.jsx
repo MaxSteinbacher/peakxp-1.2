@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../lib/i18n";
 import { Mountain, Building2, Wrench, GraduationCap, Plane, Train, Car, Package, UtensilsCrossed, Zap, Baby } from "lucide-react";
 import ResortsTab from "../components/trip/ResortsTab";
 import AccommodationTab from "../components/trip/AccommodationTab";
@@ -11,18 +12,18 @@ import CarRentalTab from "../components/trip/CarRentalTab";
 import StorageTab from "../components/trip/StorageTab";
 import DiningTab from "../components/trip/DiningTab";
 
-const tabs = [
-  { key: "resorts", label: "All Resorts", icon: Mountain },
-  { key: "accommodation", label: "Accommodation", icon: Building2 },
-  { key: "equipment", label: "Equipment Rental", icon: Wrench },
-  { key: "ski-school", label: "Ski School", icon: GraduationCap },
-  { key: "flights", label: "Flights", icon: Plane },
-  { key: "train", label: "Train", icon: Train },
-  { key: "car-rental", label: "Car Rental", icon: Car },
-  { key: "storage", label: "Storage & Lockers", icon: Package },
-  { key: "dining", label: "Dining", icon: UtensilsCrossed },
-  { key: "activities", label: "Activities", icon: Zap },
-  { key: "childcare", label: "Childcare", icon: Baby },
+const TAB_KEYS = [
+  { key: "resorts", i18nKey: "all_resorts", icon: Mountain },
+  { key: "accommodation", i18nKey: "accommodation", icon: Building2 },
+  { key: "equipment", i18nKey: "equipment_rental", icon: Wrench },
+  { key: "ski-school", i18nKey: "ski_school", icon: GraduationCap },
+  { key: "flights", i18nKey: "flights", icon: Plane },
+  { key: "train", i18nKey: "train", icon: Train },
+  { key: "car-rental", i18nKey: "car_rental", icon: Car },
+  { key: "storage", i18nKey: "storage", icon: Package },
+  { key: "dining", i18nKey: "dining", icon: UtensilsCrossed },
+  { key: "activities", i18nKey: "activities", icon: Zap },
+  { key: "childcare", i18nKey: "childcare", icon: Baby },
 ];
 
 const placeholderInfo = {
@@ -38,8 +39,10 @@ const placeholderInfo = {
 };
 
 export default function TripPlanning() {
+  const t = useT();
+  const tabs = TAB_KEYS.map(tab => ({ ...tab, label: t(tab.i18nKey) }));
   const [activeTab, setActiveTab] = useState("resorts");
-  const active = tabs.find((t) => t.key === activeTab);
+  const active = tabs.find((tab) => tab.key === activeTab);
 
   function renderContent() {
     if (activeTab === "resorts") return <ResortsTab />;
@@ -60,7 +63,7 @@ export default function TripPlanning() {
       {/* Page header */}
       <div className="border-b border-white/5 bg-peak-surface">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-0">
-          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text mb-6">Trip Planning</h1>
+          <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text mb-6">{t('trip_planning_title')}</h1>
           {/* Tab bar */}
           <div className="flex gap-1 overflow-x-auto hide-scrollbar">
             {tabs.map((tab) => (

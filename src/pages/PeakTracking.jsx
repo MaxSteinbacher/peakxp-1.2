@@ -1,18 +1,20 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useT } from "../lib/i18n";
 import { Radio, BarChart3, Eye, Upload, Route } from "lucide-react";
 import BackButton from "../components/shared/BackButton";
 import AuthGate from "../components/AuthGate";
 import { useAppAuth } from "../context/AppAuthContext";
 
-const TABS = [
-  { label: "Record", icon: Radio, path: "/tracking" },
-  { label: "Peak Log", icon: BarChart3, path: "/tracking/log" },
-  { label: "Peak Vision AI", icon: Eye, path: "/tracking/vision" },
-  { label: "Import", icon: Upload, path: "/tracking/import" },
-  { label: "Route Planner", icon: Route, path: "/tracking/routes" },
+const TRACKING_TABS = [
+  { i18nKey: "record", icon: Radio, path: "/tracking" },
+  { i18nKey: "peak_log", icon: BarChart3, path: "/tracking/log" },
+  { i18nKey: "peak_vision", icon: Eye, path: "/tracking/vision" },
+  { i18nKey: "import", icon: Upload, path: "/tracking/import" },
+  { i18nKey: "nav_route_planner", icon: Route, path: "/tracking/routes" },
 ];
 
 export default function PeakTracking() {
+  const t = useT();
   const { isLoggedIn } = useAppAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export default function PeakTracking() {
       </div>
       {/* Sub-nav */}
       <div className="sticky top-16 z-40 bg-peak-surface border-b border-white/5 px-6 flex gap-1 overflow-x-auto hide-scrollbar">
-        {TABS.map(tab => {
+        {TRACKING_TABS.map(tab => {
           const Icon = tab.icon;
           const isActive = tab.path === "/tracking"
             ? location.pathname === "/tracking"
@@ -48,7 +50,7 @@ export default function PeakTracking() {
               }`}
             >
               <Icon className="h-4 w-4" />
-              {tab.label}
+              {t(tab.i18nKey)}
             </button>
           );
         })}

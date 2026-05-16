@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../lib/i18n";
 import { useAppAuth } from "../context/AppAuthContext";
 import BackButton from "../components/shared/BackButton";
 import { Link } from "react-router-dom";
@@ -167,6 +168,7 @@ function CommentThread({ post, onAddComment, onTextChange }) {
 const PUBLIC_POST_TYPES = ["resort", "sponsored", "challenge", "deal"];
 
 export default function Community() {
+  const t = useT();
   const { isLoggedIn } = useAppAuth();
   const [feed, setFeed] = useState(INITIAL_FEED);
   const [feedNav, setFeedNav] = useState("For you");

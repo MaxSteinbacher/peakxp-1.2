@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../lib/i18n";
 import { Users, Star, DollarSign, TrendingUp, Compass, Sunrise } from "lucide-react";
 import BackButton from "../components/shared/BackButton";
 import AgentChat from "../components/agents/AgentChat";
@@ -91,6 +92,7 @@ const agents = [
 ];
 
 export default function ExpertAgents() {
+  const t = useT();
   const [activeAgent, setActiveAgent] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -105,7 +107,7 @@ export default function ExpertAgents() {
         <BackButton to="/" className="mb-6" />
         <div className="mb-12 text-center">
           <span className="inline-block text-peak-blue text-xs font-semibold uppercase tracking-widest mb-3">AI-powered</span>
-          <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-peak-text mb-4">Expert Agents</h1>
+          <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-peak-text mb-4">{t('expert_agents_title')}</h1>
           <p className="text-peak-text-secondary text-lg max-w-2xl mx-auto">
             Specialised AI booking agents that plan, book and manage your entire ski trip — tailored to your style.
           </p>
@@ -136,7 +138,7 @@ export default function ExpertAgents() {
                 className={`mt-auto flex items-center gap-2 text-sm font-semibold ${agent.color} group-hover:gap-3 transition-all`}
               >
                 <agent.icon className="h-4 w-4" />
-                Start planning →
+                {t('start_planning')} →
               </button>
             </div>
           ))}

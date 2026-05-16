@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useT } from "../lib/i18n";
 import { savePlan } from "../lib/bookings";
 import BackButton from "../components/shared/BackButton";
 import { useNavigate, Link } from "react-router-dom";
@@ -311,6 +312,7 @@ function AddPassModal({ onClose, onAdd }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function MyTrips() {
+  const t = useT();
   const navigate = useNavigate();
   const { addToBasket } = useTripPlanner();
   const [activeTab, setActiveTab] = useState(getTabFromUrl);
@@ -345,11 +347,11 @@ export default function MyTrips() {
   }, [activeTab]);
 
   const TABS = [
-    { key: "booked", label: "Booked Trips", icon: CheckCircle },
-    { key: "planning", label: "Trip Planning", icon: Bookmark },
-    { key: "passes", label: "Season Passes", icon: Ticket },
-    { key: "past", label: "Past Trips", icon: Clock },
-    { key: "cancelled", label: "Cancelled", icon: X },
+    { key: "booked", label: t('booked'), icon: CheckCircle },
+    { key: "planning", label: t('trip_planning_tab'), icon: Bookmark },
+    { key: "passes", label: t('season_passes'), icon: Ticket },
+    { key: "past", label: t('past'), icon: Clock },
+    { key: "cancelled", label: t('cancelled'), icon: X },
   ];
 
   // Stats
@@ -440,7 +442,7 @@ export default function MyTrips() {
   return (
     <div className="min-h-screen pt-24 pb-16 max-w-5xl mx-auto px-4 sm:px-6">
       <BackButton to="/" className="mb-4" />
-      <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text mb-6">My Trips</h1>
+      <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text mb-6">{t('my_trips_title')}</h1>
 
       {/* Stats strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">

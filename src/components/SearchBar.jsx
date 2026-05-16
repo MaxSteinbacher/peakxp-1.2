@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useT } from "../lib/i18n";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, CalendarDays, Users, Plus, Check, Globe, Map, X } from "lucide-react";
 import DateRangePicker, { fmtDate } from "./shared/DateRangePicker";
@@ -8,23 +9,24 @@ import { resorts as allResorts } from "../lib/data";
 import { toast } from "sonner";
 
 const SERVICE_KEYS = [
-  { key: "ski-pass", label: "Ski passes" },
-  { key: "accommodation", label: "Accommodation" },
-  { key: "equipment", label: "Equipment rental" },
-  { key: "ski-school", label: "Ski school" },
-  { key: "flights", label: "Flights" },
-  { key: "train", label: "Train" },
-  { key: "car", label: "Car rental" },
-  { key: "storage", label: "Storage & lockers" },
-  { key: "dining", label: "Dining" },
-  { key: "activities", label: "Activities" },
-  { key: "childcare", label: "Childcare" },
+  { key: "ski-pass", i18nKey: "ski_passes" },
+  { key: "accommodation", i18nKey: "accommodation" },
+  { key: "equipment", i18nKey: "equipment_rental" },
+  { key: "ski-school", i18nKey: "ski_school" },
+  { key: "flights", i18nKey: "flights" },
+  { key: "train", i18nKey: "train" },
+  { key: "car", i18nKey: "car_rental" },
+  { key: "storage", i18nKey: "storage" },
+  { key: "dining", i18nKey: "dining" },
+  { key: "activities", i18nKey: "activities" },
+  { key: "childcare", i18nKey: "childcare" },
 ];
 
 const TYPE_ICON = { resort: MapPin, country: Globe, region: Map };
 const TYPE_LABEL = { resort: "Resort", country: "Country", region: "Region" };
 
 export default function SearchBar() {
+  const t = useT();
   const navigate = useNavigate();
   const { startTrip } = useTripPlanner();
 
@@ -92,7 +94,7 @@ export default function SearchBar() {
     ? searchEnd
       ? `${fmtDate(searchStart)} → ${fmtDate(searchEnd)}`
       : fmtDate(searchStart)
-    : "Add dates";
+    : t('add_dates');
 
   // Guest label
   const guestParts = [];
@@ -164,7 +166,7 @@ export default function SearchBar() {
               value={query}
               onChange={(e) => { setQuery(e.target.value); if (selectedDest) setSelectedDest(null); }}
               onFocus={() => { if (query.length > 0 && !selectedDest) setShowDropdown(true); }}
-              placeholder="Where are you going?"
+              placeholder={t('where_going')}
               className="w-full bg-transparent text-peak-text placeholder:text-peak-text-secondary/70 outline-none text-sm font-medium"
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
@@ -254,7 +256,7 @@ export default function SearchBar() {
         {/* Search button */}
         <button onClick={handleSearch} className="m-3 px-6 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm tracking-wide rounded-lg transition-colors flex items-center gap-2 flex-shrink-0">
           <Search className="h-4 w-4" />
-          <span className="hidden sm:inline">Search</span>
+          <span className="hidden sm:inline">{t('search')}</span>
         </button>
       </div>
 
@@ -288,7 +290,7 @@ export default function SearchBar() {
                   : "bg-white/5 border-white/10 text-peak-text-secondary hover:border-white/25 hover:text-peak-text"
               }`}>
               {isActive ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-              {svc.label}
+              {t(svc.i18nKey)}
             </button>
           );
         })}

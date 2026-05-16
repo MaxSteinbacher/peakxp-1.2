@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { Link } from "react-router-dom";
 import { X, SlidersHorizontal } from "lucide-react";
 import DateRangePicker from "../shared/DateRangePicker";
@@ -143,6 +144,7 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
 const DEFAULT_FILTERS = { distanceKm: 150, countries: [], priceRange: [0, 150], pisteRange: [0, 600], altRange: [0, 5000], liftsMin: 0, minRating: null, facilities: [], passes: [] };
 
 export default function ResortsTab() {
+  const t = useT();
   const { session } = useTripPlanner();
   const destination = session?.destination || null;
   const [sortBy, setSortBy] = useState("Recommended");
