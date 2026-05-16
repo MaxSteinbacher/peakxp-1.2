@@ -35,6 +35,7 @@ import TrackingImport from './components/tracking/TrackingImport';
 import RoutePlannerLanding from './components/tracking/RoutePlannerLanding';
 import { TripPlannerProvider } from './context/TripPlannerContext';
 import { Navigate } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -102,16 +103,18 @@ function App() {
   return (
     <AuthProvider>
       <AppAuthProvider>
-        <TripPlannerProvider>
-          <QueryClientProvider client={queryClientInstance}>
-            <Router>
-              <ProfileProvider>
-                <AuthenticatedApp />
-              </ProfileProvider>
-            </Router>
-            <Toaster />
-          </QueryClientProvider>
-        </TripPlannerProvider>
+        <LanguageProvider>
+          <TripPlannerProvider>
+            <QueryClientProvider client={queryClientInstance}>
+              <Router>
+                <ProfileProvider>
+                  <AuthenticatedApp />
+                </ProfileProvider>
+              </Router>
+              <Toaster />
+            </QueryClientProvider>
+          </TripPlannerProvider>
+        </LanguageProvider>
       </AppAuthProvider>
     </AuthProvider>
   )

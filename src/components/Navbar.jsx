@@ -3,14 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import { Menu, X, Bell, Mountain, Globe, Activity } from "lucide-react";
 import NotificationsPanel from "./NotificationsPanel";
 import { useAppAuth } from "../context/AppAuthContext";
-
-const ALL_NAV_LINKS = [
-  { label: "Discovery", path: "/" },
-  { label: "Trip Planning", path: "/trip-planning" },
-  { label: "Expert Agents", path: "/agents" },
-  { label: "PeakTracking", path: "/tracking", icon: Activity, authOnly: true },
-  { label: "Community", path: "/community" },
-];
+import { useLanguage } from "../context/LanguageContext";
+import { useT } from "../lib/i18n";
 
 const languages = [
   { code: "en", label: "EN", name: "English" },
@@ -30,17 +24,28 @@ const CURRENCIES = [
 
 export default function Navbar() {
   const { isLoggedIn, user, logout } = useAppAuth();
+  const { lang, setLang } = useLanguage();
+  const t = useT();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [selectedLang, setSelectedLang] = useState(languages[0]);
   const [selectedCurrency, setSelectedCurrency] = useState(CURRENCIES[0]);
   const bellRef = useRef(null);
   const avatarRef = useRef(null);
   const location = useLocation();
+
+  const selectedLang = languages.find(l => l.code === lang) || languages[0];
+
+  const ALL_NAV_LINKS = [
+    { key: "nav_discovery", path: "/" },
+    { key: "nav_trip_planning", path: "/trip-planning" },
+    { key: "nav_expert_agents", path: "/agents" },
+    { key: "nav_peak_tracking", path: "/tracking", icon: Activity, authOnly: true },
+    { key: "nav_community", path: "/community" },
+  ];
 
   const navLinks = ALL_NAV_LINKS.filter(l => !l.authOnly || isLoggedIn);
 
@@ -85,7 +90,7 @@ export default function Navbar() {
                   }`}
                 >
                   {Icon && <Icon className="h-3.5 w-3.5" />}
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               );
             })}
@@ -136,10 +141,10 @@ export default function Navbar() {
               </button>
               {langOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-peak-card border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
-                  {languages.map(lang => (
-                    <button key={lang.code} onClick={() => { setSelectedLang(lang); setLangOpen(false); }}
-                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${selectedLang.code === lang.code ? "text-peak-blue bg-peak-blue/10" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/5"}`}>
-                      <span className="font-semibold mr-2">{lang.label}</span>{lang.name}
+                  {languages.map(l => (
+                    <button key={l.code} onClick={() => { setLang(l.code); setLangOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${lang === l.code ? "text-peak-blue bg-peak-blue/10" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/5"}`}>
+                      <span className="font-semibold mr-2">{l.label}</span>{l.name}
                     </button>
                   ))}
                 </div>
@@ -162,7 +167,12 @@ export default function Navbar() {
                       <p className="text-xs text-peak-text-secondary truncate">{user?.email}</p>
                     </div>
                     <div className="h-px bg-white/5 mb-1" />
-                    {[["My Profile", "/profile"], ["My Trips", "/my-trips"], ["Peak Log", "/tracking/log"], ["Settings", "/profile/settings"]].map(([label, path]) => (
+                    {[
+                      [t("my_profile"), "/profile"],
+                      [t("my_trips"), "/my-trips"],
+                      ["Peak Log", "/tracking/log"],
+                      [t("settings"), "/profile/settings"],
+                    ].map(([label, path]) => (
                       <button key={path} onClick={() => { navigate(path); setAvatarOpen(false); }}
                         className="w-full text-left px-3 py-2.5 text-sm text-peak-text-secondary hover:text-peak-text hover:bg-white/5 rounded-xl transition-colors">
                         {label}
@@ -171,15 +181,15 @@ export default function Navbar() {
                     <div className="h-px bg-white/5 my-1" />
                     <button onClick={() => { logout(); setAvatarOpen(false); }}
                       className="w-full text-left px-3 py-2.5 text-sm text-peak-red hover:bg-peak-red/10 rounded-xl transition-colors">
-                      Sign out
+                      {t("sign_out")}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <>
-                <Link to="/auth" className="border border-white/10 text-peak-text-secondary hover:text-peak-text px-4 py-2 rounded-lg text-sm font-medium transition-colors">Sign in</Link>
-                <Link to="/auth" className="bg-peak-red text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-peak-red-hover transition-colors">Get started</Link>
+                <Link to="/auth" className="border border-white/10 text-peak-text-secondary hover:text-peak-text px-4 py-2 rounded-lg text-sm font-medium transition-colors">{t("sign_in")}</Link>
+                <Link to="/auth" className="bg-peak-red text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-peak-red-hover transition-colors">{t("get_started")}</Link>
               </>
             )}
           </div>
@@ -200,19 +210,19 @@ export default function Navbar() {
                 className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   location.pathname === link.path ? "text-peak-text bg-white/5" : "text-peak-text-secondary hover:text-peak-text"
                 }`}>
-                {link.label}
+                {t(link.key)}
               </Link>
             ))}
             <div className="pt-3 border-t border-white/5 flex gap-3">
               {isLoggedIn ? (
                 <button onClick={() => { logout(); setMobileOpen(false); }}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-peak-red border border-peak-red/30 rounded-lg">
-                  Sign out
+                  {t("sign_out")}
                 </button>
               ) : (
                 <>
-                  <Link to="/auth" onClick={() => setMobileOpen(false)} className="flex-1 px-4 py-2.5 text-sm font-medium text-peak-text-secondary border border-white/10 rounded-lg text-center">Sign in</Link>
-                  <Link to="/auth" onClick={() => setMobileOpen(false)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-peak-red rounded-lg text-center">Get started</Link>
+                  <Link to="/auth" onClick={() => setMobileOpen(false)} className="flex-1 px-4 py-2.5 text-sm font-medium text-peak-text-secondary border border-white/10 rounded-lg text-center">{t("sign_in")}</Link>
+                  <Link to="/auth" onClick={() => setMobileOpen(false)} className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-peak-red rounded-lg text-center">{t("get_started")}</Link>
                 </>
               )}
             </div>
