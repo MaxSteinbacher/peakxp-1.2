@@ -43,16 +43,7 @@ export default function FacilitiesTab({ resort }) {
         <Link to="/trip-planning" className="mt-3 inline-block text-xs text-peak-blue hover:underline">View all in Dining tab →</Link>
       </Section>
 
-      {/* Ski school */}
-      <Section title="Ski School" badge={`${f.skiSchools || 3} schools`}>
-        <Row label="Group lesson from" value={`€${f.groupLessonFrom || 40}/person`} />
-        <Row label="Private lesson from" value={`€${f.privateLessonFrom || 100}/hour`} />
-        <div className="flex items-center justify-between py-2 border-b border-white/5 text-sm">
-          <span className="text-peak-text-secondary">Languages</span>
-          <span className="flex gap-1 text-lg">{(f.languages || ["🇫🇷", "🇬🇧", "🇩🇪"]).join(" ")}</span>
-        </div>
-        <Link to="/trip-planning" className="mt-3 inline-block text-xs text-peak-blue hover:underline">Book lessons in Ski School tab →</Link>
-      </Section>
+
 
       {/* Childcare */}
       <Section title="Childcare & Kids">

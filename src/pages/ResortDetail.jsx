@@ -9,6 +9,7 @@ import OverviewTab from "../components/resort/OverviewTab";
 import ConditionsTab from "../components/resort/ConditionsTab";
 import LiftPassesTab from "../components/resort/LiftPassesTab";
 import FacilitiesTab from "../components/resort/FacilitiesTab";
+import SkiSchoolTab from "../components/resort/SkiSchoolTab";
 import SurroundingsTab from "../components/resort/SurroundingsTab";
 import EventsTab from "../components/resort/EventsTab";
 
@@ -217,16 +218,7 @@ export default function ResortDetail() {
       {activeTab === "Events" && <EventsTab resort={resort} />}
 
       {activeTab === "Ski School" && (
-        <div>
-          <h3 className="font-display font-bold text-peak-text text-xl mb-6">Instructors</h3>
-          {resort.instructors && resort.instructors.length > 0 ? (
-            <div className="space-y-4">
-              {resort.instructors.map(inst => <InstructorCard key={inst.id} instructor={inst} />)}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-peak-text-secondary">Instructor information coming soon for this resort.</div>
-          )}
-        </div>
+        <SkiSchoolTab resort={resort} />
       )}
 
       {activeTab === "Reviews" && (
