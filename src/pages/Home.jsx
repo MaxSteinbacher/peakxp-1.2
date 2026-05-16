@@ -49,16 +49,18 @@ export default function Home() {
       {/* Video Hero */}
       <section className="relative w-full h-[70vh] overflow-hidden flex items-end">
         <div className="absolute inset-0 bg-peak-bg">
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-peak-surface via-peak-bg to-black">
-            <div className="text-center">
-              <div className="w-20 h-20 rounded-full border-2 border-white/20 flex items-center justify-center mx-auto mb-4">
-                <div className="w-0 h-0 border-t-[14px] border-t-transparent border-b-[14px] border-b-transparent border-l-[24px] border-l-white/50 ml-2" />
-              </div>
-              <p className="text-peak-text-secondary text-sm tracking-widest uppercase">Video background</p>
-            </div>
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-peak-bg" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: 0 }}
+            src="https://media.base44.com/videos/public/6a058497bdc3421cd2bb6205/c187d7527_02-ClipBBWK.mp4"
+          />
+          <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-peak-bg" style={{ zIndex: 1 }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" style={{ zIndex: 1 }} />
         </div>
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <div className="flex items-end justify-between">
