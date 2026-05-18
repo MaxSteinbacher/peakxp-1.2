@@ -1,21 +1,43 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
-export default function PhotoSlideshow({ images }) {
+export default function PhotoSlideshow({ images, videos }) {
   const [idx, setIdx] = useState(0);
 
-  if (!images || images.length === 0) return null;
+  // Build unified slides: video first, then photos
+  const slides = [
+    ...(videos || []).map(v => ({ type: "video", src: v.url })),
+    ...(images || []).map(src => ({ type: "image", src })),
+  ];
 
-  const prev = () => setIdx(i => (i === 0 ? images.length - 1 : i - 1));
-  const next = () => setIdx(i => (i === images.length - 1 ? 0 : i + 1));
+  if (slides.length === 0) return null;
+
+  const prev = () => setIdx(i => (i === 0 ? slides.length - 1 : i - 1));
+  const next = () => setIdx(i => (i === slides.length - 1 ? 0 : i + 1));
+
+  const current = slides[idx];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl mb-8 group" style={{ height: '60vh', maxHeight: '520px' }}>
-      <img
-        src={images[idx]}
-        alt={`Resort photo ${idx + 1}`}
-        className="w-full h-full object-cover transition-all duration-500"
-      />
+    <div className="relative w-full overflow-hidden rounded-2xl mb-8 group" style={{ height: '70vh', maxHeight: '600px' }}>
+      {current.type === "video" ? (
+        <video
+          key={current.src}
+          src={current.src}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <img
+          key={current.src}
+          src={current.src}
+          alt={`Resort photo ${idx}`}
+          className="w-full h-full object-cover transition-all duration-500"
+        />
+      )}
+
       <div className="absolute inset-0 bg-gradient-to-t from-peak-bg/40 via-transparent to-transparent" />
 
       {/* Left arrow */}
@@ -35,19 +57,31 @@ export default function PhotoSlideshow({ images }) {
       </button>
 
       {/* Dot indicators */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-xs">
-        {images.map((_, i) => (
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 flex-wrap justify-center max-w-sm">
+        {slides.map((slide, i) => (
           <button
             key={i}
             onClick={() => setIdx(i)}
-            className={`w-2 h-2 rounded-full transition-colors ${i === idx ? "bg-white" : "bg-white/30"}`}
+            className={`transition-all rounded-full ${
+              i === idx
+                ? "bg-white w-4 h-2"
+                : "bg-white/40 w-2 h-2 hover:bg-white/70"
+            }`}
           />
         ))}
       </div>
 
-      {/* Counter */}
-      <div className="absolute top-4 right-4 bg-peak-bg/60 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-        {idx + 1} / {images.length}
+      {/* Counter + video badge */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        {current.type === "video" && (
+          <div className="flex items-center gap-1.5 bg-peak-red/80 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+            <Play className="h-3 w-3 fill-white" />
+            Video
+          </div>
+        )}
+        <div className="bg-peak-bg/60 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+          {idx + 1} / {slides.length}
+        </div>
       </div>
     </div>
   );
