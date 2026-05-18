@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Mountain, ArrowLeft, Heart, Share2, ChevronLeft, ChevronRight, MapPin, Snowflake, Thermometer, Car, Play, ExternalLink } from "lucide-react";
+import { useT } from "../lib/i18n";
 import BackButton from "../components/shared/BackButton";
 import { getResortById, SEASON_PASSES } from "../lib/data";
 import ReviewCard from "../components/ReviewCard";
@@ -13,7 +14,7 @@ import SkiSchoolTab from "../components/resort/SkiSchoolTab";
 import SurroundingsTab from "../components/resort/SurroundingsTab";
 import EventsTab from "../components/resort/EventsTab";
 
-const TABS = ["Overview", "Conditions", "Lift Passes", "Facilities", "Surroundings", "Events", "Ski School", "Reviews"];
+const TAB_KEYS = ["overview", "conditions", "lift_passes", "facilities", "surroundings", "events", "ski_school_tab", "reviews"];
 
 const OPEN_STATUS = {
   "Open": "bg-peak-green/20 text-peak-green border-peak-green/30",
@@ -22,9 +23,10 @@ const OPEN_STATUS = {
 };
 
 export default function ResortDetail() {
+  const t = useT();
   const { id } = useParams();
   const resort = getResortById(id);
-  const [activeTab, setActiveTab] = useState("Overview");
+  const [activeTab, setActiveTab] = useState("overview");
   const [imageIdx, setImageIdx] = useState(0);
   const [saved, setSaved] = useState(false);
 
@@ -169,14 +171,14 @@ export default function ResortDetail() {
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
         {[
-          { label: "Altitude", value: `${resort.minAltitude}–${resort.maxAltitude}m` },
-          { label: "Runs", value: resort.runs },
-          { label: "Pistes", value: `${resort.pisteKm}km` },
-          { label: "Lifts", value: resort.lifts, sub: resort.gondolas ? `${resort.gondolas}G / ${resort.chairlifts}C / ${resort.dragLifts}D` : null },
-          { label: "Vertical", value: `${resort.verticalDrop || resort.maxAltitude - resort.minAltitude}m` },
-          { label: "Longest run", value: `${resort.longestRun || "—"}km` },
-          { label: "Snow guns", value: resort.snowCannons || "—" },
-          { label: "Difficulty", value: null, special: "diff" },
+          { label: t('altitude'), value: `${resort.minAltitude}–${resort.maxAltitude}m` },
+          { label: t('runs'), value: resort.runs },
+          { label: t('pistes'), value: `${resort.pisteKm}km` },
+          { label: t('lifts'), value: resort.lifts, sub: resort.gondolas ? `${resort.gondolas}G / ${resort.chairlifts}C / ${resort.dragLifts}D` : null },
+          { label: t('vertical'), value: `${resort.verticalDrop || resort.maxAltitude - resort.minAltitude}m` },
+          { label: t('longest_run'), value: `${resort.longestRun || "—"}km` },
+          { label: t('snow_guns'), value: resort.snowCannons || "—" },
+          { label: t('difficulty'), value: null, special: "diff" },
         ].map(stat => (
           <div key={stat.label} className="bg-peak-card border border-white/5 rounded-xl p-3 text-center">
             <p className="text-peak-blue text-xs font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
@@ -201,27 +203,27 @@ export default function ResortDetail() {
 
       {/* Tabs */}
       <div className="flex gap-1 overflow-x-auto hide-scrollbar border-b border-white/5 mb-8">
-        {TABS.map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === tab ? "border-peak-red text-peak-text" : "border-transparent text-peak-text-secondary hover:text-peak-text"}`}>
-            {tab}
+        {TAB_KEYS.map(key => (
+          <button key={key} onClick={() => setActiveTab(key)}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === key ? "border-peak-red text-peak-text" : "border-transparent text-peak-text-secondary hover:text-peak-text"}`}>
+            {t(key)}
           </button>
         ))}
       </div>
 
       {/* Tab content */}
-      {activeTab === "Overview" && <OverviewTab resort={resort} />}
-      {activeTab === "Conditions" && <ConditionsTab resort={resort} />}
-      {activeTab === "Lift Passes" && <LiftPassesTab resort={resort} />}
-      {activeTab === "Facilities" && <FacilitiesTab resort={resort} />}
-      {activeTab === "Surroundings" && <SurroundingsTab resort={resort} />}
-      {activeTab === "Events" && <EventsTab resort={resort} />}
+      {activeTab === "overview" && <OverviewTab resort={resort} />}
+      {activeTab === "conditions" && <ConditionsTab resort={resort} />}
+      {activeTab === "lift_passes" && <LiftPassesTab resort={resort} />}
+      {activeTab === "facilities" && <FacilitiesTab resort={resort} />}
+      {activeTab === "surroundings" && <SurroundingsTab resort={resort} />}
+      {activeTab === "events" && <EventsTab resort={resort} />}
 
-      {activeTab === "Ski School" && (
+      {activeTab === "ski_school_tab" && (
         <SkiSchoolTab resort={resort} />
       )}
 
-      {activeTab === "Reviews" && (
+      {activeTab === "reviews" && (
         <div>
           <div className="flex flex-col sm:flex-row gap-8 mb-8">
             <div className="flex items-center gap-4">

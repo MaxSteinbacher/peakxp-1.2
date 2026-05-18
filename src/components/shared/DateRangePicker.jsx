@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays, X } from "lucide-react";
 import { useT } from "../../lib/i18n";
 
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const DAYS_LABELS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+const MONTH_KEYS = ["month_jan","month_feb","month_mar","month_apr","month_may","month_jun","month_jul","month_aug","month_sep","month_oct","month_nov","month_dec"];
+const DAY_KEYS = ["day_mon","day_tue","day_wed","day_thu","day_fri","day_sat","day_sun"];
 const DAYS_FULL = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 function utc(year, month, day) {
@@ -59,15 +59,15 @@ function FooterSummary({ start, end, nightsOrDays, unitLabel, selectDatesLabel }
   );
 }
 
-function MonthPanel({ yr, mo, renderDaysGridForMonth, setHoveredDate }) {
+function MonthPanel({ yr, mo, renderDaysGridForMonth, setHoveredDate, t }) {
   return (
     <div className="flex-1 min-w-0">
       <div className="text-center font-display font-bold text-peak-text text-base mb-3">
-        {MONTHS[mo]} {yr}
+        {t(MONTH_KEYS[mo])} {yr}
       </div>
       <div className="grid grid-cols-7 mb-1">
-        {DAYS_LABELS.map(d => (
-          <div key={d} className="text-peak-text-secondary text-xs font-medium text-center py-1">{d}</div>
+        {DAY_KEYS.map(k => (
+          <div key={k} className="text-peak-text-secondary text-xs font-medium text-center py-1">{t(k)}</div>
         ))}
       </div>
       <div className="grid grid-cols-7" onMouseLeave={() => setHoveredDate(null)}>
@@ -228,7 +228,7 @@ export default function DateRangePicker({
       const bandColor = preview ? "bg-peak-red/10" : "bg-peak-red/15";
       const hasRange = !!(rStart && rEnd);
       const dow = (date.getUTCDay() + 6) % 7;
-      const ariaLabel = `${DAYS_FULL[dow]} ${d} ${MONTHS[mo]} ${yr}`;
+      const ariaLabel = `${d} ${MONTHS_SHORT[mo]} ${yr}`;
 
       cells.push(
         <div
@@ -302,11 +302,11 @@ export default function DateRangePicker({
       {/* Dual month grid */}
       {calView === "days" && (
         <div className={`flex gap-6 ${isMobile ? "flex-col" : ""}`}>
-          <MonthPanel yr={viewYear} mo={viewMonth} renderDaysGridForMonth={renderDaysGridForMonth} setHoveredDate={setHoveredDate} />
+          <MonthPanel yr={viewYear} mo={viewMonth} renderDaysGridForMonth={renderDaysGridForMonth} setHoveredDate={setHoveredDate} t={t} />
           {!isMobile && (
             <>
               <div className="w-px bg-white/5" />
-              <MonthPanel yr={nextYr} mo={nextMo} renderDaysGridForMonth={renderDaysGridForMonth} setHoveredDate={setHoveredDate} />
+              <MonthPanel yr={nextYr} mo={nextMo} renderDaysGridForMonth={renderDaysGridForMonth} setHoveredDate={setHoveredDate} t={t} />
             </>
           )}
         </div>

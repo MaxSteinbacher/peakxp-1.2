@@ -8,7 +8,7 @@ import { useTripPlanner } from "../../context/TripPlannerContext";
 import { resorts, SEASON_PASSES } from "../../lib/data";
 import { sortByProximity, getNearestResorts, getResortsInDestination } from "../../lib/proximity";
 
-const SORT_OPTIONS = ["Recommended", "Closest first", "Price ↑", "Price ↓", "Rating", "Most pistes", "Most lifts"];
+const SORT_KEYS = ["recommended", "closest_first", "price_low", "price_high", "rating", "most_pistes", "most_lifts"];
 
 function recommendedScore(r) {
   const prox = r.distanceKm != null ? Math.max(0, 1 - r.distanceKm / 500) : 0.5;
@@ -44,6 +44,7 @@ function ActiveChips({ filters, onRemove, onClearAll }) {
 }
 
 function FilterSidebar({ baseList, filters, setFilters, showDistance, destination }) {
+  const t = useT();
   const countries = useMemo(() => [...new Set(baseList.map(r => Array.isArray(r.country) ? r.country[0] : r.country).filter(Boolean))].sort(), [baseList]);
   const allFacilities = ["Kids area", "Night skiing", "Snow park", "Après-ski", "Free parking", "Ski-in ski-out", "Cross-country", "Glacier skiing", "Car-free village"];
   const activeFacilities = useMemo(() => allFacilities.filter(f => {
@@ -73,7 +74,7 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
       )}
       {countries.length > 1 && (
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Country</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('country').toUpperCase()}</p>
           <div className="space-y-1.5">
             {countries.map(c => (
               <label key={c} className="flex items-center gap-2 cursor-pointer">
@@ -86,20 +87,20 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
         </div>
       )}
       <div className="border-b border-white/5 pb-5">
-        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Daily lift pass: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
+        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('daily_lift_pass')}: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
         <RangeSlider mode="dual" value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={0} max={150} step={5} formatLabel={n => "€" + n} />
       </div>
       <div className="border-b border-white/5 pb-5">
-        <p className="text-xs font-semibold text-peak-text-secondary uppercase tracking-wider mb-3">Terrain altitude</p>
+        <p className="text-xs font-semibold text-peak-text-secondary uppercase tracking-wider mb-3">{t('terrain_altitude').toUpperCase()}</p>
         <p className="text-peak-text text-sm font-medium mb-1">{filters.altRange[0]}m – {filters.altRange[1]}m</p>
         <RangeSlider mode="dual" value={filters.altRange} onValueChange={v => setFilters(f => ({ ...f, altRange: v }))} min={0} max={5000} step={50} formatLabel={n => n + "m"} />
-        <p className="text-xs text-peak-text-secondary mb-1 mt-4">Piste km: {filters.pisteRange[0]}–{filters.pisteRange[1]}km</p>
+        <p className="text-xs text-peak-text-secondary mb-1 mt-4">{t('piste_km')}: {filters.pisteRange[0]}–{filters.pisteRange[1]}km</p>
         <RangeSlider mode="dual" value={filters.pisteRange} onValueChange={v => setFilters(f => ({ ...f, pisteRange: v }))} min={0} max={600} step={10} formatLabel={n => n + "km"} />
-        <p className="text-xs text-peak-text-secondary mb-1 mt-4">Minimum lifts: {filters.liftsMin >= 200 ? "200+" : filters.liftsMin}</p>
+        <p className="text-xs text-peak-text-secondary mb-1 mt-4">{t('minimum_lifts')}: {filters.liftsMin >= 200 ? "200+" : filters.liftsMin}</p>
         <RangeSlider mode="single" value={filters.liftsMin} onValueChange={v => setFilters(f => ({ ...f, liftsMin: typeof v === "number" ? v : v[0] }))} min={0} max={200} step={5} formatLabel={String} />
       </div>
       <div className="border-b border-white/5 pb-5">
-        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Rating</p>
+        <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('rating').toUpperCase()}</p>
         <div className="flex flex-wrap gap-1.5">
           {["Any", "7+", "8+", "8.5+", "9+"].map(r => (
             <button key={r} onClick={() => setFilters(f => ({ ...f, minRating: r === "Any" ? null : parseFloat(r) }))}
@@ -125,7 +126,7 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
       )}
       {passOptions.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Season Passes</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('season_passes_filter').toUpperCase()}</p>
           <div className="space-y-1.5">
             {passOptions.map(p => (
               <label key={p} className="flex items-center gap-2 cursor-pointer">
@@ -147,7 +148,7 @@ export default function ResortsTab() {
   const t = useT();
   const { session } = useTripPlanner();
   const destination = session?.destination || null;
-  const [sortBy, setSortBy] = useState("Recommended");
+  const [sortBy, setSortBy] = useState("recommended");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [arrivalDate, setArrivalDate] = useState(null);
@@ -195,13 +196,13 @@ export default function ResortsTab() {
     if (filters.minRating) list = list.filter(r => (r.rating || 0) >= filters.minRating);
     if (filters.passes.length) list = list.filter(r => filters.passes.some(p => (r.seasonPasses || []).includes(p)));
 
-    if (sortBy === "Recommended") list.sort((a, b) => recommendedScore(b) - recommendedScore(a));
-    else if (sortBy === "Closest first") list.sort((a, b) => (a.distanceKm || 999) - (b.distanceKm || 999));
-    else if (sortBy === "Price ↑") list.sort((a, b) => (a.priceFrom || 0) - (b.priceFrom || 0));
-    else if (sortBy === "Price ↓") list.sort((a, b) => (b.priceFrom || 0) - (a.priceFrom || 0));
-    else if (sortBy === "Rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    else if (sortBy === "Most pistes") list.sort((a, b) => (b.pisteKm || 0) - (a.pisteKm || 0));
-    else if (sortBy === "Most lifts") list.sort((a, b) => (b.lifts || 0) - (a.lifts || 0));
+    if (sortBy === "recommended") list.sort((a, b) => recommendedScore(b) - recommendedScore(a));
+    else if (sortBy === "closest_first") list.sort((a, b) => (a.distanceKm || 999) - (b.distanceKm || 999));
+    else if (sortBy === "price_low") list.sort((a, b) => (a.priceFrom || 0) - (b.priceFrom || 0));
+    else if (sortBy === "price_high") list.sort((a, b) => (b.priceFrom || 0) - (a.priceFrom || 0));
+    else if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (sortBy === "most_pistes") list.sort((a, b) => (b.pisteKm || 0) - (a.pisteKm || 0));
+    else if (sortBy === "most_lifts") list.sort((a, b) => (b.lifts || 0) - (a.lifts || 0));
 
     return list;
   }, [baseList, filters, sortBy, showDistance]);
@@ -209,15 +210,15 @@ export default function ResortsTab() {
   return (
     <div>
       <div className="mb-5 max-w-sm">
-        <DateRangePicker startDate={arrivalDate} endDate={departureDate} onStartChange={setArrivalDate} onEndChange={setDepartureDate} context="general" placeholder={{ start: "Arrival", end: "Departure" }} />
+        <DateRangePicker startDate={arrivalDate} endDate={departureDate} onStartChange={setArrivalDate} onEndChange={setDepartureDate} context="general" placeholder={{ start: t('arrival'), end: t('departure') }} />
       </div>
 
       {/* Sort bar */}
       <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar mb-3 pb-1">
-        {SORT_OPTIONS.map(opt => (
-          <button key={opt} onClick={() => setSortBy(opt)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${sortBy === opt ? "bg-peak-red text-white" : "bg-peak-surface border border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-            {opt}
+        {SORT_KEYS.map(key => (
+          <button key={key} onClick={() => setSortBy(key)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors flex-shrink-0 ${sortBy === key ? "bg-peak-red text-white" : "bg-peak-surface border border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+            {t(key)}
           </button>
         ))}
         <button onClick={() => setFiltersOpen(o => !o)} className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-peak-text-secondary border border-white/10 rounded-full ml-auto flex-shrink-0">
@@ -244,7 +245,7 @@ export default function ResortsTab() {
         )}
 
         <div className="flex-1">
-          <p className="text-peak-text-secondary text-sm mb-4">{results.length} resort{results.length !== 1 ? "s" : ""} found</p>
+          <p className="text-peak-text-secondary text-sm mb-4">{results.length} {t('resorts_found')}</p>
           {results.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-peak-text-secondary text-lg mb-3">No resorts match your filters.</p>
