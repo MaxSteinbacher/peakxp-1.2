@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { ArrowUpDown, AlertTriangle, MapPin, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
@@ -8,7 +9,7 @@ import CheckoutFlow from "./shared/CheckoutFlow";
 import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STEPS = ["Search", "Results", "Checkout"];
+const STEPS_KEYS = ["search_step", "results", "checkout_step"];
 const SORT_OPTIONS = ["Cheapest", "Best rated", "Recommended", "Largest boot", "Luxury first"];
 
 const CITY_AIRPORT_LOOKUP = {
@@ -91,6 +92,7 @@ function generateCarResults(pickupLocation, pickupDate, returnDate, driverAge, p
 }
 
 export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [pickupVal, setPickupVal] = useState("");
   const [sameReturn, setSameReturn] = useState(true);
@@ -175,7 +177,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
   const statusColor = { "Available": "text-peak-green", "Limited": "text-yellow-400", "Sold out": "text-peak-red" };
 
   return (
-    <BookingShell steps={STEPS} current={step} onBack={goBack}>
+    <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={step} onBack={goBack}>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -195,27 +197,27 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             {/* Row 1 — Pick-up + Return */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <div>
-                <label className="block text-xs text-peak-text-secondary mb-1.5">Pick-up location</label>
+                <label className="block text-xs text-peak-text-secondary mb-1.5">{t('pickup_location')}</label>
                 <LocationInput
                   type="general" context="pickup" placeholder="Airport, city or resort"
                   value={pickupVal} onChange={setPickupVal}
                   onSelect={handlePickupSelect}
                 />
                 <div className="flex gap-1.5 mt-2 flex-wrap">
-                  {["Airport", "City centre", "Train station", "Hotel delivery"].map(t => (
-                    <button key={t} onClick={() => setLocationType(t)}
-                      className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${locationType === t ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                      {t}
+                  {[{ key: "Airport", labelKey: "airport" }, { key: "City centre", labelKey: "city_centre" }, { key: "Train station", labelKey: "train_station" }, { key: "Hotel delivery", labelKey: "hotel_delivery" }].map(opt => (
+                    <button key={opt.key} onClick={() => setLocationType(opt.key)}
+                      className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${locationType === opt.key ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
+                      {t(opt.labelKey)}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs text-peak-text-secondary">Return location</label>
+                  <label className="text-xs text-peak-text-secondary">{t('return_location')}</label>
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" checked={sameReturn} onChange={e => setSameReturn(e.target.checked)} className="accent-peak-blue" />
-                    <span className="text-xs text-peak-text-secondary">Same as pick-up</span>
+                    <span className="text-xs text-peak-text-secondary">{t('same_as_pickup')}</span>
                   </label>
                 </div>
                 {sameReturn ? (
@@ -236,7 +238,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             <div className="border-t border-white/5 pt-5 mb-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Pick-up date</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('pickup_date')}</label>
                   <DateRangePicker startDate={searchForm.pickupDate} endDate={null}
                     onStartChange={v => sf("pickupDate", v)} onEndChange={() => {}}
                     context="car" minStay={1} placeholder={{ start: "Pick-up date", end: "" }} />
@@ -246,7 +248,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Return date</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('return_date')}</label>
                   <DateRangePicker startDate={searchForm.returnDate} endDate={null}
                     onStartChange={v => sf("returnDate", v)} onEndChange={() => {}}
                     context="car" minStay={1} placeholder={{ start: "Return date", end: "" }} />
@@ -262,7 +264,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             <div className="border-t border-white/5 pt-5 mb-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Driver age</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('driver_age')}</label>
                   <select value={searchForm.driverAge} onChange={e => sf("driverAge", e.target.value)}
                     className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-peak-blue">
                     {["18-20", "21-24", "25-29", "30+"].map(a => <option key={a}>{a}</option>)}
@@ -270,7 +272,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                   {isYoungDriver && <p className="text-yellow-400 text-xs mt-1">Young driver surcharges apply for under 25</p>}
                 </div>
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Additional drivers</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('additional_drivers')}</label>
                   <div className="flex items-center gap-3 bg-peak-surface border border-white/10 rounded-xl px-4 py-3">
                     <button onClick={() => sf("additionalDrivers", Math.max(0, searchForm.additionalDrivers - 1))} className="w-7 h-7 rounded border border-white/10 text-peak-text-secondary hover:text-peak-text text-lg flex items-center justify-center">-</button>
                     <span className="text-peak-text font-bold text-sm flex-1 text-center">{searchForm.additionalDrivers}</span>
@@ -282,7 +284,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 4 — Vehicle preferences */}
             <div className="border-t border-white/5 pt-5 mb-5">
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Vehicle preferences</p>
+              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('vehicle_preferences').toUpperCase()}</p>
               <div className="flex flex-wrap gap-2">
                 {VEHICLE_PREFS.map(p => (
                   <button key={p} onClick={() => togglePref(p)}
@@ -295,7 +297,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 5 — Filter toggles */}
             <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4">
-              {[{ k: "freeCancel", l: "Free cancellation only" }, { k: "unlimited", l: "Unlimited mileage" }, { k: "fullToFull", l: "Full-to-full fuel only" }].map(({ k, l }) => (
+              {[{ k: "freeCancel", l: t('free_cancellation_only') }, { k: "unlimited", l: t('unlimited_mileage') }, { k: "fullToFull", l: t('full_to_full') }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -312,7 +314,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
           </div>
 
           <button onClick={() => { setCarResults(generateCarResults(pickupVal, searchForm.pickupDate, searchForm.returnDate, searchForm.driverAge, vehiclePrefs, pickupDays)); setStep(1); }} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
-            Search vehicles
+            {t('search_vehicles')}
           </button>
         </div>
       )}
@@ -325,7 +327,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
               {!pickupVal ? (
                 <span className="text-peak-text-secondary text-sm">Please enter a pick-up location to search</span>
               ) : (
-                <span className="text-peak-text-secondary text-sm">{filtered.length} vehicles available at {pickupVal} — {pickupDays} day rental</span>
+                <span className="text-peak-text-secondary text-sm">{filtered.length} {t('vehicles_found')} — {pickupVal} — {pickupDays} {t('day')}</span>
               )}
               <span className="text-peak-text-secondary/60 text-xs ml-2">{pickupVal} · {pickupDays} day{pickupDays !== 1 ? "s" : ""} · {fmtDate(searchForm.pickupDate) || "-"} to {fmtDate(searchForm.returnDate) || "-"}</span>
             </div>
@@ -394,12 +396,12 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                           <div>
                             <button onClick={() => { setSelectedCar(car); setStep(2); }}
                               className="w-full bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
-                              <ShoppingBag className="h-3 w-3" /> Select
+                              <ShoppingBag className="h-3 w-3" /> {t('select_vehicle')}
                             </button>
                             <button onClick={() => setExpandedCar(expandedCar === car.id ? null : car.id)}
                               className="mt-1.5 text-xs text-peak-text-secondary hover:text-peak-text flex items-center justify-end gap-1 w-full">
                               {expandedCar === car.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                              Details
+                              {t('show_details')}
                             </button>
                           </div>
                         </div>

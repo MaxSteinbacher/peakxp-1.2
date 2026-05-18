@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { User, Star, Users, Snowflake, Zap, HelpCircle, Plus, X } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
 import ResultCard from "./shared/ResultCard";
 import CheckoutFlow from "./shared/CheckoutFlow";
 
-const STEPS = ["Who", "Course", "Schedule", "School", "Checkout"];
+const STEPS_KEYS = ["who_step", "course_step", "schedule_step", "school_step", "checkout_step"];
 
 function Tooltip({ text }) {
   const [open, setOpen] = useState(false);
@@ -57,6 +58,7 @@ const SCHOOLS = [
 ];
 
 export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [participants, setParticipants] = useState([{ type: "adult", age: null, name: "Participant 1" }]);
   const [courseType, setCourseType] = useState(null);
@@ -111,7 +113,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
   ];
 
   return (
-    <BookingShell steps={STEPS} current={step} onBack={goBack}>
+    <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={step} onBack={goBack}>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -121,17 +123,17 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       {/* STEP 0 */}
       {step === 0 && (
         <div>
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">Who is taking lessons?</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">You can add multiple participants — each gets their own lesson.</p>
+          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('who_taking_lessons')}</h2>
+          <p className="text-peak-text-secondary text-sm mb-6">{t('multiple_participants')}</p>
           <div className="space-y-3 mb-6">
             {participants.map((p, i) => (
               <div key={i} className="bg-peak-card border border-white/5 rounded-xl p-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex gap-2">
-                    {[{ v: "adult", label: "Adult 15+" }, { v: "kid", label: "Child 3–14" }].map(opt => (
+                    {[{ v: "adult", labelKey: "adult_15_plus" }, { v: "kid", labelKey: "child_3_14" }].map(opt => (
                       <button key={opt.v} onClick={() => updateParticipant(i, "type", opt.v)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${p.type === opt.v ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                        {opt.label}
+                         {t(opt.labelKey)}
                       </button>
                     ))}
                   </div>
@@ -160,10 +162,10 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
             ))}
           </div>
           <button onClick={addParticipant} className="text-peak-blue text-sm hover:underline mb-6 flex items-center gap-1">
-            <Plus className="h-4 w-4" /> Add another person
+            <Plus className="h-4 w-4" /> {t('add_another_person')}
           </button>
           <button onClick={() => setStep(1)} className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Continue
+            {t('continue')}
           </button>
         </div>
       )}
@@ -171,7 +173,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       {/* STEP 1 */}
       {step === 1 && (
         <div>
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">Choose a course type</h2>
+          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('choose_course')}</h2>
           <p className="text-peak-text-secondary text-sm mb-6">Select the lesson format that works best for your group.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {courseTypes.map(ct => {
@@ -194,7 +196,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
           </div>
           <button onClick={() => setStep(2)} disabled={!courseType}
             className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Continue
+            {t('continue')}
           </button>
         </div>
       )}
@@ -276,7 +278,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
             </div>
           </div>
           <button onClick={() => setStep(3)} className="mt-8 px-8 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Find ski schools
+            {t('choose_school')}
           </button>
         </div>
       )}
@@ -284,7 +286,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       {/* STEP 3 */}
       {step === 3 && (
         <div>
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">Choose a ski school</h2>
+          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('choose_school')}</h2>
           <p className="text-peak-text-secondary text-sm mb-6">{schedule.days} day{schedule.days !== 1 ? "s" : ""} · {schedule.sport} · {schedule.level}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
             {SCHOOLS.map(school => (
@@ -321,7 +323,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
           <div className="flex gap-3">
             <button onClick={() => setStep(4)} disabled={!selectedSchool}
               className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-              Continue to checkout
+              {t('continue')}
             </button>
             {selectedSchool && (
               <SavePlanButton planData={{ serviceKey: "ski-school", name: `${selectedSchool.name} — ${schedule.sport} · ${schedule.days} days`, destination: { label: "Ski School", type: "general" }, dates: { start: schedule.date || null, end: schedule.endDate || null }, guests: { adults: participants.filter(p => p.type === "adult").length, children: participants.filter(p => p.type === "kid").length, seniors: 0 }, itemDetails: { school: selectedSchool.name, courseType, sport: schedule.sport, level: schedule.level, days: schedule.days }, estimatedPriceEUR: selectedSchool.pricePerDay * days }} />

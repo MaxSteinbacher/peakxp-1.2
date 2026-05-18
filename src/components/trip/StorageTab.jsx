@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { MapPin, ArrowUpDown } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
@@ -9,7 +10,7 @@ import CheckoutFlow from "./shared/CheckoutFlow";
 import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STEPS = ["Location", "Preferences", "Choose facility", "Confirm & pay"];
+const STEPS_KEYS = ["location_step", "specifications", "choose_shop", "checkout_step"];
 const SORT_OPTIONS = ["Closest to lifts", "Cheapest", "Best rated", "Most availability"];
 
 const ITEMS = [
@@ -72,6 +73,7 @@ const TRUST = [
 const DURATION_OPTIONS = ["Half day", "Full day", "Multi-day", "Weekly", "Season locker"];
 
 export default function StorageTab({ agentServiceDetails = {}, onBook }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [location, setLocation] = useState("");
   const [locating, setLocating] = useState(false);
@@ -138,7 +140,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
       </div>
     );
     return (
-      <BookingShell steps={STEPS} current={step} onBack={goBack}>
+      <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={Math.min(step, STEPS_KEYS.length - 1)} onBack={goBack}>
         <div className="max-w-lg">
           <h2 className="font-display font-bold text-2xl text-peak-text mb-2">Season locker enquiry</h2>
           <p className="text-peak-text-secondary text-sm mb-6">Fill in the form below and we'll confirm availability within 24h.</p>
@@ -180,7 +182,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
   }
 
   return (
-    <BookingShell steps={STEPS} current={step} onBack={goBack}>
+    <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={Math.min(step, STEPS_KEYS.length - 1)} onBack={goBack}>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -207,7 +209,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
             }} disabled={locating}
               className="flex items-center gap-2 text-peak-blue text-sm font-medium hover:underline disabled:opacity-50">
               <MapPin className="h-4 w-4" />
-              {locating ? "Detecting location..." : "Use my location"}
+              {locating ? "Detecting location..." : t('use_my_location')}
             </button>
             <div>
               <label className="block text-xs text-peak-text-secondary mb-1">Or enter your ski area, resort, or nearby town</label>
@@ -239,7 +241,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
           </div>
           <button onClick={() => setStep(1)} disabled={!location}
             className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Continue
+            {t('continue')}
           </button>
         </div>
       )}
@@ -317,7 +319,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
             </label>
           </div>
           <button onClick={() => setStep(2)} className="mt-8 w-full py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Search storage
+            {t('search')}
           </button>
         </div>
       )}
@@ -368,7 +370,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
               </label>
             </div>
             <div className="flex-1">
-              <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} facilities found near {location}</p>
+              <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} {t('facilities_found')} {location}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filtered.map(fac => (
                   <ResultCard
@@ -411,7 +413,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
           <div className="mt-8 flex gap-3">
             <button onClick={() => setStep(3)} disabled={!selectedFacility}
               className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-              Continue to checkout
+              {t('continue')}
             </button>
             {selectedFacility && (
               <SavePlanButton planData={{ serviceKey: "storage", name: `${selectedFacility.name} — ${prefs.duration}`, destination: { label: location, type: "general" }, dates: { start: prefs.startDate || null, end: prefs.endDate || null }, itemDetails: { facility: selectedFacility.name, duration: prefs.duration, lockers: prefs.lockers }, estimatedPriceEUR: Math.round(selectedFacility.pricePerDay * rentalDays * prefs.lockers) }} />

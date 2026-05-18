@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import SavePlanButton from "./SavePlanButton";
 import Step0 from "./equipment/Step0";
 import Step1Expert from "./equipment/Step1Expert";
@@ -7,13 +8,13 @@ import Step1Guided from "./equipment/Step1Guided";
 import Step2Shops from "./equipment/Step2Shops";
 import Step3Checkout from "./equipment/Step3Checkout";
 
-const STEPS = ["Equipment", "Specifications", "Choose Shop", "Checkout"];
+const STEPS_KEYS = ["equipment_step", "specifications", "choose_shop", "checkout_step"];
 
-function StepIndicator({ current }) {
+function StepIndicator({ current, t }) {
   return (
     <div className="flex items-center gap-0 mb-8">
-      {STEPS.map((label, i) => (
-        <div key={label} className="flex items-center flex-1 last:flex-none">
+      {STEPS_KEYS.map((key, i) => (
+        <div key={key} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center gap-1">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
               i < current ? "bg-peak-blue border-peak-blue text-white"
@@ -22,9 +23,9 @@ function StepIndicator({ current }) {
             }`}>
               {i < current ? "✓" : i + 1}
             </div>
-            <span className={`text-xs whitespace-nowrap ${i === current ? "text-peak-text" : "text-peak-text-secondary"}`}>{label}</span>
+            <span className={`text-xs whitespace-nowrap ${i === current ? "text-peak-text" : "text-peak-text-secondary"}`}>{t(key)}</span>
           </div>
-          {i < STEPS.length - 1 && (
+          {i < STEPS_KEYS.length - 1 && (
             <div className={`flex-1 h-px mx-2 mb-4 ${i < current ? "bg-peak-blue" : "bg-white/10"}`} />
           )}
         </div>
@@ -34,6 +35,7 @@ function StepIndicator({ current }) {
 }
 
 export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [selectedEquipment, setSelectedEquipment] = useState([]);
   const [mode, setMode] = useState(null); // "expert" | "guided"
@@ -65,7 +67,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
 
   return (
     <div>
-      <StepIndicator current={stepIndex} />
+      <StepIndicator current={stepIndex} t={t} />
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -74,7 +76,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
 
       {step !== 0 && (
         <button onClick={goBack} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
-          <ChevronLeft className="h-4 w-4" /> Back
+          <ChevronLeft className="h-4 w-4" /> {t('back')}
         </button>
       )}
 

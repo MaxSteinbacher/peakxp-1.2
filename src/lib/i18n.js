@@ -165,6 +165,70 @@ export const TRANSLATIONS = {
     month_may: "May", month_jun: "June", month_jul: "July", month_aug: "August",
     month_sep: "September", month_oct: "October", month_nov: "November", month_dec: "December",
     day_mon: "Mo", day_tue: "Tu", day_wed: "We", day_thu: "Th", day_fri: "Fr", day_sat: "Sa", day_sun: "Su",
+
+    // Car rental
+    pickup_location: "Pick-up location", return_location: "Return location", same_as_pickup: "Same as pick-up",
+    pickup_date: "Pick-up date", return_date: "Return date", driver_age: "Driver age",
+    additional_drivers: "Additional drivers", vehicle_preferences: "Vehicle preferences",
+    snow_ready: "Snow-ready", ski_rack: "Ski rack", large_boot: "Large boot",
+    seven_seater: "7-seater", electric_hybrid: "Electric / Hybrid", luxury: "Luxury",
+    unlimited_mileage: "Unlimited mileage", full_to_full: "Full-to-full fuel only",
+    airport: "Airport", city_centre: "City centre", train_station: "Train station", hotel_delivery: "Hotel delivery",
+    search_step: "Search", search: "Search", automatic: "Automatic", manual: "Manual", free_cancellation_only: "Free cancellation only",
+    search_vehicles: "Search vehicles", vehicles_found: "vehicles found", select_vehicle: "Select vehicle",
+    results: "Results",
+
+    // Flights
+    search_flights: "Search flights", round_trip: "Round trip", one_way: "One way",
+    to: "To", passengers: "Passengers", cabin_class: "Cabin class",
+    economy: "Economy", business: "Business", direct_only: "Direct flights only", flexible_dates: "Flexible dates",
+    flights_found: "flights found", cheapest: "Cheapest", fastest: "Fastest", best: "Best",
+    departure_time: "Departure time", arrival_time: "Arrival time", direct: "Direct",
+    select_flight: "Select flight", show_details: "Show details",
+
+    // Train
+    search_trains: "Search trains", return_journey: "Return", single_journey: "Single",
+    trains_found: "trains found", select_train: "Select train",
+    first_class: "1st class", second_class: "2nd class",
+
+    // Dining
+    where_eating: "Where are you eating?",
+    show_restaurants_near: "We'll show restaurants near you on the mountain and in the valley.",
+    use_my_location: "Use my location", or_enter_location: "Or enter a resort, village, or town",
+    area_scope: "Area scope", on_the_mountain: "On the mountain",
+    on_mountain_sub: "Slope-side restaurants, mountain huts, summit cafes",
+    in_the_valley: "In the valley",
+    in_valley_sub: "Village restaurants, town dining, apres-ski venues, hotel restaurants",
+    meal_moment: "Meal moment", lunch_slopes: "Lunch on the slopes", late_night: "Late night",
+    show_restaurants: "Show restaurants", location_step: "Location",
+    restaurants_step: "Restaurants", reserve_step: "Reserve",
+    breakfast: "Breakfast", apres_ski: "Apres-ski", dinner: "Dinner",
+    make_reservation: "Make reservation",
+
+    // Storage
+    storage_location: "Storage location", locker_size: "Locker size",
+    small: "Small", medium: "Medium", large: "Large", facilities_found: "facilities found",
+
+    // Ski school
+    who_taking_lessons: "Who is taking lessons?", multiple_participants: "You can add multiple participants — each gets their own lesson.",
+    adult_15_plus: "Adult 15+", child_3_14: "Child 3–14", add_another_person: "+ Add another person",
+    choose_course: "Choose a course type", group_lesson: "Group lesson", private_lesson: "Private lesson",
+    choose_schedule: "Choose your schedule", half_day: "Half day", full_day: "Full day", multi_day: "Multi-day course",
+    choose_school: "Choose a ski school",
+    who_step: "Who", course_step: "Course", schedule_step: "Schedule", school_step: "School", checkout_step: "Checkout",
+
+    // Equipment
+    equipment_step: "Equipment", specifications: "Specifications", choose_shop: "Choose Shop",
+    what_do_you_need: "What do you need?", select_equipment: "Select all the equipment you'd like to rent.",
+    skis: "Skis", snowboard: "Snowboard", ski_boots: "Ski Boots", snowboard_boots: "Snowboard Boots",
+    poles: "Poles", helmet: "Helmet", ski_jacket: "Ski Jacket", ski_pants: "Ski Pants",
+    gloves: "Gloves", goggles: "Goggles", back_protector: "Back Protector",
+    how_proceed: "How would you like to proceed?", i_know_what_i_want: "I know what I want",
+    choose_own_specs: "I'll choose my own specs.", help_me_choose: "Help me choose",
+    answer_questions: "Answer a few questions and we'll match you.",
+
+    // Shared
+    step_label: "Step", of_label: "of", from_city: "from",
   },
 
   de: {
@@ -330,6 +394,62 @@ export const TRANSLATIONS = {
     month_may: "Mai", month_jun: "Juni", month_jul: "Juli", month_aug: "August",
     month_sep: "September", month_oct: "Oktober", month_nov: "November", month_dec: "Dezember",
     day_mon: "Mo", day_tue: "Di", day_wed: "Mi", day_thu: "Do", day_fri: "Fr", day_sat: "Sa", day_sun: "So",
+
+    pickup_location: "Abholort", return_location: "Rückgabeort", same_as_pickup: "Gleich wie Abholort",
+    pickup_date: "Abholdatum", return_date: "Rückgabedatum", driver_age: "Fahreralter",
+    additional_drivers: "Zusätzliche Fahrer", vehicle_preferences: "Fahrzeugpräferenzen",
+    snow_ready: "Wintertauglich", ski_rack: "Skiträger", large_boot: "Großer Kofferraum",
+    seven_seater: "7-Sitzer", electric_hybrid: "Elektro / Hybrid", luxury: "Luxus",
+    unlimited_mileage: "Unbegrenzte Kilometer", full_to_full: "Voll-zu-voll Kraftstoff",
+    airport: "Flughafen", city_centre: "Stadtzentrum", train_station: "Bahnhof", hotel_delivery: "Hotellieferung",
+    search_step: "Suche", search: "Suchen", automatic: "Automatik", manual: "Schaltung", free_cancellation_only: "Nur kostenlose Stornierung",
+    search_vehicles: "Fahrzeuge suchen", vehicles_found: "Fahrzeuge gefunden", select_vehicle: "Fahrzeug wählen",
+    results: "Ergebnisse",
+
+    search_flights: "Flüge suchen", round_trip: "Hin und zurück", one_way: "Einfach",
+    to: "Nach", passengers: "Reisende", cabin_class: "Kabinenklasse",
+    economy: "Economy", business: "Business", direct_only: "Nur Direktflüge", flexible_dates: "Flexible Daten",
+    flights_found: "Flüge gefunden", cheapest: "Günstigste", fastest: "Schnellste", best: "Beste",
+    departure_time: "Abflugzeit", arrival_time: "Ankunftszeit", direct: "Direkt",
+    select_flight: "Flug wählen", show_details: "Details anzeigen",
+
+    search_trains: "Züge suchen", return_journey: "Hin und zurück", single_journey: "Einfach",
+    trains_found: "Züge gefunden", select_train: "Zug wählen",
+    first_class: "1. Klasse", second_class: "2. Klasse",
+
+    where_eating: "Wo möchten Sie essen?",
+    show_restaurants_near: "Wir zeigen Ihnen Restaurants in der Nähe auf dem Berg und im Tal.",
+    use_my_location: "Meinen Standort verwenden", or_enter_location: "Oder ein Resort, Dorf oder eine Stadt eingeben",
+    area_scope: "Bereich", on_the_mountain: "Auf dem Berg",
+    on_mountain_sub: "Pisten-Restaurants, Berghütten, Gipfelcafés",
+    in_the_valley: "Im Tal",
+    in_valley_sub: "Dorfrestaurants, Stadtgastronomie, Après-Ski-Lokale, Hotelrestaurants",
+    meal_moment: "Mahlzeit", lunch_slopes: "Mittagessen auf der Piste", late_night: "Spätabends",
+    show_restaurants: "Restaurants anzeigen", location_step: "Ort",
+    restaurants_step: "Restaurants", reserve_step: "Reservieren",
+    breakfast: "Frühstück", apres_ski: "Après-Ski", dinner: "Abendessen",
+    make_reservation: "Tisch reservieren",
+
+    storage_location: "Lagerort", locker_size: "Schließfachgröße",
+    small: "Klein", medium: "Mittel", large: "Groß", facilities_found: "Einrichtungen gefunden",
+
+    who_taking_lessons: "Wer nimmt Unterricht?", multiple_participants: "Sie können mehrere Teilnehmer hinzufügen — jeder bekommt seinen eigenen Unterricht.",
+    adult_15_plus: "Erwachsener 15+", child_3_14: "Kind 3–14", add_another_person: "+ Eine weitere Person hinzufügen",
+    choose_course: "Kurstyp wählen", group_lesson: "Gruppenunterricht", private_lesson: "Privatunterricht",
+    choose_schedule: "Zeitplan wählen", half_day: "Halbtag", full_day: "Ganztag", multi_day: "Mehrtägiger Kurs",
+    choose_school: "Skischule wählen",
+    who_step: "Wer", course_step: "Kurs", schedule_step: "Zeitplan", school_step: "Schule", checkout_step: "Kasse",
+
+    equipment_step: "Ausrüstung", specifications: "Spezifikationen", choose_shop: "Shop wählen",
+    what_do_you_need: "Was brauchen Sie?", select_equipment: "Wählen Sie alle Ausrüstungsgegenstände, die Sie mieten möchten.",
+    skis: "Ski", snowboard: "Snowboard", ski_boots: "Skischuhe", snowboard_boots: "Snowboardschuhe",
+    poles: "Stöcke", helmet: "Helm", ski_jacket: "Skijacke", ski_pants: "Skihose",
+    gloves: "Handschuhe", goggles: "Skibrille", back_protector: "Rückenprotektor",
+    how_proceed: "Wie möchten Sie vorgehen?", i_know_what_i_want: "Ich weiß, was ich will",
+    choose_own_specs: "Ich wähle meine eigenen Spezifikationen.", help_me_choose: "Hilf mir wählen",
+    answer_questions: "Beantworten Sie ein paar Fragen und wir finden das Passende.",
+
+    step_label: "Schritt", of_label: "von", from_city: "ab",
   },
 
   fr: {
@@ -495,6 +615,62 @@ export const TRANSLATIONS = {
     month_may: "Mai", month_jun: "Juin", month_jul: "Juillet", month_aug: "Août",
     month_sep: "Septembre", month_oct: "Octobre", month_nov: "Novembre", month_dec: "Décembre",
     day_mon: "Lu", day_tue: "Ma", day_wed: "Me", day_thu: "Je", day_fri: "Ve", day_sat: "Sa", day_sun: "Di",
+
+    pickup_location: "Lieu de prise en charge", return_location: "Lieu de retour", same_as_pickup: "Même que la prise en charge",
+    pickup_date: "Date de prise en charge", return_date: "Date de retour", driver_age: "Âge du conducteur",
+    additional_drivers: "Conducteurs supplémentaires", vehicle_preferences: "Préférences de véhicule",
+    snow_ready: "Adapté à la neige", ski_rack: "Porte-skis", large_boot: "Grand coffre",
+    seven_seater: "7 places", electric_hybrid: "Électrique / Hybride", luxury: "Luxe",
+    unlimited_mileage: "Kilométrage illimité", full_to_full: "Plein-à-plein uniquement",
+    airport: "Aéroport", city_centre: "Centre-ville", train_station: "Gare", hotel_delivery: "Livraison à l'hôtel",
+    search_step: "Recherche", search: "Rechercher", automatic: "Automatique", manual: "Manuelle", free_cancellation_only: "Annulation gratuite uniquement",
+    search_vehicles: "Rechercher des véhicules", vehicles_found: "véhicules trouvés", select_vehicle: "Choisir ce véhicule",
+    results: "Résultats",
+
+    search_flights: "Rechercher des vols", round_trip: "Aller-retour", one_way: "Aller simple",
+    to: "Vers", passengers: "Passagers", cabin_class: "Classe",
+    economy: "Économique", business: "Affaires", direct_only: "Vols directs uniquement", flexible_dates: "Dates flexibles",
+    flights_found: "vols trouvés", cheapest: "Moins cher", fastest: "Le plus rapide", best: "Meilleur",
+    departure_time: "Heure de départ", arrival_time: "Heure d'arrivée", direct: "Direct",
+    select_flight: "Choisir ce vol", show_details: "Voir les détails",
+
+    search_trains: "Rechercher des trains", return_journey: "Aller-retour", single_journey: "Aller simple",
+    trains_found: "trains trouvés", select_train: "Choisir ce train",
+    first_class: "1ère classe", second_class: "2ème classe",
+
+    where_eating: "Où allez-vous manger?",
+    show_restaurants_near: "Nous vous montrerons des restaurants près de vous sur la montagne et dans la vallée.",
+    use_my_location: "Utiliser ma position", or_enter_location: "Ou entrez un resort, village ou ville",
+    area_scope: "Zone", on_the_mountain: "Sur la montagne",
+    on_mountain_sub: "Restaurants en bord de piste, refuges, cafés au sommet",
+    in_the_valley: "Dans la vallée",
+    in_valley_sub: "Restaurants de village, repas en ville, bars après-ski, restaurants d'hôtel",
+    meal_moment: "Moment du repas", lunch_slopes: "Déjeuner sur les pistes", late_night: "Tard le soir",
+    show_restaurants: "Afficher les restaurants", location_step: "Lieu",
+    restaurants_step: "Restaurants", reserve_step: "Réserver",
+    breakfast: "Petit-déjeuner", apres_ski: "Après-ski", dinner: "Dîner",
+    make_reservation: "Réserver une table",
+
+    storage_location: "Lieu de stockage", locker_size: "Taille du casier",
+    small: "Petit", medium: "Moyen", large: "Grand", facilities_found: "installations trouvées",
+
+    who_taking_lessons: "Qui prend des cours?", multiple_participants: "Vous pouvez ajouter plusieurs participants — chacun aura son propre cours.",
+    adult_15_plus: "Adulte 15+", child_3_14: "Enfant 3–14", add_another_person: "+ Ajouter une autre personne",
+    choose_course: "Choisir le type de cours", group_lesson: "Cours collectif", private_lesson: "Cours particulier",
+    choose_schedule: "Choisir l'horaire", half_day: "Demi-journée", full_day: "Journée complète", multi_day: "Stage multi-jours",
+    choose_school: "Choisir une école de ski",
+    who_step: "Qui", course_step: "Cours", schedule_step: "Horaire", school_step: "École", checkout_step: "Paiement",
+
+    equipment_step: "Équipement", specifications: "Spécifications", choose_shop: "Choisir le magasin",
+    what_do_you_need: "De quoi avez-vous besoin?", select_equipment: "Sélectionnez tout l'équipement que vous souhaitez louer.",
+    skis: "Skis", snowboard: "Snowboard", ski_boots: "Chaussures de ski", snowboard_boots: "Chaussures de snowboard",
+    poles: "Bâtons", helmet: "Casque", ski_jacket: "Veste de ski", ski_pants: "Pantalon de ski",
+    gloves: "Gants", goggles: "Lunettes de ski", back_protector: "Protection dorsale",
+    how_proceed: "Comment souhaitez-vous procéder?", i_know_what_i_want: "Je sais ce que je veux",
+    choose_own_specs: "Je choisis mes propres spécifications.", help_me_choose: "Aidez-moi à choisir",
+    answer_questions: "Répondez à quelques questions et nous vous trouverons le bon équipement.",
+
+    step_label: "Étape", of_label: "sur", from_city: "depuis",
   },
 
   it: {
@@ -660,6 +836,62 @@ export const TRANSLATIONS = {
     month_may: "Maggio", month_jun: "Giugno", month_jul: "Luglio", month_aug: "Agosto",
     month_sep: "Settembre", month_oct: "Ottobre", month_nov: "Novembre", month_dec: "Dicembre",
     day_mon: "Lu", day_tue: "Ma", day_wed: "Me", day_thu: "Gi", day_fri: "Ve", day_sat: "Sa", day_sun: "Do",
+
+    pickup_location: "Luogo di ritiro", return_location: "Luogo di restituzione", same_as_pickup: "Uguale al ritiro",
+    pickup_date: "Data di ritiro", return_date: "Data di restituzione", driver_age: "Età del conducente",
+    additional_drivers: "Conducenti aggiuntivi", vehicle_preferences: "Preferenze veicolo",
+    snow_ready: "Pronto per la neve", ski_rack: "Portasci", large_boot: "Bagagliaio grande",
+    seven_seater: "7 posti", electric_hybrid: "Elettrico / Ibrido", luxury: "Lusso",
+    unlimited_mileage: "Chilometri illimitati", full_to_full: "Pieno-a-pieno carburante",
+    airport: "Aeroporto", city_centre: "Centro città", train_station: "Stazione ferroviaria", hotel_delivery: "Consegna in hotel",
+    search_step: "Ricerca", search: "Cerca", automatic: "Automatico", manual: "Manuale", free_cancellation_only: "Solo cancellazione gratuita",
+    search_vehicles: "Cerca veicoli", vehicles_found: "veicoli trovati", select_vehicle: "Seleziona veicolo",
+    results: "Risultati",
+
+    search_flights: "Cerca voli", round_trip: "Andata e ritorno", one_way: "Solo andata",
+    to: "A", passengers: "Passeggeri", cabin_class: "Classe cabina",
+    economy: "Economy", business: "Business", direct_only: "Solo voli diretti", flexible_dates: "Date flessibili",
+    flights_found: "voli trovati", cheapest: "Più economico", fastest: "Più veloce", best: "Migliore",
+    departure_time: "Orario di partenza", arrival_time: "Orario di arrivo", direct: "Diretto",
+    select_flight: "Seleziona volo", show_details: "Mostra dettagli",
+
+    search_trains: "Cerca treni", return_journey: "Andata e ritorno", single_journey: "Solo andata",
+    trains_found: "treni trovati", select_train: "Seleziona treno",
+    first_class: "1ª classe", second_class: "2ª classe",
+
+    where_eating: "Dove mangerai?",
+    show_restaurants_near: "Ti mostreremo ristoranti vicino a te sulla montagna e nella valle.",
+    use_my_location: "Usa la mia posizione", or_enter_location: "Oppure inserisci un resort, villaggio o città",
+    area_scope: "Area", on_the_mountain: "Sulla montagna",
+    on_mountain_sub: "Ristoranti in pista, rifugi, bar in vetta",
+    in_the_valley: "Nella valle",
+    in_valley_sub: "Ristoranti del villaggio, ristorazione in città, locali après-ski, ristoranti d'albergo",
+    meal_moment: "Momento del pasto", lunch_slopes: "Pranzo sulle piste", late_night: "Tarda notte",
+    show_restaurants: "Mostra ristoranti", location_step: "Posizione",
+    restaurants_step: "Ristoranti", reserve_step: "Prenota",
+    breakfast: "Colazione", apres_ski: "Après-ski", dinner: "Cena",
+    make_reservation: "Prenota un tavolo",
+
+    storage_location: "Luogo di deposito", locker_size: "Dimensione armadietto",
+    small: "Piccolo", medium: "Medio", large: "Grande", facilities_found: "strutture trovate",
+
+    who_taking_lessons: "Chi prende lezioni?", multiple_participants: "Puoi aggiungere più partecipanti — ognuno avrà la propria lezione.",
+    adult_15_plus: "Adulto 15+", child_3_14: "Bambino 3–14", add_another_person: "+ Aggiungi un'altra persona",
+    choose_course: "Scegli il tipo di corso", group_lesson: "Lezione di gruppo", private_lesson: "Lezione privata",
+    choose_schedule: "Scegli l'orario", half_day: "Mezza giornata", full_day: "Giornata intera", multi_day: "Corso multi-giorno",
+    choose_school: "Scegli la scuola di sci",
+    who_step: "Chi", course_step: "Corso", schedule_step: "Orario", school_step: "Scuola", checkout_step: "Pagamento",
+
+    equipment_step: "Attrezzatura", specifications: "Specifiche", choose_shop: "Scegli negozio",
+    what_do_you_need: "Di cosa hai bisogno?", select_equipment: "Seleziona tutta l'attrezzatura che desideri noleggiare.",
+    skis: "Sci", snowboard: "Snowboard", ski_boots: "Scarponi da sci", snowboard_boots: "Scarponi da snowboard",
+    poles: "Bastoncini", helmet: "Casco", ski_jacket: "Giacca da sci", ski_pants: "Pantaloni da sci",
+    gloves: "Guanti", goggles: "Occhiali da sci", back_protector: "Paraschiena",
+    how_proceed: "Come vuoi procedere?", i_know_what_i_want: "So cosa voglio",
+    choose_own_specs: "Scelgo le mie specifiche.", help_me_choose: "Aiutami a scegliere",
+    answer_questions: "Rispondi ad alcune domande e ti abbineremo.",
+
+    step_label: "Fase", of_label: "di", from_city: "da",
   },
 };
 

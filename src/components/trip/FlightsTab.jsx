@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
 import { Plane, Leaf, ArrowUpDown, SlidersHorizontal, ArrowLeftRight, ChevronDown, ChevronUp, MapPin, AlertTriangle, ShoppingBag } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
@@ -8,9 +9,10 @@ import CheckoutFlow from "./shared/CheckoutFlow";
 import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STEPS = ["Search", "Results", "Checkout"];
+const STEPS_KEYS = ["search_step", "results", "checkout_step"];
 
-const SORT_OPTIONS = ["Cheapest", "Fastest", "Best", "Departure", "Arrival"];
+const SORT_KEYS = ["cheapest", "fastest", "best", "departure_time", "arrival_time"];
+const SORT_VALUES = ["Cheapest", "Fastest", "Best", "Departure", "Arrival"];
 
 const DEST_AIRPORTS = [
   { iata: "GVA", name: "Geneva", transfer: "1h15 to Verbier / 1h to Chamonix" },
@@ -121,6 +123,7 @@ function generateFlightResults(fromAirport, toAirport, depDate, retDate, pax, ca
 }
 
 export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [tripType, setTripType] = useState("Round trip");
   const [fromVal, setFromVal] = useState("");
@@ -182,7 +185,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
   function goBack() { if (step > 0) setStep(s => s - 1); }
 
   return (
-    <BookingShell steps={STEPS} current={step} onBack={goBack}>
+    <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={step} onBack={goBack}>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -194,10 +197,10 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
         <div className="max-w-5xl mx-auto">
           {/* Trip type */}
           <div className="flex gap-2 mb-5">
-            {["Round trip", "One way", "Multi-city"].map(t => (
-              <button key={t} onClick={() => setTripType(t)}
-                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${tripType === t ? "bg-peak-red text-white border-peak-red" : "bg-peak-surface border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                {t}
+            {[{ key: "Round trip", label: t('round_trip') }, { key: "One way", label: t('one_way') }, { key: "Multi-city", label: "Multi-city" }].map(opt => (
+              <button key={opt.key} onClick={() => setTripType(opt.key)}
+                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${tripType === opt.key ? "bg-peak-red text-white border-peak-red" : "bg-peak-surface border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                {opt.label}
               </button>
             ))}
           </div>
@@ -207,7 +210,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
             {/* Row 1 — From / Swap / To */}
             <div className="flex items-start gap-3 mb-5">
               <div className="flex-1">
-                <label className="block text-xs text-peak-text-secondary mb-1.5">From</label>
+                <label className="block text-xs text-peak-text-secondary mb-1.5">{t('from')}</label>
                 <LocationInput
                   type="airport" context="departure" placeholder="City or airport — e.g. Barcelona BCN"
                   value={fromVal} onChange={setFromVal}
@@ -220,7 +223,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               </button>
 
               <div className="flex-1">
-                <label className="block text-xs text-peak-text-secondary mb-1.5">To (airport or city)</label>
+                <label className="block text-xs text-peak-text-secondary mb-1.5">{t('to')}</label>
                 <LocationInput
                   type="airport" context="destination" placeholder="Destination airport"
                   value={toVal} onChange={setToVal}
@@ -246,7 +249,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Cabin</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('cabin_class')}</label>
                   <select value={searchForm.cabin} onChange={e => sf("cabin", e.target.value)}
                     className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-peak-blue">
                     {["Economy", "Premium Economy", "Business", "First"].map(c => <option key={c}>{c}</option>)}
@@ -254,7 +257,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-xs text-peak-text-secondary mb-1.5">Passengers</label>
+                <label className="block text-xs text-peak-text-secondary mb-1.5">{t('passengers')}</label>
                 <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 flex flex-wrap gap-4">
                   {[{ label: "Adults (12+)", key: "adults", min: 1 }, { label: "Children (2–11)", key: "children", min: 0 }, { label: "Infants", key: "infants", min: 0 }].map(({ label, key, min }) => (
                     <div key={key} className="flex items-center gap-3">
@@ -270,7 +273,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 3 — Filter toggles */}
             <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4">
-              {[{ k: "directOnly", l: "Direct flights only" }, { k: "flexible", l: "Flexible dates ±3 days" }, { k: "nearbyAirports", l: "Include nearby airports" }, { k: "carbon", l: "Carbon offset included" }].map(({ k, l }) => (
+              {[{ k: "directOnly", l: t('direct_only') }, { k: "flexible", l: t('flexible_dates') + " ±3 days" }, { k: "nearbyAirports", l: "Include nearby airports" }, { k: "carbon", l: "Carbon offset included" }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -302,7 +305,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
           </div>
 
           <button onClick={() => { setFlightResults(generateFlightResults(fromVal, toVal, searchForm.depDate, searchForm.retDate, totalPax, searchForm.cabin, Object.values(skiGear).some(Boolean))); setStep(1); }} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
-            Search flights
+            {t('search_flights')}
           </button>
         </div>
       )}
@@ -336,15 +339,15 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               {!fromVal || !toVal ? (
                 <span className="text-peak-text-secondary text-sm">Please enter departure and destination airports to search</span>
               ) : (
-                <span className="text-peak-text-secondary text-sm">{filtered.length} flights found from {fromVal.split(" ")[0]} to {toVal.split(" ")[0]}</span>
+                <span className="text-peak-text-secondary text-sm">{filtered.length} {t('flights_found')} {fromVal.split(" ")[0]} → {toVal.split(" ")[0]}</span>
               )}
               <span className="text-peak-text-secondary/60 text-xs ml-2">{fromVal} → {toVal} · {fmtDate(searchForm.depDate) || "–"} · {totalPax} pax · {searchForm.cabin}</span>
             </div>
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-              {SORT_OPTIONS.map(opt => (
-                <button key={opt} onClick={() => setSortBy(opt)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border whitespace-nowrap transition-colors ${sortBy === opt ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                  {opt}
+              {SORT_KEYS.map((key, i) => (
+                <button key={key} onClick={() => setSortBy(SORT_VALUES[i])}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border whitespace-nowrap transition-colors ${sortBy === SORT_VALUES[i] ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                  {t(key)}
                 </button>
               ))}
             </div>
@@ -403,7 +406,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                             <div className="flex-1 h-px bg-white/10" />
                           </div>
                           <p className="text-peak-text-secondary text-xs">{flight.duration}</p>
-                          <p className={`text-xs font-medium mt-0.5 ${flight.stops === "Direct" ? "text-peak-green" : "text-peak-text-secondary"}`}>{flight.stops}</p>
+                          <p className={`text-xs font-medium mt-0.5 ${flight.stops === "Direct" ? "text-peak-green" : "text-peak-text-secondary"}`}>{flight.stops === "Direct" ? t('direct') : flight.stops}</p>
                         </div>
                         <div>
                           <p className="font-display font-bold text-peak-text text-2xl">{flight.arr}</p>
@@ -432,7 +435,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                         <p className="text-peak-text-secondary text-xs">€{flight.price * totalPax} total</p>
                         <button onClick={() => { setSelectedFlight(flight); setStep(2); }}
                           className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
-                          <ShoppingBag className="h-3 w-3" /> Select
+                          <ShoppingBag className="h-3 w-3" /> {t('select_flight')}
                         </button>
                       </div>
                     </div>
@@ -441,7 +444,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                     <button onClick={() => setExpandedFlight(expandedFlight === flight.id ? null : flight.id)}
                       className="mt-3 text-xs text-peak-text-secondary hover:text-peak-text flex items-center gap-1">
                       {expandedFlight === flight.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                      Show details
+                      {t('show_details')}
                     </button>
 
                     {expandedFlight === flight.id && (

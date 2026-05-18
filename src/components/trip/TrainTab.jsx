@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Train, ArrowUpDown, ArrowLeftRight, Leaf, ChevronDown, ChevronUp, MapPin, Wifi, Zap, UtensilsCrossed, Bike, ShoppingBag } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import LocationInput from "../shared/LocationInput";
 import SavePlanButton from "./SavePlanButton";
 import BookingShell from "./shared/BookingShell";
@@ -7,8 +8,10 @@ import CheckoutFlow from "./shared/CheckoutFlow";
 import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STEPS = ["Search", "Results", "Checkout"];
-const SORT_OPTIONS = ["Cheapest", "Fastest", "Earliest", "Latest"];
+const STEPS_KEYS = ["search_step", "results", "checkout_step"];
+const SORT_KEYS = ["cheapest", "fastest", "results", "results"];
+const SORT_VALUES = ["Cheapest", "Fastest", "Earliest", "Latest"];
+const SORT_LABELS_EN = ["Cheapest", "Fastest", "Earliest", "Latest"];
 
 const CITY_STATION_LOOKUP = {
   barcelona: "Barcelona Sants", london: "London St Pancras", paris: "Paris Gare de Lyon",
@@ -95,6 +98,7 @@ function generateTrainResults(fromStation, toStation, depDate, retDate, pax, rai
 }
 
 export default function TrainTab({ agentServiceDetails = {}, onBook }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [tripType, setTripType] = useState("Return");
   const [fromVal, setFromVal] = useState("");
@@ -164,7 +168,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   function goBack() { if (step > 0) setStep(s => s - 1); }
 
   return (
-    <BookingShell steps={STEPS} current={step} onBack={goBack}>
+    <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={step} onBack={goBack}>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -176,10 +180,10 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
         <div className="max-w-5xl mx-auto">
           {/* Trip type */}
           <div className="flex gap-2 mb-5">
-            {["Return", "Single", "Open return"].map(t => (
-              <button key={t} onClick={() => setTripType(t)}
-                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${tripType === t ? "bg-peak-red text-white border-peak-red" : "bg-peak-surface border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                {t}
+            {[{ key: "Return", labelKey: "return_journey" }, { key: "Single", labelKey: "single_journey" }, { key: "Open return", labelKey: null }].map(opt => (
+              <button key={opt.key} onClick={() => setTripType(opt.key)}
+                className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${tripType === opt.key ? "bg-peak-red text-white border-peak-red" : "bg-peak-surface border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                {opt.labelKey ? t(opt.labelKey) : opt.key}
               </button>
             ))}
           </div>
@@ -244,7 +248,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
             <div className="border-t border-white/5 pt-5 mb-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Passengers</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('passengers')}</label>
                   <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 space-y-2">
                     {[{ label: "Adults", key: "adults", min: 1 }, { label: "Youth (12–25)", key: "youth", min: 0 }, { label: "Children (4–11)", key: "children", min: 0 }, { label: "Infants under 4", key: "infants", min: 0 }].map(({ label, key, min }) => (
                       <div key={key} className="flex items-center justify-between">
@@ -308,7 +312,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
           </div>
 
           <button onClick={() => { setTrainResults(generateTrainResults(fromVal, toVal, searchForm.depDate, searchForm.retDate, totalPax, searchForm.railcard)); setStep(1); }} className="w-full py-4 bg-peak-red hover:bg-peak-red-hover text-white font-bold text-base rounded-xl transition-colors mt-4">
-            Search trains
+            {t('search_trains')}
           </button>
         </div>
       )}
@@ -326,15 +330,15 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
               {!fromVal || !toVal ? (
                 <span className="text-peak-text-secondary text-sm">Please enter departure and destination stations to search</span>
               ) : (
-                <span className="text-peak-text-secondary text-sm">{filtered.length} trains found from {fromVal} to {toVal}</span>
+                <span className="text-peak-text-secondary text-sm">{filtered.length} {t('trains_found')} {fromVal} → {toVal}</span>
               )}
               <span className="text-peak-text-secondary/60 text-xs ml-2">{fromVal} → {toVal} · {searchForm.depDate || "–"} · {totalPax} pax</span>
             </div>
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-              {SORT_OPTIONS.map(opt => (
-                <button key={opt} onClick={() => setSortBy(opt)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border whitespace-nowrap transition-colors ${sortBy === opt ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                  {opt}
+              {[{ key: "cheapest", val: "Cheapest" }, { key: "fastest", val: "Fastest" }, { key: "results", val: "Earliest" }, { key: "results", val: "Latest" }].map((opt, idx) => (
+                <button key={opt.val} onClick={() => setSortBy(opt.val)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg border whitespace-nowrap transition-colors ${sortBy === opt.val ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                  {idx < 2 ? t(opt.key) : opt.val}
                 </button>
               ))}
             </div>
@@ -383,7 +387,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                             <div className="flex-1 h-px bg-white/10" />
                           </div>
                           <p className="text-peak-text-secondary text-xs">{train.duration}</p>
-                          <p className={`text-xs font-medium mt-0.5 ${train.changes === "Direct" || train.changes.startsWith("Direct") ? "text-peak-green" : "text-peak-text-secondary"}`}>{train.changes}</p>
+                          <p className={`text-xs font-medium mt-0.5 ${train.changes === "Direct" || train.changes.startsWith("Direct") ? "text-peak-green" : "text-peak-text-secondary"}`}>{train.changes.startsWith("Direct") ? t('direct') + (train.changes.includes("(") ? " " + train.changes.slice(train.changes.indexOf("(")) : "") : train.changes}</p>
                         </div>
                         <div>
                           <p className="font-display font-bold text-peak-text text-2xl">{train.arr}</p>
@@ -413,7 +417,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                         <p className="text-peak-green text-xs mt-0.5">Saves ~{train.co2saved}kg CO₂</p>
                         <button onClick={() => { setSelectedTrain(train); setStep(2); }}
                           className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
-                          <ShoppingBag className="h-3 w-3" /> Select
+                          <ShoppingBag className="h-3 w-3" /> {t('select_train')}
                         </button>
                       </div>
                     </div>
@@ -421,7 +425,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                     <button onClick={() => setExpandedTrain(expandedTrain === train.id ? null : train.id)}
                       className="mt-3 text-xs text-peak-text-secondary hover:text-peak-text flex items-center gap-1">
                       {expandedTrain === train.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                      Show details
+                      {t('show_details')}
                     </button>
 
                     {expandedTrain === train.id && (

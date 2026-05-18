@@ -1,4 +1,5 @@
 import { Sliders, Sparkles } from "lucide-react";
+import { useT } from "../../../lib/i18n";
 
 const EQUIPMENT_TYPES = [
   { key: "skis", label: "Skis", emoji: "🎿" },
@@ -19,12 +20,13 @@ function toggle(arr, val) {
 }
 
 export default function Step0({ selectedEquipment, setSelectedEquipment, mode, setMode, onContinue }) {
+  const t = useT();
   const canContinue = selectedEquipment.length > 0 && mode !== null;
 
   return (
     <div>
-      <h2 className="font-display font-bold text-2xl text-peak-text mb-1">What do you need?</h2>
-      <p className="text-peak-text-secondary text-sm mb-6">Select all the equipment you'd like to rent.</p>
+      <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('what_do_you_need')}</h2>
+      <p className="text-peak-text-secondary text-sm mb-6">{t('select_equipment')}</p>
 
       {/* Equipment grid */}
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 mb-8">
@@ -48,19 +50,19 @@ export default function Step0({ selectedEquipment, setSelectedEquipment, mode, s
       </div>
 
       {/* Mode selector */}
-      <h3 className="font-display font-bold text-lg text-peak-text mb-3">How would you like to proceed?</h3>
+      <h3 className="font-display font-bold text-lg text-peak-text mb-3">{t('how_proceed')}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {[
           {
             key: "expert",
-            title: "I know what I want",
-            subtitle: "I'll choose my own specs.",
+            titleKey: "i_know_what_i_want",
+            subtitleKey: "choose_own_specs",
             icon: Sliders,
           },
           {
             key: "guided",
-            title: "Help me choose",
-            subtitle: "Answer a few questions and we'll match you.",
+            titleKey: "help_me_choose",
+            subtitleKey: "answer_questions",
             icon: Sparkles,
           },
         ].map((m) => {
@@ -80,8 +82,8 @@ export default function Step0({ selectedEquipment, setSelectedEquipment, mode, s
                 <Icon className={`h-5 w-5 ${active ? "text-peak-blue" : "text-peak-text-secondary"}`} />
               </div>
               <div>
-                <p className={`font-semibold text-sm mb-0.5 ${active ? "text-peak-text" : "text-peak-text-secondary"}`}>{m.title}</p>
-                <p className="text-peak-text-secondary text-xs">{m.subtitle}</p>
+                <p className={`font-semibold text-sm mb-0.5 ${active ? "text-peak-text" : "text-peak-text-secondary"}`}>{t(m.titleKey)}</p>
+                <p className="text-peak-text-secondary text-xs">{t(m.subtitleKey)}</p>
               </div>
             </button>
           );
@@ -93,7 +95,7 @@ export default function Step0({ selectedEquipment, setSelectedEquipment, mode, s
         disabled={!canContinue}
         className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 disabled:cursor-not-allowed text-white font-display font-bold text-sm rounded-xl transition-colors"
       >
-        Continue
+        {t('continue')}
       </button>
     </div>
   );

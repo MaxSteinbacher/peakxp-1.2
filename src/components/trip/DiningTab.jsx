@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink, Bookmark } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import LocationInput from "../shared/LocationInput";
 import { savePlan } from "../../lib/bookings";
 import { toast } from "sonner";
 import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const STEPS = ["Location", "Restaurants", "Reserve"];
+const STEPS_KEYS = ["location_step", "restaurants_step", "reserve_step"];
 const SORT_OPTIONS = ["Recommended", "Closest to lifts", "Highest rated", "Price: low to high", "Open now first"];
 const PRICE_RANGE = ["€", "€€", "€€€", "€€€€"];
 
@@ -315,6 +316,7 @@ function RestaurantCard({ restaurant, onReserve }) {
 }
 
 export default function DiningTab({ agentServiceDetails = {} }) {
+  const t = useT();
   const [step, setStep] = useState(0);
   const [location, setLocation] = useState("");
   const [locating, setLocating] = useState(false);
@@ -371,19 +373,19 @@ export default function DiningTab({ agentServiceDetails = {} }) {
     <div>
       {/* Minimal step indicator for dining (3 steps but step 2 is inline) */}
       <div className="flex items-center gap-0 mb-4">
-        {STEPS.map((label, i) => (
-          <div key={label} className="flex items-center flex-1 last:flex-none">
+        {STEPS_KEYS.map((key, i) => (
+          <div key={key} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center gap-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${i < step ? "bg-peak-red border-peak-red text-white" : i === step ? "border-peak-red text-peak-red bg-transparent" : "border-white/20 text-peak-text-secondary"}`}>
                 {i < step ? "✓" : i + 1}
               </div>
-              <span className={`text-xs whitespace-nowrap ${i === step ? "text-peak-text" : "text-peak-text-secondary"}`}>{label}</span>
+              <span className={`text-xs whitespace-nowrap ${i === step ? "text-peak-text" : "text-peak-text-secondary"}`}>{t(key)}</span>
             </div>
-            {i < STEPS.length - 1 && <div className={`flex-1 h-px mx-2 mb-4 ${i < step ? "bg-peak-red" : "bg-white/10"}`} />}
+            {i < STEPS_KEYS.length - 1 && <div className={`flex-1 h-px mx-2 mb-4 ${i < step ? "bg-peak-red" : "bg-white/10"}`} />}
           </div>
         ))}
       </div>
-      <p className="text-peak-text-secondary text-xs mb-6">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+      <p className="text-peak-text-secondary text-xs mb-6">{t('step_label')} {step + 1} {t('of_label')} {STEPS_KEYS.length} — {t(STEPS_KEYS[step])}</p>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
           <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
@@ -398,8 +400,8 @@ export default function DiningTab({ agentServiceDetails = {} }) {
       {/* STEP 0 — Location */}
       {step === 0 && (
         <div className="max-w-2xl">
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">Where are you eating?</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">We'll show restaurants near you on the mountain and in the valley.</p>
+          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('where_eating')}</h2>
+          <p className="text-peak-text-secondary text-sm mb-6">{t('show_restaurants_near')}</p>
           <div className="bg-peak-card border border-white/5 rounded-xl p-6 mb-6 space-y-4">
             <button onClick={() => {
               if (!navigator.geolocation) return;
@@ -413,10 +415,10 @@ export default function DiningTab({ agentServiceDetails = {} }) {
                 setLocating(false);
               }, () => setLocating(false));
             }} disabled={locating} className="flex items-center gap-2 text-peak-blue text-sm font-medium hover:underline disabled:opacity-50">
-              <MapPin className="h-4 w-4" />{locating ? "Detecting..." : "Use my location"}
+              <MapPin className="h-4 w-4" />{locating ? "Detecting..." : t('use_my_location')}
             </button>
             <div>
-              <label className="block text-xs text-peak-text-secondary mb-1">Or enter a resort, village, or town</label>
+              <label className="block text-xs text-peak-text-secondary mb-1">{t('or_enter_location')}</label>
               <LocationInput
                 type="resort" context="destination" placeholder="e.g. Verbier, Zermatt, Chamonix"
                 value={location} onChange={setLocation}
@@ -424,31 +426,31 @@ export default function DiningTab({ agentServiceDetails = {} }) {
               />
             </div>
           </div>
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Area scope</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">{t('area_scope').toUpperCase()}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             {[
-              { key: "mountain", label: "On the mountain", desc: "Slope-side restaurants, mountain huts, summit cafes" },
-              { key: "valley", label: "In the valley", desc: "Village restaurants, town dining, apres-ski venues, hotel restaurants" },
+              { key: "mountain", labelKey: "on_the_mountain", descKey: "on_mountain_sub" },
+              { key: "valley", labelKey: "in_the_valley", descKey: "in_valley_sub" },
             ].map(opt => (
               <button key={opt.key} onClick={() => toggleArea(opt.key)}
                 className={`flex flex-col items-start gap-1 p-5 rounded-xl border text-left transition-all ${areas.includes(opt.key) ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10 bg-peak-card hover:border-white/25"}`}>
-                <p className={`font-semibold text-sm ${areas.includes(opt.key) ? "text-peak-blue" : "text-peak-text"}`}>{opt.label}</p>
-                <p className="text-peak-text-secondary text-xs">{opt.desc}</p>
+                <p className={`font-semibold text-sm ${areas.includes(opt.key) ? "text-peak-blue" : "text-peak-text"}`}>{t(opt.labelKey)}</p>
+                <p className="text-peak-text-secondary text-xs">{t(opt.descKey)}</p>
               </button>
             ))}
           </div>
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Meal moment</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('meal_moment').toUpperCase()}</p>
           <div className="flex flex-wrap gap-2 mb-6">
-            {["Breakfast", "Lunch on the slopes", "Apres-ski", "Dinner", "Late night"].map(m => (
-              <button key={m} onClick={() => toggleMoment(m)}
-                className={`px-4 py-2 text-sm font-medium rounded-full border transition-colors ${mealMoments.includes(m) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                {m}
+            {[{ key: "Breakfast", labelKey: "breakfast" }, { key: "Lunch on the slopes", labelKey: "lunch_slopes" }, { key: "Apres-ski", labelKey: "apres_ski" }, { key: "Dinner", labelKey: "dinner" }, { key: "Late night", labelKey: "late_night" }].map(m => (
+              <button key={m.key} onClick={() => toggleMoment(m.key)}
+                className={`px-4 py-2 text-sm font-medium rounded-full border transition-colors ${mealMoments.includes(m.key) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                {t(m.labelKey)}
               </button>
             ))}
           </div>
           <button onClick={() => setStep(1)} disabled={!location}
             className="w-full py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Show restaurants
+            {t('show_restaurants')}
           </button>
         </div>
       )}
@@ -475,7 +477,7 @@ export default function DiningTab({ agentServiceDetails = {} }) {
           <div className="flex gap-8">
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price range</p>
+                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('daily_lift_pass')}</p>
                 <div className="flex gap-1">
                   {PRICE_RANGE.map(p => (
                     <button key={p} onClick={() => togglePrice(p)}
@@ -495,12 +497,12 @@ export default function DiningTab({ agentServiceDetails = {} }) {
                 <span className="text-sm text-peak-text-secondary">Open now only</span>
               </label>
               <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Meal moment</p>
-                {["Breakfast", "Lunch on the slopes", "Apres-ski", "Dinner", "Late night"].map(m => (
-                  <label key={m} className="flex items-center gap-2 cursor-pointer mb-2">
-                    <Checkbox checked={mealMoments.includes(m)} onCheckedChange={() => toggleMoment(m)}
+                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('meal_moment').toUpperCase()}</p>
+                {[{ key: "Breakfast", labelKey: "breakfast" }, { key: "Lunch on the slopes", labelKey: "lunch_slopes" }, { key: "Apres-ski", labelKey: "apres_ski" }, { key: "Dinner", labelKey: "dinner" }, { key: "Late night", labelKey: "late_night" }].map(m => (
+                  <label key={m.key} className="flex items-center gap-2 cursor-pointer mb-2">
+                    <Checkbox checked={mealMoments.includes(m.key)} onCheckedChange={() => toggleMoment(m.key)}
                       className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
-                    <span className="text-xs text-peak-text-secondary">{m}</span>
+                    <span className="text-xs text-peak-text-secondary">{t(m.labelKey)}</span>
                   </label>
                 ))}
               </div>
