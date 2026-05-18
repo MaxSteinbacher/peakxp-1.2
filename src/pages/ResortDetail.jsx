@@ -7,6 +7,7 @@ import { getResortById, SEASON_PASSES } from "../lib/data";
 import ReviewCard from "../components/ReviewCard";
 import InstructorCard from "../components/InstructorCard";
 import OverviewTab from "../components/resort/OverviewTab";
+import PhotoSlideshow from "../components/resort/PhotoSlideshow";
 import ConditionsTab from "../components/resort/ConditionsTab";
 import LiftPassesTab from "../components/resort/LiftPassesTab";
 import FacilitiesTab from "../components/resort/FacilitiesTab";
@@ -94,6 +95,11 @@ export default function ResortDetail() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Photo slideshow — shown after video hero if images exist */}
+      {resort.videos && resort.videos.length > 0 && resort.images && resort.images.length > 0 && (
+        <PhotoSlideshow images={resort.images} />
       )}
 
       {/* Resort header */}
