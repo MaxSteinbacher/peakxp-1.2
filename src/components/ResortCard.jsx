@@ -76,22 +76,22 @@ export default function ResortCard({ resort, compact = false }) {
             <h3 className="font-display font-bold text-peak-text text-xl">{resort.name}</h3>
             <p className="text-peak-text-secondary text-sm mt-0.5">{resort.flag} {resort.country}</p>
           </div>
-          <span className="text-peak-red font-bold text-lg">€{resort.priceFrom}<span className="text-xs text-peak-text-secondary font-normal">/day</span></span>
+          <span className="text-peak-red font-bold text-lg">€{resort.priceFrom}<span className="text-xs text-peak-text-secondary font-normal">/{t('day')}</span></span>
         </div>
         <div className="mt-4 flex items-center gap-4 text-xs text-peak-text-secondary">
           <span className="flex items-center gap-1">
             <Mountain className="h-3.5 w-3.5 text-peak-blue" />
             {resort.maxAltitude}m
           </span>
-          <span>{resort.runs} runs</span>
-          <span>{resort.pisteKm}km pistes</span>
-          <span>{resort.lifts} lifts</span>
+          <span>{resort.runs} {t('runs')}</span>
+          <span>{resort.pisteKm}km {t('pistes')}</span>
+          <span>{resort.lifts} {t('lifts')}</span>
         </div>
         <Link
           to={`/resort/${resort.id}`}
           className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 bg-peak-red hover:bg-peak-red-hover text-white text-sm font-semibold rounded-lg transition-colors"
         >
-          View resort
+          {t('view_resort')}
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
