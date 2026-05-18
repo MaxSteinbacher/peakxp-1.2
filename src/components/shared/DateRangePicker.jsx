@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays, X } from "lucide-react";
+import { useT } from "../../lib/i18n";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -47,8 +48,8 @@ function rangeContainsUnavailable(start, end, unavailableDates, unavailableRange
   return false;
 }
 
-function FooterSummary({ start, end, nightsOrDays, unitLabel }) {
-  if (!start && !end) return <span>Select dates</span>;
+function FooterSummary({ start, end, nightsOrDays, unitLabel, selectDatesLabel }) {
+  if (!start && !end) return <span>{selectDatesLabel || "Select dates"}</span>;
   if (start && !end) return <span>From {fmtDate(start)}</span>;
   return (
     <span>
@@ -89,6 +90,7 @@ export default function DateRangePicker({
   align = "left",
   context = "general",
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [selectingEnd, setSelectingEnd] = useState(false);
   const [hoveredDate, setHoveredDate] = useState(null);
@@ -275,7 +277,7 @@ export default function DateRangePicker({
       {mode === "range" && (
         <p className="text-peak-text-secondary text-xs text-center mb-3">
           {!start || !selectingEnd
-            ? "Select your start date"
+            ? t('select_start_date')
             : context === "hotel" ? "Now select your check-out date" : "Now select your end date"}
         </p>
       )}
@@ -337,13 +339,13 @@ export default function DateRangePicker({
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 border-t border-white/5 mt-4">
         <div className="text-peak-text-secondary text-xs flex-1 mr-2 truncate">
-          <FooterSummary start={start} end={end} nightsOrDays={nightsOrDays} unitLabel={unitLabel} />
+          <FooterSummary start={start} end={end} nightsOrDays={nightsOrDays} unitLabel={unitLabel} selectDatesLabel={t('select_dates')} />
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <button onClick={clearDates} className="text-peak-text-secondary text-xs hover:text-peak-text transition-colors">Clear</button>
+          <button onClick={clearDates} className="text-peak-text-secondary text-xs hover:text-peak-text transition-colors">{t('clear')}</button>
           <button onClick={() => setOpen(false)} disabled={!canConfirm}
             className="bg-peak-red text-white text-xs px-4 py-1.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
-            Confirm
+            {t('confirm')}
           </button>
         </div>
       </div>

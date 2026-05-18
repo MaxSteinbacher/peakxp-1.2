@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Heart, Mountain, ArrowRight, CableCar, Ruler, Ticket } from "lucide-react";
+import { useT } from "../lib/i18n";
 
 export default function ResortCard({ resort, compact = false }) {
+  const t = useT();
   const [saved, setSaved] = useState(false);
 
   const passPrice = resort.liftPasses?.[0]?.adult ?? resort.priceFrom;
@@ -29,7 +31,7 @@ export default function ResortCard({ resort, compact = false }) {
           <div className="flex items-center gap-3 text-xs text-peak-text-secondary">
             <span className="flex items-center gap-1">
               <CableCar className="h-3.5 w-3.5 text-peak-blue" />
-              {resort.lifts} lifts
+              {resort.lifts} {t('lifts')}
             </span>
             <span className="flex items-center gap-1">
               <Ruler className="h-3.5 w-3.5 text-peak-blue" />
@@ -38,7 +40,7 @@ export default function ResortCard({ resort, compact = false }) {
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-xs text-peak-text-secondary">
             <Ticket className="h-3.5 w-3.5 text-peak-red" />
-            <span>Day pass from <span className="text-peak-red font-semibold">€{passPrice}</span></span>
+            <span>{t('day_pass_from')} <span className="text-peak-red font-semibold">€{passPrice}</span></span>
           </div>
         </div>
       </Link>

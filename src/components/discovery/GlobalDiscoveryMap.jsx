@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronRight, Maximize, Minimize, X, ArrowLeft } from "lucide-react";
 import { resorts } from "../../lib/data";
 import PeakMap from "../shared/PeakMap";
+import { useT } from "../../lib/i18n";
 
 // ─── Geography data ───────────────────────────────────────────────────────────
 
@@ -131,6 +132,7 @@ function getResortsForSubRegion(subRegion) {
 
 export default function GlobalDiscoveryMap() {
   const navigate = useNavigate();
+  const t = useT();
   const containerRef = useRef(null);
   const worldDataRef = useRef(null);
   const projRef = useRef(null);
@@ -441,7 +443,7 @@ export default function GlobalDiscoveryMap() {
               return (
                 <g key={continent.id} style={{ cursor: "default" }}>
                   <text x={pos.x} y={pos.y - 35} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={9} fontWeight={500} style={{ pointerEvents: "none" }}>
-                    Coming soon
+                    {t('coming_soon')}
                   </text>
                   <circle cx={pos.x} cy={pos.y} r={44} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} style={{ pointerEvents: "none" }} />
                   <circle cx={pos.x} cy={pos.y} r={6} fill="rgba(255,255,255,0.3)" style={{ pointerEvents: "none" }} />
@@ -559,8 +561,8 @@ export default function GlobalDiscoveryMap() {
       {/* Header */}
       {phase === "world" && (
         <div className="absolute top-6 left-6 z-20 pointer-events-none">
-          <h3 className="font-display font-bold text-white text-2xl">Explore the World</h3>
-          <p className="text-white/50 text-sm mt-1">Click a continent to discover ski regions</p>
+          <h3 className="font-display font-bold text-white text-2xl">{t('explore_the_world')}</h3>
+          <p className="text-white/50 text-sm mt-1">{t('click_continent')}</p>
         </div>
       )}
 

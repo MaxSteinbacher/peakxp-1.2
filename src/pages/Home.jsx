@@ -7,14 +7,24 @@ import SearchBar from "../components/SearchBar";
 import ResortCard from "../components/ResortCard";
 import { resorts, trendingCards } from "../lib/data";
 
-const pillars = [
-{ icon: Ticket, label: "Smart booking", desc: "One cart for everything" },
-{ icon: Navigation, label: "On-mountain GPS", desc: "Real-time trail mapping" },
-{ icon: BarChart3, label: "Performance tracking", desc: "Every run, recorded" }];
+const TAG_KEYS = {
+  "Best powder in the Alps": "best_powder",
+  "Top-rated for progression": "top_rated_progression",
+  "Ultimate luxury skiing": "ultimate_luxury",
+};
+
+function getPillars(t) {
+  return [
+    { icon: Ticket, label: t('smart_booking'), desc: t('smart_booking_sub') },
+    { icon: Navigation, label: t('on_mountain_gps'), desc: t('on_mountain_gps_sub') },
+    { icon: BarChart3, label: t('performance_tracking'), desc: t('performance_tracking_sub') },
+  ];
+}
 
 
 export default function Home() {
   const t = useT();
+  const pillars = getPillars(t);
   return (
     <div className="min-h-screen">
       {/* Hero */}
@@ -34,7 +44,7 @@ export default function Home() {
             <span className="text-peak-red">UNIFIED.</span>
           </h1>
           <p className="text-peak-text-secondary text-lg sm:text-xl max-w-2xl mx-auto mb-10">
-            Find, book, and experience every ski resort in the Alps — in one place.
+            {t('hero_subline')}
           </p>
           <SearchBar />
         </div>
@@ -59,14 +69,14 @@ export default function Home() {
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
           <div className="flex items-end justify-between">
             <div>
-              <span className="inline-block text-peak-text-secondary text-xs tracking-[0.3em] uppercase mb-2">Season 2025–2026</span>
+              <span className="inline-block text-peak-text-secondary text-xs tracking-[0.3em] uppercase mb-2">{t('tagline_season')}</span>
               <h2 className="font-display font-extrabold text-4xl sm:text-5xl text-peak-text leading-tight">
-                The Alps.<br />
-                <span className="text-peak-blue">Unfiltered.</span>
+                {t('tagline_heading')}<br />
+                <span className="text-peak-blue">{t('tagline_subheading')}</span>
               </h2>
             </div>
             <div className="hidden sm:flex flex-col items-end gap-1 text-peak-text-secondary text-xs">
-              <span className="tracking-widest uppercase">Scroll to explore</span>
+              <span className="tracking-widest uppercase">{t('scroll_to_explore')}</span>
               <div className="w-px h-10 bg-white/20 self-center mt-1" />
             </div>
           </div>
@@ -76,9 +86,9 @@ export default function Home() {
       {/* Featured Resorts */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8">
-          <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">Featured Resorts</h2>
+          <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">{t('featured_resorts')}</h2>
           <Link to="/trip-planning" className="flex items-center gap-1 text-peak-blue text-sm font-medium hover:underline">
-            View all <ArrowRight className="h-4 w-4" />
+            {t('view_all')} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -90,8 +100,8 @@ export default function Home() {
 
       {/* Discover by destination */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-2">Discover by destination</h2>
-        <p className="text-peak-text-secondary text-sm mb-6">Explore every ski region in the world — from the Alps to the Andes.</p>
+        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-2">{t('discover_by_destination')}</h2>
+        <p className="text-peak-text-secondary text-sm mb-6">{t('discover_subline')}</p>
         <GlobalDiscoveryMap />
       </section>
 
@@ -99,7 +109,7 @@ export default function Home() {
 
       {/* Trending this week */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-8">Trending this week</h2>
+        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text mb-8">{t('trending_this_week')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {trendingCards.map((card) =>
           <Link
@@ -115,7 +125,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/30 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">
                 <span className="inline-block bg-peak-red/90 text-white text-xs font-semibold px-3 py-1 rounded-full mb-3">
-                  {card.tag}
+                  {TAG_KEYS[card.tag] ? t(TAG_KEYS[card.tag]) : card.tag}
                 </span>
                 <h3 className="font-display font-bold text-peak-text text-2xl">{card.resort}</h3>
               </div>
@@ -128,10 +138,10 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-peak-card border border-white/5 rounded-2xl p-8 sm:p-12">
           <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text text-center mb-2">
-            Your performance, <span className="text-peak-red">elevated</span>
+            {t('performance_heading')}
           </h2>
           <p className="text-peak-text-secondary text-center text-sm mb-10">
-            Everything you need, unified in one platform.
+            {t('performance_subline')}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {pillars.map((p) =>
@@ -156,9 +166,9 @@ export default function Home() {
             PEAK<span className="text-peak-red">XP</span> © 2026
           </span>
           <div className="flex gap-6 text-peak-text-secondary text-sm">
-            <span className="hover:text-peak-text cursor-pointer transition-colors">Privacy</span>
-            <span className="hover:text-peak-text cursor-pointer transition-colors">Terms</span>
-            <span className="hover:text-peak-text cursor-pointer transition-colors">Support</span>
+            <span className="hover:text-peak-text cursor-pointer transition-colors">{t('privacy')}</span>
+            <span className="hover:text-peak-text cursor-pointer transition-colors">{t('terms')}</span>
+            <span className="hover:text-peak-text cursor-pointer transition-colors">{t('support')}</span>
           </div>
         </div>
       </footer>

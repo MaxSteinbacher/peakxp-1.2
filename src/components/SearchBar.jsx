@@ -98,9 +98,9 @@ export default function SearchBar() {
 
   // Guest label
   const guestParts = [];
-  if (adults > 0) guestParts.push(`${adults} adult${adults !== 1 ? "s" : ""}`);
-  if (children > 0) guestParts.push(`${children} child${children !== 1 ? "ren" : ""}`);
-  if (seniors > 0) guestParts.push(`${seniors} senior${seniors !== 1 ? "s" : ""}`);
+  if (adults > 0) guestParts.push(`${adults} ${adults !== 1 ? t('adults') : t('adult')}`);
+  if (children > 0) guestParts.push(`${children} ${t('children')}`);
+  if (seniors > 0) guestParts.push(`${seniors} ${t('seniors')}`);
   const guestLabel = guestParts.join(" · ") || "Add guests";
 
   function toggleService(key) {
@@ -233,9 +233,9 @@ export default function SearchBar() {
           {guestOpen && (
             <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-peak-card border border-white/10 rounded-2xl shadow-2xl p-4 min-w-[220px]">
               {[
-                { label: "Adults", sub: "Age 13+", val: adults, set: setAdults, min: 1 },
-                { label: "Children", sub: "Ages 2–12", val: children, set: setChildren, min: 0 },
-                { label: "Seniors", sub: "Age 65+", val: seniors, set: setSeniors, min: 0 },
+                { label: t('adults'), sub: t('age_13_plus'), val: adults, set: setAdults, min: 1 },
+                { label: t('children'), sub: t('ages_2_12'), val: children, set: setChildren, min: 0 },
+                { label: t('seniors'), sub: t('age_65_plus'), val: seniors, set: setSeniors, min: 0 },
               ].map(({ label, sub, val, set, min }) => (
                 <div key={label} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
                   <div>

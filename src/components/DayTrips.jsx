@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { MapPin, Clock } from "lucide-react";
+import { useT } from "../lib/i18n";
 
 const dayTripResorts = [
   {
@@ -65,6 +66,7 @@ const dayTripResorts = [
 ];
 
 export default function DayTrips() {
+  const t = useT();
   const [city, setCity] = useState("Munich");
 
   useEffect(() => {
@@ -93,8 +95,8 @@ export default function DayTrips() {
           <MapPin className="h-4 w-4 text-peak-blue" />
           <span className="text-peak-blue text-xs font-semibold uppercase tracking-widest">Based on your location</span>
         </div>
-        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">Day trips from {city}</h2>
-        <p className="text-peak-text-secondary text-sm mt-1">Resorts within 2 hours — perfect for a day on the slopes</p>
+        <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">{t('day_trips_from')} {city}</h2>
+        <p className="text-peak-text-secondary text-sm mt-1">{t('day_trips_subline')}</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
