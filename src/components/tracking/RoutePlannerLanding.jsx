@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { MapPin, Plus, Mountain, Route, Trash2, Download, Map } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { searchDestinations } from "../../lib/searchIndex";
 import LocationInput from "../shared/LocationInput";
 import { retrieve, persist, KEYS } from "../../lib/persistence";
@@ -29,7 +30,7 @@ function loadSDK() {
         const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
         setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
       };
-      script.onerror = reject;
+      script.onerror = (e) => { sdkLoadPromise = null; reject(e); };
       document.head.appendChild(script);
     } else {
       const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
@@ -159,6 +160,8 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
     if (!lat || !lng) { setLoading(false); return; }
     let map = null, unmounted = false;
 
+    // Small rAF delay ensures the container div has painted and has real pixel dimensions
+    const raf = requestAnimationFrame(() => {
     loadSDK().then(sdk => {
       if (unmounted || !mapRef.current) return;
       sdk.config.apiKey = MAPTILER_KEY;
@@ -234,9 +237,11 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
 
       mapInstance.current = map;
     }).catch(() => { if (!unmounted) setLoading(false); });
+    }); // end rAF
 
     return () => {
       unmounted = true;
+      cancelAnimationFrame(raf);
       if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     };
   }, [lat, lng]);
@@ -304,6 +309,7 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
 // ── Main landing ─────────────────────────────────────────────────────────────
 export default function RoutePlannerLanding() {
   const { user } = useAppAuth();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedResort, setSelectedResort] = useState(null);
   const [initialRoute, setInitialRoute] = useState(null);
@@ -375,13 +381,16 @@ export default function RoutePlannerLanding() {
         </div>
         <button
           onClick={() => {
-            setSelectedResort(null);
-            setInitialRoute(null);
-            setQuery("");
-            setTimeout(() => {
-              searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-              searchRef.current?.querySelector("input")?.focus();
-            }, 50);
+            if (selectedResort) {
+              navigate(`/resort/${selectedResort.id}/map`);
+            } else {
+              setInitialRoute(null);
+              setQuery("");
+              setTimeout(() => {
+                searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                searchRef.current?.querySelector("input")?.focus();
+              }, 50);
+            }
           }}
           className="bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-peak-red-hover transition-colors">
           <Plus className="h-4 w-4" />
