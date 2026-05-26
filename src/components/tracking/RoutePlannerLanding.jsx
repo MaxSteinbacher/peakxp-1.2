@@ -115,7 +115,7 @@ ${trkpts}
 const EMPTY_FC = { type: "FeatureCollection", features: [] };
 
 // ── Embedded route planner map ───────────────────────────────────────────────
-function ResortMapPlanner({ resort, initialRoute, onSave }) {
+function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const geojsonRef = useRef(null);
@@ -123,7 +123,6 @@ function ResortMapPlanner({ resort, initialRoute, onSave }) {
   const [routePoints, setRoutePoints] = useState(initialRoute?.points || []);
   const [layers, setLayers] = useState({ slopes: true, lifts: true, liftStatus: true, terrain: true });
   const [stats, setStats] = useState(() => calcStats(initialRoute?.points || []));
-  const [savedRoutes, setSavedRoutes] = useState([]);
   const routeRef = useRef([]);
 
   const lat = resort?.lat;
@@ -157,7 +156,7 @@ function ResortMapPlanner({ resort, initialRoute, onSave }) {
   }, [layers, loading]);
 
   useEffect(() => {
-    if (!lat || !lng || !mapRef.current) { setLoading(false); return; }
+    if (!lat || !lng) { setLoading(false); return; }
     let map = null, unmounted = false;
 
     loadSDK().then(sdk => {
@@ -309,6 +308,7 @@ export default function RoutePlannerLanding() {
   const [selectedResort, setSelectedResort] = useState(null);
   const [initialRoute, setInitialRoute] = useState(null);
   const [savedRoutes, setSavedRoutes] = useState([]);
+  const searchRef = useRef(null);
 
   // Load saved routes
   useEffect(() => {
@@ -374,7 +374,15 @@ export default function RoutePlannerLanding() {
           <p className="text-peak-text-secondary text-sm mt-0.5">Plan your runs before you ski them</p>
         </div>
         <button
-          onClick={() => { setSelectedResort(null); setInitialRoute(null); setQuery(""); }}
+          onClick={() => {
+            setSelectedResort(null);
+            setInitialRoute(null);
+            setQuery("");
+            setTimeout(() => {
+              searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              searchRef.current?.querySelector("input")?.focus();
+            }, 50);
+          }}
           className="bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-peak-red-hover transition-colors">
           <Plus className="h-4 w-4" />
           New route
@@ -382,7 +390,7 @@ export default function RoutePlannerLanding() {
       </div>
 
       {/* Resort search */}
-      <div className="mb-6">
+      <div className="mb-6" ref={searchRef}>
         <LocationInput
           type="resort" context="destination" placeholder="Search for a resort to plan a route..."
           value={query} onChange={setQuery}
@@ -397,6 +405,7 @@ export default function RoutePlannerLanding() {
             resort={selectedResort}
             initialRoute={initialRoute}
             onSave={handleSaveRoute}
+            savedRoutes={savedRoutes}
           />
         </div>
       )}
