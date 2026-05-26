@@ -154,7 +154,7 @@ export default function ResortRoutePlanner() {
   }, [layers, loading]);
 
   useEffect(() => {
-    if (!lat || !lng || (lat === 0 && lng === 0) || !mapRef.current) { setLoading(false); return; }
+    if (!lat || !lng || (lat === 0 && lng === 0)) { setLoading(false); return; }
     let map = null, unmounted = false;
 
     loadSDK().then(sdk => {
