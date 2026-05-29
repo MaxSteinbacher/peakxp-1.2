@@ -1,80 +1,27 @@
-import { useState, useMemo, useEffect } from "react";
-import { MapPin, Star, ChevronDown, ChevronUp, X, ExternalLink, Bookmark } from "lucide-react";
-import { useT } from "../../lib/i18n";
-import LocationInput from "../shared/LocationInput";
+import { useState, useMemo } from "react";
+import { Star, ChevronDown, ChevronUp, X, ExternalLink, MapPin, Calendar } from "lucide-react";
+import { useTripPlanner } from "../../context/TripPlannerContext";
 import { savePlan } from "../../lib/bookings";
 import { toast } from "sonner";
-import RangeSlider from "../shared/RangeSlider";
-import { Checkbox } from "@/components/ui/checkbox";
 
-const STEPS_KEYS = ["location_step", "restaurants_step", "reserve_step"];
 const SORT_OPTIONS = ["Recommended", "Closest to lifts", "Highest rated", "Price: low to high", "Open now first"];
-const PRICE_RANGE = ["€", "€€", "€€€", "€€€€"];
+const POPULAR_FILTERS = ["Open now", "Panoramic view", "Terrace", "Apres-ski", "Vegetarian", "Kid-friendly"];
+const MEAL_MOMENTS = ["Breakfast", "Lunch on the slopes", "Apres-ski", "Dinner", "Late night"];
+const PRICE_RANGE = ["\u20ac", "\u20ac\u20ac", "\u20ac\u20ac\u20ac", "\u20ac\u20ac\u20ac\u20ac"];
 
 const RESTAURANTS = [
-  {
-    id: "r1", name: "Le Carve — Verbier Summit", image: "https://picsum.photos/seed/dining1/600/400",
-    cuisines: ["Alpine", "Swiss", "International"], rating: 4.8, reviews: 284, source: "Based on 284 reviews",
-    location: "Slope-side — 2100m", distLift: "10m from Mont-Fort gondola",
-    priceRange: "€€€", openNow: true, opensAt: "11:30", closesAt: "16:30",
-    moments: ["Lunch on the slopes", "Après-ski"], highlights: ["Panoramic view", "Terrace", "Gluten-free menu"],
-    bookingStatus: "Available today", verified: true,
-  },
-  {
-    id: "r2", name: "Chez Marie — Le Chable", image: "https://picsum.photos/seed/dining2/600/400",
-    cuisines: ["French", "Swiss"], rating: 4.6, reviews: 193, source: "Based on 193 reviews",
-    location: "Village centre, Le Chable", distLift: "400m from cable car station",
-    priceRange: "€€", openNow: true, opensAt: "12:00", closesAt: "22:00",
-    moments: ["Lunch on the slopes", "Dinner"], highlights: ["Fireplace", "Kid-friendly", "Live music Fridays"],
-    bookingStatus: "Walk-ins welcome", verified: false,
-  },
-  {
-    id: "r3", name: "Après All — Verbier Village", image: "https://picsum.photos/seed/dining3/600/400",
-    cuisines: ["International", "Swiss"], rating: 4.5, reviews: 420, source: "Based on 420 reviews",
-    location: "Village centre, Verbier", distLift: "200m from main lift",
-    priceRange: "€€", openNow: true, opensAt: "15:00", closesAt: "01:00",
-    moments: ["Après-ski", "Dinner", "Late night"], highlights: ["Live music", "Terrace", "Panoramic view"],
-    bookingStatus: "Available today", verified: true,
-  },
-  {
-    id: "r4", name: "Berghaus Altitude 2400", image: "https://picsum.photos/seed/dining4/600/400",
-    cuisines: ["Alpine", "International"], rating: 4.7, reviews: 156, source: "Based on 156 reviews",
-    location: "Slope-side — 2400m", distLift: "Ski-in ski-out",
-    priceRange: "€€€", openNow: false, opensAt: "11:30", closesAt: "15:30",
-    moments: ["Lunch on the slopes", "Breakfast"], highlights: ["Panoramic view", "Terrace", "Gluten-free menu"],
-    bookingStatus: "Fully booked", verified: true,
-  },
-  {
-    id: "r5", name: "La Strada — Verbier", image: "https://picsum.photos/seed/dining5/600/400",
-    cuisines: ["Italian", "International"], rating: 4.4, reviews: 98, source: "Based on 98 reviews",
-    location: "Village centre, Verbier", distLift: "350m from main lift",
-    priceRange: "€€", openNow: true, opensAt: "19:00", closesAt: "23:00",
-    moments: ["Dinner"], highlights: ["Private dining", "Vegetarian-friendly", "Kid-friendly"],
-    bookingStatus: "Available today", verified: false,
-  },
+  { id: "r1", name: "Le Carve \u2014 Summit", image: "https://picsum.photos/seed/dining1/600/400", cuisines: ["Alpine", "Swiss", "International"], rating: 4.8, reviews: 284, location: "Slope-side \u2014 2100m", distLift: "10m from main gondola", priceRange: "\u20ac\u20ac\u20ac", openNow: true, closesAt: "16:30", moments: ["Lunch on the slopes", "Apres-ski"], highlights: ["Panoramic view", "Terrace", "Gluten-free menu"], bookingStatus: "Available today", verified: true },
+  { id: "r2", name: "Chez Marie \u2014 Village", image: "https://picsum.photos/seed/dining2/600/400", cuisines: ["French", "Swiss"], rating: 4.6, reviews: 193, location: "Village centre", distLift: "400m from cable car", priceRange: "\u20ac\u20ac", openNow: true, closesAt: "22:00", moments: ["Lunch on the slopes", "Dinner"], highlights: ["Fireplace", "Kid-friendly", "Live music Fridays"], bookingStatus: "Walk-ins welcome", verified: false },
+  { id: "r3", name: "Apres All \u2014 Bar & Kitchen", image: "https://picsum.photos/seed/dining3/600/400", cuisines: ["International", "Swiss"], rating: 4.5, reviews: 420, location: "Village centre", distLift: "200m from main lift", priceRange: "\u20ac\u20ac", openNow: true, closesAt: "01:00", moments: ["Apres-ski", "Dinner", "Late night"], highlights: ["Live music", "Terrace", "Panoramic view"], bookingStatus: "Available today", verified: true },
+  { id: "r4", name: "Berghaus Altitude 2400", image: "https://picsum.photos/seed/dining4/600/400", cuisines: ["Alpine", "International"], rating: 4.7, reviews: 156, location: "Slope-side \u2014 2400m", distLift: "Ski-in ski-out", priceRange: "\u20ac\u20ac\u20ac", openNow: false, closesAt: "15:30", moments: ["Lunch on the slopes", "Breakfast"], highlights: ["Panoramic view", "Terrace"], bookingStatus: "Fully booked", verified: true },
+  { id: "r5", name: "La Strada Ristorante", image: "https://picsum.photos/seed/dining5/600/400", cuisines: ["Italian", "International"], rating: 4.4, reviews: 98, location: "Village centre", distLift: "350m from main lift", priceRange: "\u20ac\u20ac", openNow: true, closesAt: "23:00", moments: ["Dinner"], highlights: ["Private dining", "Vegetarian-friendly", "Kid-friendly"], bookingStatus: "Available today", verified: false },
 ];
 
 const FULL_MENU = {
-  Starters: [
-    { name: "Fondue au gruyere (for 2)", price: 28 },
-    { name: "Raclette with pickles", price: 18 },
-    { name: "Soupe a l'oignon gratinee", price: 12 },
-  ],
-  Mains: [
-    { name: "Filet de boeuf frites", price: 38 },
-    { name: "Tartiflette savoyarde", price: 22 },
-    { name: "Truite fumee du lac", price: 28 },
-    { name: "Risotto aux champignons (V)", price: 24 },
-  ],
-  Desserts: [
-    { name: "Coupe de glace maison", price: 9 },
-    { name: "Tarte tatin", price: 11 },
-  ],
-  Drinks: [
-    { name: "Vin chaud (mulled wine)", price: 7 },
-    { name: "Biere locale 50cl", price: 8 },
-    { name: "Cidre breton", price: 7 },
-  ],
+  Starters: [{ name: "Fondue au gruyere (for 2)", price: 28 }, { name: "Raclette with pickles", price: 18 }, { name: "Soupe a l'oignon", price: 12 }],
+  Mains: [{ name: "Filet de boeuf frites", price: 38 }, { name: "Tartiflette savoyarde", price: 22 }, { name: "Risotto aux champignons (V)", price: 24 }],
+  Desserts: [{ name: "Tarte tatin", price: 11 }, { name: "Coupe de glace", price: 9 }],
+  Drinks: [{ name: "Vin chaud", price: 7 }, { name: "Biere locale", price: 8 }],
 };
 
 function PriceSymbol({ level }) {
@@ -87,57 +34,139 @@ function PriceSymbol({ level }) {
   );
 }
 
-function ReservationPanel({ restaurant, onClose }) {
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [partySize, setPartySize] = useState(2);
-  const [seating, setSeating] = useState(null);
-  const [requests, setRequests] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
-  const [selectedTime, setSelectedTime] = useState(null);
+// Day-by-day slot picker
+function DaySlotPicker({ nights, bookedSlots, onBook, partySize, resortName }) {
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedMoment, setSelectedMoment] = useState(null);
 
-  const timeSlots = [];
-  for (let h = 12; h <= 21; h++) {
-    timeSlots.push(`${h.toString().padStart(2, "0")}:00`);
-    timeSlots.push(`${h.toString().padStart(2, "0")}:30`);
+  const days = Array.from({ length: nights }, (_, i) => i + 1);
+
+  // Which slots are already booked
+  function isBooked(day, moment) {
+    return bookedSlots.some(s => s.day === day && s.moment === moment);
   }
 
-  const unavailableSlots = ["13:00", "13:30", "20:00"];
+  function handleSelect(day, moment) {
+    setSelectedDay(day);
+    setSelectedMoment(moment);
+    onBook(day, moment);
+  }
+
+  const momentEmoji = { "Breakfast": "☀️", "Lunch on the slopes": "⛷️", "Apres-ski": "🍹", "Dinner": "🌙", "Late night": "🎶" };
+
+  return (
+    <div className="bg-peak-surface border border-white/8 rounded-2xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
+        <Calendar className="h-4 w-4 text-peak-blue" />
+        <p className="text-peak-text font-semibold text-sm">Choose a dining slot</p>
+        <span className="text-peak-text-secondary text-xs ml-1">· {partySize} guest{partySize !== 1 ? "s" : ""} · {resortName}</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead>
+            <tr>
+              <th className="px-4 py-3 text-left text-xs text-peak-text-secondary font-medium w-24">Meal</th>
+              {days.map(d => (
+                <th key={d} className="px-3 py-3 text-center text-xs text-peak-text-secondary font-medium min-w-[80px]">Day {d}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {MEAL_MOMENTS.map(moment => (
+              <tr key={moment} className="border-t border-white/5">
+                <td className="px-4 py-2.5 text-xs text-peak-text-secondary whitespace-nowrap">{momentEmoji[moment]} {moment}</td>
+                {days.map(d => {
+                  const booked = isBooked(d, moment);
+                  const isSelected = selectedDay === d && selectedMoment === moment;
+                  return (
+                    <td key={d} className="px-3 py-2 text-center">
+                      {booked ? (
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-peak-green/20 text-peak-green text-xs">✓</span>
+                      ) : (
+                        <button
+                          onClick={() => handleSelect(d, moment)}
+                          className={`w-7 h-7 rounded-full border text-xs transition-all ${isSelected ? "bg-peak-red border-peak-red text-white" : "border-white/15 text-peak-text-secondary hover:border-peak-blue hover:text-peak-blue"}`}
+                        >
+                          +
+                        </button>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-peak-text-secondary text-xs px-5 py-3 border-t border-white/5">
+        Tap <span className="text-peak-blue">+</span> to pick a restaurant for that meal slot
+      </p>
+    </div>
+  );
+}
+
+function ReservationModal({ restaurant, day, moment, partySize, tripStart, onClose, onConfirm }) {
+  const [seating, setSeating] = useState(null);
+  const [requests, setRequests] = useState("");
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Compute actual date from trip start + day offset
+  const dateStr = (() => {
+    if (!tripStart) return `Day ${day}`;
+    const d = new Date(tripStart);
+    d.setDate(d.getDate() + day - 1);
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  })();
+
+  // Generate time slots based on meal moment
+  const timeSlots = (() => {
+    const slotMap = {
+      "Breakfast": ["08:00", "08:30", "09:00", "09:30", "10:00"],
+      "Lunch on the slopes": ["12:00", "12:30", "13:00", "13:30", "14:00"],
+      "Apres-ski": ["15:30", "16:00", "16:30", "17:00", "17:30", "18:00"],
+      "Dinner": ["19:00", "19:30", "20:00", "20:30", "21:00"],
+      "Late night": ["22:00", "22:30", "23:00"],
+    };
+    return slotMap[moment] || ["12:00", "13:00", "19:00", "20:00"];
+  })();
+
+  const unavailableSlots = ["13:00", "20:00"];
 
   if (confirmed) return (
     <div className="bg-peak-card border border-white/10 rounded-2xl p-6 text-center">
       <div className="w-12 h-12 rounded-full bg-peak-green/20 flex items-center justify-center mx-auto mb-3">
-        <span className="text-xl">✓</span>
+        <span className="text-2xl">✓</span>
       </div>
       <h3 className="font-display font-bold text-xl text-peak-text mb-1">Table reserved!</h3>
-      <p className="text-peak-text-secondary text-sm mb-3">Booking reference: <span className="text-peak-text font-mono font-bold">PXP-{Math.random().toString(36).slice(2, 8).toUpperCase()}</span></p>
+      <p className="text-peak-text-secondary text-sm mb-3">
+        Booking ref: <span className="text-peak-text font-mono font-bold">PXP-{Math.random().toString(36).slice(2, 8).toUpperCase()}</span>
+      </p>
       <div className="bg-peak-surface rounded-xl p-4 text-sm space-y-1 mb-4 text-left">
         <p><span className="text-peak-text-secondary">Restaurant:</span> <span className="text-peak-text">{restaurant.name}</span></p>
-        <p><span className="text-peak-text-secondary">Date:</span> <span className="text-peak-text">{date}</span></p>
+        <p><span className="text-peak-text-secondary">Date:</span> <span className="text-peak-text">{dateStr}</span></p>
         <p><span className="text-peak-text-secondary">Time:</span> <span className="text-peak-text">{selectedTime}</span></p>
-        <p><span className="text-peak-text-secondary">Party size:</span> <span className="text-peak-text">{partySize}</span></p>
+        <p><span className="text-peak-text-secondary">Party:</span> <span className="text-peak-text">{partySize} guests</span></p>
+        <p><span className="text-peak-text-secondary">Meal:</span> <span className="text-peak-text">{moment}</span></p>
       </div>
-      <button onClick={onClose} className="text-peak-blue text-sm hover:underline">Close</button>
+      <button onClick={() => { onConfirm(); onClose(); }} className="w-full py-2.5 bg-peak-red hover:bg-peak-red-hover text-white text-sm font-semibold rounded-xl transition-colors">
+        Done
+      </button>
     </div>
   );
 
   return (
-    <div className="bg-peak-card border border-white/10 rounded-2xl p-6">
+    <div className="bg-peak-card border border-white/10 rounded-2xl p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display font-bold text-lg text-peak-text">Reserve a table</h3>
-        <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text transition-colors"><X className="h-5 w-5" /></button>
+        <div>
+          <h3 className="font-display font-bold text-lg text-peak-text">{restaurant.name}</h3>
+          <p className="text-peak-text-secondary text-xs">{dateStr} · {moment} · {partySize} guests</p>
+        </div>
+        <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text"><X className="h-5 w-5" /></button>
       </div>
-      <p className="text-peak-text-secondary text-sm mb-4">{restaurant.name}</p>
       <div className="space-y-4">
         <div>
-          <label className="block text-xs text-peak-text-secondary mb-1">Date</label>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)}
-            className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-        </div>
-        <div>
-          <label className="block text-xs text-peak-text-secondary mb-2">Time</label>
+          <label className="block text-xs text-peak-text-secondary mb-2">Select time</label>
           <div className="flex flex-wrap gap-2">
             {timeSlots.map(t => {
               const unavail = unavailableSlots.includes(t);
@@ -149,15 +178,6 @@ function ReservationPanel({ restaurant, onClose }) {
               );
             })}
           </div>
-        </div>
-        <div>
-          <label className="block text-xs text-peak-text-secondary mb-1">Party size</label>
-          <div className="flex items-center gap-4">
-            <button onClick={() => setPartySize(Math.max(1, partySize - 1))} className="w-9 h-9 rounded-lg border border-white/10 text-peak-text-secondary hover:text-peak-text text-xl flex items-center justify-center">-</button>
-            <span className="text-2xl font-display font-bold text-peak-text w-6 text-center">{partySize}</span>
-            <button onClick={() => setPartySize(Math.min(20, partySize + 1))} className="w-9 h-9 rounded-lg border border-white/10 text-peak-text-secondary hover:text-peak-text text-xl flex items-center justify-center">+</button>
-          </div>
-          {partySize >= 10 && <p className="mt-1.5 text-xs text-peak-blue">For large groups, the restaurant will confirm within 24h.</p>}
         </div>
         <div>
           <label className="block text-xs text-peak-text-secondary mb-2">Seating preference (optional)</label>
@@ -175,29 +195,10 @@ function ReservationPanel({ restaurant, onClose }) {
           <input value={requests} onChange={e => setRequests(e.target.value)} placeholder="Allergies, high chair, anniversary..."
             className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
         </div>
-        <div className="border-t border-white/5 pt-4 space-y-3">
-          {[{ val: name, set: setName, label: "Full name", placeholder: "Jane Smith" }, { val: email, set: setEmail, label: "Email", placeholder: "jane@email.com" }, { val: phone, set: setPhone, label: "Phone", placeholder: "+44 7700 900123" }].map(f => (
-            <div key={f.label}>
-              <label className="block text-xs text-peak-text-secondary mb-1">{f.label}</label>
-              <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
-                className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setConfirmed(true)} disabled={!selectedTime || !name || !email}
-            className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            Reserve table
-          </button>
-          <button
-            onClick={() => {
-              savePlan("guest", { serviceKey: "dining", name: `${restaurant.name}`, destination: { label: restaurant.location, type: "general" }, dates: { start: date || null, end: null }, itemDetails: { restaurant: restaurant.name, time: selectedTime, partySize, seating }, estimatedPriceEUR: 0 });
-              toast.success("Saved to Trip Planning", { description: "View in My Trips", action: { label: "View", onClick: () => { window.location.href = "/my-trips?tab=planning"; } } });
-            }}
-            className="flex-1 py-3 border border-white/10 text-peak-text-secondary rounded-xl flex items-center justify-center gap-2 hover:border-white/25 hover:text-peak-text transition-colors text-sm">
-            <Bookmark className="h-4 w-4" /> Save to planning
-          </button>
-        </div>
+        <button onClick={() => setConfirmed(true)} disabled={!selectedTime}
+          className="w-full py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-semibold text-sm rounded-xl transition-colors">
+          Reserve table
+        </button>
       </div>
     </div>
   );
@@ -206,10 +207,9 @@ function ReservationPanel({ restaurant, onClose }) {
 function RestaurantCard({ restaurant, onReserve }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <div className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden hover:border-white/15 transition-all">
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-44 overflow-hidden">
         <img src={restaurant.image} alt={restaurant.name} className="w-full h-full object-cover" />
         {restaurant.verified && (
           <div className="absolute top-3 left-3 flex items-center gap-1 bg-peak-blue/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -220,91 +220,58 @@ function RestaurantCard({ restaurant, onReserve }) {
           {restaurant.bookingStatus}
         </div>
       </div>
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1">
-            <h3 className="font-display font-bold text-peak-text text-lg leading-tight mb-1">{restaurant.name}</h3>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="text-peak-text text-sm font-medium">{restaurant.rating}</span>
-                <span className="text-peak-text-secondary text-xs">({restaurant.reviews})</span>
-              </div>
-              <PriceSymbol level={restaurant.priceRange} />
-            </div>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {restaurant.cuisines.map(c => (
-                <span key={c} className="text-xs text-peak-blue border border-peak-blue/30 px-2 py-0.5 rounded-full">{c}</span>
-              ))}
-            </div>
+      <div className="p-4">
+        <h3 className="font-display font-bold text-peak-text text-base leading-tight mb-1">{restaurant.name}</h3>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+            <span className="text-peak-text text-sm font-medium">{restaurant.rating}</span>
+            <span className="text-peak-text-secondary text-xs">({restaurant.reviews})</span>
           </div>
+          <PriceSymbol level={restaurant.priceRange} />
         </div>
-        <p className="text-xs text-peak-text-secondary mb-1">{restaurant.location}</p>
-        <p className={`text-xs font-medium mb-2 ${restaurant.openNow ? "text-peak-green" : "text-peak-text-secondary"}`}>
-          {restaurant.openNow ? `Open now — closes ${restaurant.closesAt}` : `Closed — opens ${restaurant.opensAt}`}
+        <div className="flex flex-wrap gap-1 mb-2">
+          {restaurant.cuisines.map(c => <span key={c} className="text-xs text-peak-blue border border-peak-blue/30 px-2 py-0.5 rounded-full">{c}</span>)}
+        </div>
+        <p className="text-xs text-peak-text-secondary mb-1">{restaurant.location} · {restaurant.distLift}</p>
+        <p className={`text-xs font-medium mb-3 ${restaurant.openNow ? "text-peak-green" : "text-peak-text-secondary"}`}>
+          {restaurant.openNow ? `Open — closes ${restaurant.closesAt}` : "Closed"}
         </p>
         <div className="flex flex-wrap gap-1 mb-3">
-          {restaurant.moments.map(m => (
-            <span key={m} className="text-xs bg-white/5 text-peak-text-secondary px-2 py-0.5 rounded-full border border-white/10">{m}</span>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-1 mb-4">
-          {restaurant.highlights.map(h => (
-            <span key={h} className="text-xs bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{h}</span>
-          ))}
+          {restaurant.highlights.map(h => <span key={h} className="text-xs bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{h}</span>)}
         </div>
         <div className="flex gap-2">
-          <button onClick={onReserve}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors ${restaurant.bookingStatus === "Fully booked" ? "opacity-40 cursor-not-allowed bg-peak-text-secondary text-peak-bg" : "bg-peak-red hover:bg-peak-red-hover text-white"}`}
-            disabled={restaurant.bookingStatus === "Fully booked"}>
-            Reserve a table
+          <button onClick={onReserve} disabled={restaurant.bookingStatus === "Fully booked"}
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors ${restaurant.bookingStatus === "Fully booked" ? "opacity-40 cursor-not-allowed bg-peak-surface text-peak-text-secondary" : "bg-peak-red hover:bg-peak-red-hover text-white"}`}>
+            Select for this slot
           </button>
           <button onClick={() => setMenuOpen(m => !m)}
             className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text transition-colors">
-            View menu
+            Menu
           </button>
         </div>
         {menuOpen && (
-          <div className="mt-4 border-t border-white/5 pt-4">
+          <div className="mt-3 border-t border-white/5 pt-3">
             {Object.entries(FULL_MENU).map(([section, items]) => (
-              <div key={section} className="mb-3">
+              <div key={section} className="mb-2">
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-1">{section}</p>
                 {items.map(item => (
                   <div key={item.name} className="flex justify-between text-xs text-peak-text-secondary py-1 border-b border-white/5">
-                    <span>{item.name}</span>
-                    <span className="text-peak-text">{"\u20ac"}{item.price}</span>
+                    <span>{item.name}</span><span className="text-peak-text">\u20ac{item.price}</span>
                   </div>
                 ))}
               </div>
             ))}
           </div>
         )}
-        <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center justify-center gap-1 mt-3 text-xs text-peak-text-secondary hover:text-peak-text transition-colors">
+        <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center justify-center gap-1 mt-2 text-xs text-peak-text-secondary hover:text-peak-text transition-colors">
           {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          {expanded ? "Hide" : "Show"} full details
+          {expanded ? "Hide" : "Show"} details
         </button>
         {expanded && (
-          <div className="mt-3 border-t border-white/5 pt-3 space-y-3 text-xs text-peak-text-secondary">
-            <p>One of the Alps' most iconic dining spots, combining breathtaking panoramic views with exceptional local cuisine. Fresh ingredients sourced daily from valley farms.</p>
+          <div className="mt-3 border-t border-white/5 pt-3 space-y-2 text-xs text-peak-text-secondary">
+            <p>Seasonal alpine cuisine using fresh valley ingredients, with spectacular panoramic views.</p>
             <div className="flex gap-2">
-              {[1, 2, 3].map(i => (
-                <img key={i} src={`https://picsum.photos/seed/diningphoto${restaurant.id}${i}/200/150`} alt="" className="w-20 h-14 rounded-lg object-cover" />
-              ))}
-            </div>
-            <div>
-              <p className="font-semibold text-peak-text mb-1">Rating breakdown</p>
-              {[["Food", 4.9], ["Service", 4.7], ["Atmosphere", 4.8], ["Value", 4.4]].map(([cat, score]) => (
-                <div key={cat} className="flex items-center gap-2 mb-1">
-                  <span className="w-20">{cat}</span>
-                  <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${(score / 5) * 100}%` }} />
-                  </div>
-                  <span className="text-peak-text">{score}</span>
-                </div>
-              ))}
-            </div>
-            <p className="font-semibold text-peak-text">{restaurant.distLift}</p>
-            <div className="flex gap-3">
               <button className="flex items-center gap-1 text-peak-blue hover:underline"><MapPin className="h-3 w-3" /> Directions</button>
               <button className="flex items-center gap-1 text-peak-blue hover:underline"><ExternalLink className="h-3 w-3" /> Website</button>
             </div>
@@ -315,151 +282,116 @@ function RestaurantCard({ restaurant, onReserve }) {
   );
 }
 
-export default function DiningTab({ agentServiceDetails = {} }) {
-  const t = useT();
-  const [step, setStep] = useState(0);
-  const [location, setLocation] = useState("");
-  const [locating, setLocating] = useState(false);
-  const [areas, setAreas] = useState([]);
-  const [mealMoments, setMealMoments] = useState([]);
+export default function DiningTab({ agentServiceDetails = {}, onBook }) {
+  const { session } = useTripPlanner();
+  const resortName = session?.destination?.label || session?.resorts?.[0]?.resortName || "your resort";
+  const nights = session?.dates?.nights || 3;
+  const partySize = (session?.guests?.adults || 1) + (session?.guests?.children || 0);
+  const tripStart = session?.dates?.start || null;
+
+  // Day-by-day: which restaurant is booked for which slot
+  const [bookedSlots, setBookedSlots] = useState([]); // [{day, moment, restaurant}]
+  // Which slot the user is currently picking a restaurant for
+  const [pickingSlot, setPickingSlot] = useState(null); // {day, moment}
+  // Reservation modal
+  const [reservingFor, setReservingFor] = useState(null); // {restaurant, day, moment}
+  // Filters
   const [sortBy, setSortBy] = useState("Recommended");
-  const [reservingFor, setReservingFor] = useState(null);
   const [popularFilters, setPopularFilters] = useState([]);
-  const [minRating, setMinRating] = useState(0);
-  const [priceFilter, setPriceFilter] = useState([]);
-  const [openNowOnly, setOpenNowOnly] = useState(false);
-  const [preFilled, setPreFilled] = useState(false);
+  const [momentFilter, setMomentFilter] = useState([]);
 
-  useEffect(() => {
-    const sd = agentServiceDetails?.dining;
-    if (!sd) return;
-    if (Array.isArray(sd.types)) {
-      const areaArr = [];
-      const momentArr = [];
-      sd.types.forEach(t => {
-        if (t === "mountain") areaArr.push("mountain");
-        if (t === "valley") areaArr.push("valley");
-        if (t === "apres-ski") { if (!areaArr.includes("valley")) areaArr.push("valley"); momentArr.push("Apres-ski"); }
-      });
-      if (areaArr.length) setAreas([...new Set(areaArr)]);
-      if (momentArr.length) setMealMoments(momentArr);
-    }
-    setPreFilled(true);
-  }, []);
-
-  const toggleArea = (a) => setAreas(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
-  const toggleMoment = (m) => setMealMoments(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
   const togglePop = (f) => setPopularFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
-  const togglePrice = (p) => setPriceFilter(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
+  const toggleMoment = (m) => setMomentFilter(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
 
   const filtered = useMemo(() => {
     let res = [...RESTAURANTS];
-    if (openNowOnly) res = res.filter(r => r.openNow);
-    if (mealMoments.length) res = res.filter(r => mealMoments.some(m => r.moments.includes(m)));
-    if (priceFilter.length) res = res.filter(r => priceFilter.includes(r.priceRange));
-    if (minRating > 0) res = res.filter(r => r.rating >= minRating);
+    if (momentFilter.length) res = res.filter(r => momentFilter.some(m => r.moments.includes(m)));
     if (popularFilters.includes("Open now")) res = res.filter(r => r.openNow);
     if (popularFilters.includes("Panoramic view")) res = res.filter(r => r.highlights.includes("Panoramic view"));
     if (popularFilters.includes("Terrace")) res = res.filter(r => r.highlights.includes("Terrace"));
     if (popularFilters.includes("Kid-friendly")) res = res.filter(r => r.highlights.includes("Kid-friendly"));
+    if (popularFilters.includes("Vegetarian")) res = res.filter(r => r.highlights.some(h => h.toLowerCase().includes("vegetarian")));
     if (sortBy === "Highest rated") res.sort((a, b) => b.rating - a.rating);
     if (sortBy === "Open now first") res.sort((a, b) => (b.openNow ? 1 : 0) - (a.openNow ? 1 : 0));
     return res;
-  }, [openNowOnly, mealMoments, priceFilter, minRating, popularFilters, sortBy]);
+  }, [momentFilter, popularFilters, sortBy]);
 
-  function goBack() { if (step > 0) setStep(s => s - 1); }
+  function handleSlotBook(day, moment) {
+    setPickingSlot({ day, moment });
+    // Pre-filter restaurants by meal moment
+    setMomentFilter([moment]);
+  }
+
+  function handleRestaurantSelect(restaurant) {
+    if (!pickingSlot) return;
+    setReservingFor({ restaurant, ...pickingSlot });
+  }
+
+  function handleReservationConfirm() {
+    if (!reservingFor) return;
+    const { restaurant, day, moment } = reservingFor;
+    // Add to booked slots
+    setBookedSlots(prev => [...prev.filter(s => !(s.day === day && s.moment === moment)), { day, moment, restaurant }]);
+    // Add to basket
+    onBook?.(`${restaurant.name} — Day ${day} ${moment}`, 0, { restaurant: restaurant.name, day, moment, partySize });
+    toast.success(`Table booked at ${restaurant.name} — Day ${day}, ${moment}`);
+    setReservingFor(null);
+    setPickingSlot(null);
+  }
 
   return (
-    <div>
-      {/* Minimal step indicator for dining (3 steps but step 2 is inline) */}
-      <div className="flex items-center gap-0 mb-4">
-        {STEPS_KEYS.map((key, i) => (
-          <div key={key} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${i < step ? "bg-peak-red border-peak-red text-white" : i === step ? "border-peak-red text-peak-red bg-transparent" : "border-white/20 text-peak-text-secondary"}`}>
-                {i < step ? "✓" : i + 1}
-              </div>
-              <span className={`text-xs whitespace-nowrap ${i === step ? "text-peak-text" : "text-peak-text-secondary"}`}>{t(key)}</span>
-            </div>
-            {i < STEPS_KEYS.length - 1 && <div className={`flex-1 h-px mx-2 mb-4 ${i < step ? "bg-peak-red" : "bg-white/10"}`} />}
-          </div>
-        ))}
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 w-full">
+      <div className="flex items-center gap-3 mb-2">
+        <h2 className="font-display font-extrabold text-2xl text-peak-text">
+          Dining — {resortName}
+        </h2>
       </div>
-      <p className="text-peak-text-secondary text-xs mb-6">{t('step_label')} {step + 1} {t('of_label')} {STEPS_KEYS.length} — {t(STEPS_KEYS[step])}</p>
-      {preFilled && (
-        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
-          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
-        </div>
-      )}
-      {step > 0 && (
-        <button onClick={goBack} className="flex items-center gap-2 text-peak-text-secondary hover:text-peak-text transition-colors cursor-pointer text-sm font-medium w-fit mb-6">
-          ← Back
-        </button>
-      )}
+      <p className="text-peak-text-secondary text-sm mb-6">
+        Plan your meals day by day. {nights} nights · {partySize} guest{partySize !== 1 ? "s" : ""}
+      </p>
 
-      {/* STEP 0 — Location */}
-      {step === 0 && (
-        <div className="max-w-2xl">
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('where_eating')}</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">{t('show_restaurants_near')}</p>
-          <div className="bg-peak-card border border-white/5 rounded-xl p-6 mb-6 space-y-4">
-            <button onClick={() => {
-              if (!navigator.geolocation) return;
-              setLocating(true);
-              navigator.geolocation.getCurrentPosition(async ({ coords }) => {
-                try {
-                  const res = await fetch(`https://api.maptiler.com/geocoding/${coords.longitude},${coords.latitude}.json?key=lNsV1pOMdNShmVL9tiih`);
-                  const data = await res.json();
-                  setLocation(data.features?.[0]?.context?.find(c => c.id?.startsWith("place"))?.text || data.features?.[0]?.place_name?.split(",")[0] || "Current location");
-                } catch { setLocation("Current location"); }
-                setLocating(false);
-              }, () => setLocating(false));
-            }} disabled={locating} className="flex items-center gap-2 text-peak-blue text-sm font-medium hover:underline disabled:opacity-50">
-              <MapPin className="h-4 w-4" />{locating ? "Detecting..." : t('use_my_location')}
+      {/* Day-by-day grid */}
+      <div className="mb-8">
+        <DaySlotPicker
+          nights={nights}
+          bookedSlots={bookedSlots}
+          onBook={handleSlotBook}
+          partySize={partySize}
+          resortName={resortName}
+        />
+      </div>
+
+      {/* Restaurant picker — shown when a slot is selected */}
+      {pickingSlot && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-bold text-lg text-peak-text">
+              Choose a restaurant for Day {pickingSlot.day} — {pickingSlot.moment}
+            </h3>
+            <button onClick={() => { setPickingSlot(null); setMomentFilter([]); }}
+              className="text-peak-text-secondary hover:text-peak-text text-sm flex items-center gap-1">
+              <X className="h-4 w-4" /> Cancel
             </button>
-            <div>
-              <label className="block text-xs text-peak-text-secondary mb-1">{t('or_enter_location')}</label>
-              <LocationInput
-                type="resort" context="destination" placeholder="e.g. Verbier, Zermatt, Chamonix"
-                value={location} onChange={setLocation}
-                onSelect={s => setLocation(s.label || s.name || s.city)}
+          </div>
+
+          {/* Reservation modal inline */}
+          {reservingFor && (
+            <div className="mb-6">
+              <ReservationModal
+                restaurant={reservingFor.restaurant}
+                day={reservingFor.day}
+                moment={reservingFor.moment}
+                partySize={partySize}
+                tripStart={tripStart}
+                onClose={() => setReservingFor(null)}
+                onConfirm={handleReservationConfirm}
               />
             </div>
-          </div>
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">{t('area_scope').toUpperCase()}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {[
-              { key: "mountain", labelKey: "on_the_mountain", descKey: "on_mountain_sub" },
-              { key: "valley", labelKey: "in_the_valley", descKey: "in_valley_sub" },
-            ].map(opt => (
-              <button key={opt.key} onClick={() => toggleArea(opt.key)}
-                className={`flex flex-col items-start gap-1 p-5 rounded-xl border text-left transition-all ${areas.includes(opt.key) ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10 bg-peak-card hover:border-white/25"}`}>
-                <p className={`font-semibold text-sm ${areas.includes(opt.key) ? "text-peak-blue" : "text-peak-text"}`}>{t(opt.labelKey)}</p>
-                <p className="text-peak-text-secondary text-xs">{t(opt.descKey)}</p>
-              </button>
-            ))}
-          </div>
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('meal_moment').toUpperCase()}</p>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {[{ key: "Breakfast", labelKey: "breakfast" }, { key: "Lunch on the slopes", labelKey: "lunch_slopes" }, { key: "Apres-ski", labelKey: "apres_ski" }, { key: "Dinner", labelKey: "dinner" }, { key: "Late night", labelKey: "late_night" }].map(m => (
-              <button key={m.key} onClick={() => toggleMoment(m.key)}
-                className={`px-4 py-2 text-sm font-medium rounded-full border transition-colors ${mealMoments.includes(m.key) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                {t(m.labelKey)}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => setStep(1)} disabled={!location}
-            className="w-full py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            {t('show_restaurants')}
-          </button>
-        </div>
-      )}
+          )}
 
-      {/* STEP 1 — Results */}
-      {step === 1 && (
-        <div>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {["Open now", "Panoramic view", "Terrace", "Apres-ski", "Vegetarian", "Kid-friendly"].map(f => (
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {POPULAR_FILTERS.map(f => (
               <button key={f} onClick={() => togglePop(f)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${popularFilters.includes(f) ? "bg-peak-red/20 border-peak-red/40 text-peak-red" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
                 {f}
@@ -469,57 +401,32 @@ export default function DiningTab({ agentServiceDetails = {} }) {
           <div className="flex items-center gap-2 mb-4 overflow-x-auto hide-scrollbar">
             {SORT_OPTIONS.map(opt => (
               <button key={opt} onClick={() => setSortBy(opt)}
-                className={`flex items-center gap-1 px-3 py-2 text-xs font-medium rounded-lg border whitespace-nowrap transition-colors ${sortBy === opt ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border whitespace-nowrap transition-colors ${sortBy === opt ? "bg-peak-blue/20 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
                 {opt}
               </button>
             ))}
           </div>
-          <div className="flex gap-8">
-            <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
-              <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('daily_lift_pass')}</p>
-                <div className="flex gap-1">
-                  {PRICE_RANGE.map(p => (
-                    <button key={p} onClick={() => togglePrice(p)}
-                      className={`px-2 py-1.5 text-xs rounded-lg border transition-colors ${priceFilter.includes(p) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                      {p}
-                    </button>
-                  ))}
-                </div>
+
+          <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} restaurants near {resortName}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filtered.map(r => (
+              <RestaurantCard key={r.id} restaurant={r} onReserve={() => handleRestaurantSelect(r)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Summary of booked slots */}
+      {bookedSlots.length > 0 && !pickingSlot && (
+        <div className="mt-6 bg-peak-card border border-white/5 rounded-2xl p-5">
+          <p className="text-peak-text font-semibold text-sm mb-3">Your dining plan</p>
+          <div className="space-y-2">
+            {bookedSlots.map((s, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="text-peak-text-secondary">Day {s.day} · {s.moment}</span>
+                <span className="text-peak-text font-medium">{s.restaurant.name}</span>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Min rating: {minRating > 0 ? minRating + "+" : "Any"}</p>
-                <RangeSlider value={[minRating]} onValueChange={([v]) => setMinRating(v)} min={0} max={5} step={0.5} formatLabel={String} />
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={openNowOnly} onCheckedChange={setOpenNowOnly}
-                  className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
-                <span className="text-sm text-peak-text-secondary">Open now only</span>
-              </label>
-              <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('meal_moment').toUpperCase()}</p>
-                {[{ key: "Breakfast", labelKey: "breakfast" }, { key: "Lunch on the slopes", labelKey: "lunch_slopes" }, { key: "Apres-ski", labelKey: "apres_ski" }, { key: "Dinner", labelKey: "dinner" }, { key: "Late night", labelKey: "late_night" }].map(m => (
-                  <label key={m.key} className="flex items-center gap-2 cursor-pointer mb-2">
-                    <Checkbox checked={mealMoments.includes(m.key)} onCheckedChange={() => toggleMoment(m.key)}
-                      className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
-                    <span className="text-xs text-peak-text-secondary">{t(m.labelKey)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div className="flex-1">
-              {reservingFor && (
-                <div className="mb-6">
-                  <ReservationPanel restaurant={reservingFor} onClose={() => setReservingFor(null)} />
-                </div>
-              )}
-              <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} restaurants near {location}</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {filtered.map(r => (
-                  <RestaurantCard key={r.id} restaurant={r} onReserve={() => setReservingFor(r)} />
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
