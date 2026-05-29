@@ -130,7 +130,7 @@ const CITIES = [
 ];
 
 function getFlag(countryCode) {
-  if (!countryCode) return "";
+  if (!countryCode || typeof countryCode !== "string") return "";
   return countryCode.toUpperCase().split("").map(c => String.fromCodePoint(c.charCodeAt(0) + 127397)).join("");
 }
 
