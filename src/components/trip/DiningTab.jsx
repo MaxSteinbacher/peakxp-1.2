@@ -22,7 +22,7 @@ const CUISINE_TYPES = ["Alpine", "Swiss", "French", "Italian", "International"];
 const RESTAURANTS = [
   {
     id: "r1", name: "Le Carve — Summit",
-    image: "https://picsum.photos/seed/dining1/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c785bedad_image.png",
     cuisines: ["Alpine", "Swiss", "International"],
     rating: 4.8, reviews: 284,
     location: "slope_side", locationLabel: "Slope-side — 2100m", distLift: "10m from main gondola",
@@ -33,7 +33,7 @@ const RESTAURANTS = [
   },
   {
     id: "r2", name: "Chez Marie — Village",
-    image: "https://picsum.photos/seed/dining2/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ac96422dc_image.png",
     cuisines: ["French", "Swiss"],
     rating: 4.6, reviews: 193,
     location: "valley", locationLabel: "Village centre", distLift: "400m from cable car",
@@ -44,7 +44,7 @@ const RESTAURANTS = [
   },
   {
     id: "r3", name: "Après All — Bar & Kitchen",
-    image: "https://picsum.photos/seed/dining3/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ac96422dc_image.png",
     cuisines: ["International", "Swiss"],
     rating: 4.5, reviews: 420,
     location: "valley", locationLabel: "Village centre", distLift: "200m from main lift",
@@ -55,7 +55,7 @@ const RESTAURANTS = [
   },
   {
     id: "r4", name: "Berghaus Altitude 2400",
-    image: "https://picsum.photos/seed/dining4/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c785bedad_image.png",
     cuisines: ["Alpine", "International"],
     rating: 4.7, reviews: 156,
     location: "slope_side", locationLabel: "Slope-side — 2400m", distLift: "Ski-in ski-out",
@@ -66,7 +66,7 @@ const RESTAURANTS = [
   },
   {
     id: "r5", name: "La Strada Ristorante",
-    image: "https://picsum.photos/seed/dining5/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ac96422dc_image.png",
     cuisines: ["Italian", "International"],
     rating: 4.4, reviews: 98,
     location: "valley", locationLabel: "Village centre", distLift: "350m from main lift",
@@ -77,7 +77,7 @@ const RESTAURANTS = [
   },
   {
     id: "r6", name: "Panorama Hütte",
-    image: "https://picsum.photos/seed/dining6/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c785bedad_image.png",
     cuisines: ["Alpine", "International"],
     rating: 4.3, reviews: 67,
     location: "slope_side", locationLabel: "Slope-side — 1800m", distLift: "50m from blue run",
