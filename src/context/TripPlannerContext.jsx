@@ -136,6 +136,72 @@ export function TripPlannerProvider({ children }) {
     });
   }
 
+  /**
+   * Atomically marks a step complete/skipped AND advances to the next step
+   * in a single setState call — fixes the double-click bug caused by
+   * getNextStep() reading stale session state after a separate markStepComplete call.
+   */
+  function completeAndAdvance(serviceKey, resortId = null, skipped = false) {
+    setSession((prev) => {
+      // 1. Build updated completedSteps
+      const alreadyExists = prev.completedSteps.some(
+        (s) => s.serviceKey === serviceKey && s.resortId === resortId
+      );
+      const newCompleted = alreadyExists ? prev.completedSteps : [
+        ...prev.completedSteps,
+        { serviceKey, resortId, completed: !skipped, skipped },
+      ];
+
+      // 2. Compute next step from the updated session state inline
+      const updatedSession = { ...prev, completedSteps: newCompleted };
+
+      const services = (updatedSession.selectedServices || []).map(s =>
+        s.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/_/g, "-").toLowerCase()
+      );
+      const serviceOrder = [
+        "ski-pass", "accommodation", "equipment", "ski-school",
+        "dining", "storage", "activities", "childcare",
+        "flights", "train", "car",
+      ];
+      const globalServices = ["flights", "train", "car"];
+
+      function isComplete(sKey, rId) {
+        return newCompleted.some(s => s.serviceKey === sKey && s.resortId === rId);
+      }
+
+      let nextStep = null;
+
+      for (let i = 0; i < updatedSession.resorts.length; i++) {
+        const resort = updatedSession.resorts[i];
+        for (const svc of serviceOrder) {
+          if (!services.includes(svc)) continue;
+          if (globalServices.includes(svc)) continue;
+          if (!isComplete(svc, resort.resortId)) {
+            nextStep = { serviceKey: svc, resortId: resort.resortId, stepIndex: 0 };
+            break;
+          }
+        }
+        if (nextStep) break;
+      }
+
+      if (!nextStep) {
+        for (const svc of serviceOrder) {
+          if (!services.includes(svc)) continue;
+          if (!globalServices.includes(svc)) continue;
+          if (!isComplete(svc, null)) {
+            nextStep = { serviceKey: svc, resortId: null, stepIndex: 0 };
+            break;
+          }
+        }
+      }
+
+      return {
+        ...updatedSession,
+        currentStep: nextStep || updatedSession.currentStep,
+      };
+    });
+  }
+
   function addToBasket(item) {
     setSession((prev) => ({ ...prev, basket: [...prev.basket, { ...item, itemId: String(Date.now()) }] }));
   }
@@ -255,6 +321,7 @@ export function TripPlannerProvider({ children }) {
         setCurrentStep,
         markStepComplete,
         markStepSkipped,
+        completeAndAdvance,
         addToBasket,
         removeFromBasket,
         updateBasketItem,
