@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../../lib/i18n";
 import { HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import DateRangePicker from "../../shared/DateRangePicker";
 
@@ -65,7 +66,7 @@ function buildQuestions(selectedEquipment) {
       tooltip: "Age helps us recommend the right flex and length for your physique and strength.",
       render: (val, set) => (
         <input type="number" value={val || ""} onChange={(e) => set(e.target.value)}
-          placeholder="Your age"
+          placeholder=t("your_age")
           className="w-48 bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-peak-text text-lg outline-none focus:border-peak-blue" />
       ),
     },
@@ -220,6 +221,7 @@ function buildSummary(answers, selectedEquipment) {
 }
 
 export default function Step1Guided({ selectedEquipment, answers, setAnswers, onContinue }) {
+  const t = useT();
   const questions = buildQuestions(selectedEquipment);
   const [qIndex, setQIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
