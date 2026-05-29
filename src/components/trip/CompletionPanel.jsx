@@ -1,4 +1,5 @@
 import { CheckCircle, ArrowRight, Plus, Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car } from "lucide-react";
+import { useT } from "../../lib/i18n";
 
 const SERVICE_ICONS = {
   "ski-pass": Ticket, accommodation: Hotel, equipment: Wrench, "ski-school": GraduationCap,
@@ -6,7 +7,8 @@ const SERVICE_ICONS = {
   flights: Plane, train: Train, car: Car,
 };
 
-export default function CompletionPanel({ basket, total, onCheckout, onAddMore }) {
+export default function CompletionPanel({
+  const t = useT(); basket, total, onCheckout, onAddMore }) {
   const tax = Math.round(total * 0.1);
   const grandTotal = total + tax;
 
@@ -15,13 +17,13 @@ export default function CompletionPanel({ basket, total, onCheckout, onAddMore }
       <div className="w-20 h-20 rounded-full bg-peak-green/20 flex items-center justify-center mx-auto mb-6">
         <CheckCircle className="w-10 h-10 text-peak-green" />
       </div>
-      <h2 className="font-display font-extrabold text-3xl text-peak-text mb-3">Your trip is ready to review</h2>
+      <h2 className="font-display font-extrabold text-3xl text-peak-text mb-3">{t("trip_ready_review")}</h2>
       <p className="text-peak-text-secondary text-base mb-8">
         All your selections have been added to your basket. Review everything before checkout.
       </p>
 
       <div className="bg-peak-card border border-white/5 rounded-2xl p-5 text-left mb-8">
-        <p className="font-bold text-peak-text text-base mb-4">Basket summary</p>
+        <p className="font-bold text-peak-text text-base mb-4">{t("basket_summary")}</p>
         <div className="space-y-0">
           {basket.map(item => {
             const Icon = SERVICE_ICONS[item.serviceKey] || Ticket;
@@ -39,10 +41,10 @@ export default function CompletionPanel({ basket, total, onCheckout, onAddMore }
           })}
         </div>
         <div className="flex items-center justify-between pt-3 mt-1">
-          <span className="font-bold text-peak-text">Total</span>
+          <span className="font-bold text-peak-text">{t("total")}</span>
           <span className="font-bold text-peak-text text-xl">€{grandTotal.toLocaleString()}</span>
         </div>
-        <p className="text-peak-text-secondary text-xs mt-1">Includes taxes & fees (10%)</p>
+        <p className="text-peak-text-secondary text-xs mt-1">{t("includes_taxes")}</p>
       </div>
 
       <div className="space-y-3">
