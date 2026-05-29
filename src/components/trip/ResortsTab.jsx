@@ -102,10 +102,10 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
       <div className="border-b border-white/5 pb-5">
         <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('rating').toUpperCase()}</p>
         <div className="flex flex-wrap gap-1.5">
-          {[{ val: "Any", label: t("any") }, { val: "7+", label: "7+" }, { val: "8+", label: "8+" }, { val: "8.5+", label: "8.5+" }, { val: "9+", label: "9+" }].map(r => (
-            <button key={r.val} onClick={() => setFilters(f => ({ ...f, minRating: r.val === "Any" ? null : parseFloat(r.val) }))}
-              className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${(filters.minRating?.toString() + "+") === r.val || (r.val === "Any" && !filters.minRating) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-              {r.label}
+          {["Any", "7+", "8+", "8.5+", "9+"].map(r => (
+            <button key={r} onClick={() => setFilters(f => ({ ...f, minRating: r === "Any" ? null : parseFloat(r) }))}
+              className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${(filters.minRating?.toString() + "+") === r || (r === "Any" && !filters.minRating) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
+              {r}
             </button>
           ))}
         </div>
@@ -144,10 +144,12 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
 
 const DEFAULT_FILTERS = { distanceKm: 150, countries: [], priceRange: [0, 150], pisteRange: [0, 600], altRange: [0, 5000], liftsMin: 0, minRating: null, facilities: [], passes: [] };
 
-export default function ResortsTab() {
+export default function ResortsTab({ standalone = false }) {
   const t = useT();
   const { session } = useTripPlanner();
-  const destination = session?.destination || null;
+  // In standalone (browse) mode, never read session.destination —
+  // the Trip Planning tab is independent of any active booking session.
+  const destination = standalone ? null : (session?.destination || null);
   const [sortBy, setSortBy] = useState("recommended");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -272,17 +274,17 @@ export default function ResortsTab() {
                     <div className="absolute top-3 left-3 bg-peak-bg/80 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-medium text-peak-text">
                       {resort.flag} {Array.isArray(resort.country) ? resort.country[0] : resort.country}
                     </div>
-                    <div className="absolute top-3 right-3 bg-peak-blue text-white text-xs font-bold px-2 py-0.5 rounded" title={t('rating')}>{resort.rating}</div>
+                    <div className="absolute top-3 right-3 bg-peak-blue text-white text-xs font-bold px-2 py-0.5 rounded">{resort.rating}</div>
                   </div>
                   <div className="p-5">
                     <h3 className="font-display font-bold text-peak-text text-lg">{resort.name}</h3>
-                    <p className="text-peak-text-secondary text-sm mt-0.5 mb-1">{resort.pisteKm}km {t('pistes')} · {resort.lifts} {t('lifts')} · {resort.maxAltitude}m</p>
+                    <p className="text-peak-text-secondary text-sm mt-0.5 mb-1">{resort.pisteKm}km pistes · {resort.lifts} lifts · {resort.maxAltitude}m</p>
                     {resort.distanceKm != null && destination?.type === "resort" && (
                       <p className="text-peak-text-secondary text-xs mb-2">{resort.distanceKm} km away</p>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-peak-text-secondary">{t(resort.ratingLabel?.toLowerCase().replace(' ', '_')) || resort.ratingLabel}</span>
-                      <span className="text-peak-text font-bold">€{resort.priceFrom}<span className="text-peak-text-secondary text-xs font-normal">/{t('day')}</span></span>
+                      <span className="text-xs text-peak-text-secondary">{resort.ratingLabel}</span>
+                      <span className="text-peak-text font-bold">€{resort.priceFrom}<span className="text-peak-text-secondary text-xs font-normal">/day</span></span>
                     </div>
                   </div>
                 </Link>
