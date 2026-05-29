@@ -1,4 +1,5 @@
 import { ShieldCheck, RefreshCw, Lock, ShoppingBag, Bookmark } from "lucide-react";
+import { useT } from "../../../lib/i18n";
 import { savePlan } from "../../../lib/bookings";
 import { toast } from "sonner";
 import { useAppAuth } from "../../../context/AppAuthContext";
@@ -14,9 +15,9 @@ function TrustBadges() {
   return (
     <div className="flex flex-wrap gap-4 mt-4">
       {[
-        [ShieldCheck, "Pick up ready on arrival"],
-        [RefreshCw, "Free size exchange on day 1"],
-        [Lock, "SSL secured"],
+        [ShieldCheck, t("pickup_ready_on_arrival")],
+        [RefreshCw, t("free_size_exchange_day1")],
+        [Lock, t("ssl_secured")],
       ].map(([Icon, label]) => (
         <div key={label} className="flex items-center gap-2 text-xs text-peak-text-secondary">
           <Icon className="h-3.5 w-3.5 text-peak-green" />
@@ -28,6 +29,7 @@ function TrustBadges() {
 }
 
 export default function Step3Checkout({ selectedEquipment, shop, specs, answers, onBook, onBack }) {
+  const t = useT();
   const { user } = useAppAuth();
   const { profile } = useProfile();
   const days = answers?.days || 3;
