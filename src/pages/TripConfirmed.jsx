@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useT } from "../lib/i18n";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 
 export default function TripConfirmed() {
+  const t = useT();
   const [trip, setTrip] = useState(null);
   const [showConfetti, setShowConfetti] = useState(true);
 
