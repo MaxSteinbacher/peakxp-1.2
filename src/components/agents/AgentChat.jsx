@@ -454,6 +454,8 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   const [servicesSelected, setServicesSelected] = useState([]);
   const [showCard, setShowCard] = useState(false);
   const [editingFromSummary, setEditingFromSummary] = useState(false);
+  const [resumePrompt, setResumePrompt] = useState("none");
+  const [savedConvPreview, setSavedConvPreview] = useState(null);
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
   const userInitials = user ? (user.firstName?.[0] || user.full_name?.[0] || "G") : "G";
