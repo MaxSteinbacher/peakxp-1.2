@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useT } from "../../lib/i18n";
+
 import { Pencil, ArrowRight, Check } from "lucide-react";
 
 /**
@@ -23,6 +24,7 @@ export default function AgentQuestionCard({
   const [customValue, setCustomValue] = useState("");
   const [showCustom, setShowCustom] = useState(false);
   const customInputRef = useRef(null);
+  const t = useT();
 
   // ── Single select ──────────────────────────────────────────────────────
   function handleOptionClick(opt) {
