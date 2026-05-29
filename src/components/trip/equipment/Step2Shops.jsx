@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../../lib/i18n";
 import { Star, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 
 const MOCK_SHOPS = [
@@ -9,11 +10,11 @@ const MOCK_SHOPS = [
     rating: 4.8,
     reviews: 312,
     distance: "50m from main lift",
-    proximity: "Slope-side",
+    proximity: t("slope_side"),
     brands: ["Atomic", "Salomon", "Head"],
     pricePerDay: 38,
-    tier: "Performance",
-    status: "Available",
+    tier: t("performance"),
+    status: t("available"),
     package: [
       { item: "Skis", brand: "Atomic", model: "Redster X9", price: 22 },
       { item: "Ski Boots", brand: "Salomon", model: "X Pro 100", price: 10 },
@@ -28,11 +29,11 @@ const MOCK_SHOPS = [
     rating: 4.5,
     reviews: 187,
     distance: "200m from main lift",
-    proximity: "Village centre",
+    proximity: t("village_centre"),
     brands: ["Rossignol", "Fischer", "K2"],
     pricePerDay: 28,
-    tier: "Standard",
-    status: "Available",
+    tier: t("standard"),
+    status: t("available"),
     package: [
       { item: "Skis", brand: "Rossignol", model: "Experience 88 Ti", price: 16 },
       { item: "Ski Boots", brand: "Fischer", model: "RC4 80", price: 8 },
@@ -46,11 +47,11 @@ const MOCK_SHOPS = [
     rating: 3.9,
     reviews: 95,
     distance: "800m from main lift",
-    proximity: "Near parking",
+    proximity: t("near_parking"),
     brands: ["Elan", "Dynastar"],
     pricePerDay: 18,
-    tier: "Budget",
-    status: "Limited",
+    tier: t("budget"),
+    status: t("limited"),
     package: [
       { item: "Skis", brand: "Elan", model: "Amphibio 12", price: 12 },
       { item: "Ski Boots", brand: "Dynastar", model: "Speed Classic", price: 6 },
@@ -63,11 +64,11 @@ const MOCK_SHOPS = [
     rating: 4.9,
     reviews: 524,
     distance: "100m from main lift",
-    proximity: "Slope-side",
+    proximity: t("slope_side"),
     brands: ["Volkl", "Nordica", "Tecnica", "Lange"],
     pricePerDay: 55,
     tier: "Premium",
-    status: "Available",
+    status: t("available"),
     package: [
       { item: "Skis", brand: "Volkl", model: "Mantra M6", price: 30 },
       { item: "Ski Boots", brand: "Lange", model: "RS 130", price: 15 },
@@ -168,6 +169,7 @@ function ShopCard({ shop, days, selected, onSelect }) {
 }
 
 export default function Step2Shops({ selectedShop, setSelectedShop, onContinue, answers }) {
+  const t = useT();
   const days = answers?.days || 3;
   const [destination, setDestination] = useState(answers?.destination || "");
 
