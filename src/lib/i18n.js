@@ -519,6 +519,12 @@ export const TRANSLATIONS = {
     clear_filters: "Clear filters",
     all_filters: "All",
 
+    agent_resume_title: "Continue your conversation?",
+    agent_resume_desc: "You have an unfinished conversation.",
+    agent_continue_conv: "Continue conversation",
+    agent_new_conv: "Start a new conversation",
+    agent_last_message: "Last message",
+
   },
 
   de: {
@@ -991,6 +997,12 @@ export const TRANSLATIONS = {
     clear_filters: "Filter löschen",
     all_filters: "Alle",
 
+    agent_resume_title: "Gespräch fortsetzen?",
+    agent_resume_desc: "Sie haben ein unvollendetes Gespräch.",
+    agent_continue_conv: "Gespräch fortsetzen",
+    agent_new_conv: "Neues Gespräch starten",
+    agent_last_message: "Letzte Nachricht",
+
   },
 
   fr: {
@@ -1462,6 +1474,12 @@ export const TRANSLATIONS = {
     clear_filters: "Effacer les filtres",
     all_filters: "Tous",
 
+    agent_resume_title: "Continuer votre conversation ?",
+    agent_resume_desc: "Vous avez une conversation inachevée.",
+    agent_continue_conv: "Continuer la conversation",
+    agent_new_conv: "Commencer une nouvelle conversation",
+    agent_last_message: "Dernier message",
+
   },
 
   it: {
@@ -1932,6 +1950,12 @@ export const TRANSLATIONS = {
     private_dining: "Sala privata",
     clear_filters: "Cancella filtri",
     all_filters: "Tutti",
+
+    agent_resume_title: "Continuare la conversazione?",
+    agent_resume_desc: "Hai una conversazione incompiuta.",
+    agent_continue_conv: "Continua la conversazione",
+    agent_new_conv: "Inizia una nuova conversazione",
+    agent_last_message: "Ultimo messaggio",
 
   },
 };
