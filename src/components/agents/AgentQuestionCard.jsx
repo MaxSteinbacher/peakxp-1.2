@@ -1,28 +1,51 @@
 import { useState, useRef } from "react";
-import { Pencil, ArrowRight } from "lucide-react";
+import { Pencil, ArrowRight, Check } from "lucide-react";
 
+/**
+ * AgentQuestionCard — single-select OR multi-select question card.
+ * Always exactly 4 options + a "Something else…" custom input.
+ */
 export default function AgentQuestionCard({
   question,
-  options,
+  options,          // max 4
   stepIndex,
   totalSteps,
-  onSelect,
+  onSelect,         // (answer: string) => void  — for single select
+  onMultiSelect,    // (answers: string[]) => void — for multi select
   onSkip,
   onCustom,
+  allowMultiple = false,
   agentColor = "text-peak-blue",
-  agentBg = "bg-peak-blue/10",
 }) {
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(null);           // single
+  const [multiSelected, setMultiSelected] = useState([]);   // multi
   const [customValue, setCustomValue] = useState("");
   const [showCustom, setShowCustom] = useState(false);
   const customInputRef = useRef(null);
 
+  // ── Single select ──────────────────────────────────────────────────────
   function handleOptionClick(opt) {
+    if (allowMultiple) {
+      setMultiSelected((prev) =>
+        prev.includes(opt) ? prev.filter((o) => o !== opt) : [...prev, opt]
+      );
+      return;
+    }
     if (selected === opt) return;
     setSelected(opt);
     setTimeout(() => onSelect(opt), 260);
   }
 
+  // ── Multi select confirm ───────────────────────────────────────────────
+  function handleMultiConfirm() {
+    if (multiSelected.length === 0) {
+      onSkip();
+      return;
+    }
+    onMultiSelect(multiSelected);
+  }
+
+  // ── Custom input ───────────────────────────────────────────────────────
   function handleCustomSubmit() {
     if (!customValue.trim()) return;
     onCustom(customValue.trim());
@@ -39,7 +62,7 @@ export default function AgentQuestionCard({
 
   return (
     <div className="w-full rounded-2xl bg-peak-surface border border-white/8 overflow-hidden">
-      {/* Step dots */}
+      {/* Progress bar */}
       <div className="flex items-center gap-1.5 px-5 pt-4 pb-1">
         {Array.from({ length: totalSteps }).map((_, i) => (
           <div
@@ -60,27 +83,30 @@ export default function AgentQuestionCard({
 
       {/* Question */}
       <div className="px-5 pt-3 pb-4">
-        <p className="text-peak-text font-semibold text-base leading-snug">
-          {question}
-        </p>
+        <p className="text-peak-text font-semibold text-base leading-snug">{question}</p>
+        {allowMultiple && (
+          <p className="text-peak-text-secondary text-xs mt-1">Select all that apply</p>
+        )}
       </div>
 
-      {/* Options grid */}
+      {/* Options */}
       <div className="px-3 pb-2 grid grid-cols-1 gap-1">
-        {options.map((opt, i) => {
-          const isSelected = selected === opt;
-          const letter = String.fromCharCode(65 + i); // A, B, C…
+        {options.slice(0, 4).map((opt, i) => {
+          const letter = String.fromCharCode(65 + i);
+          const isSelected = allowMultiple
+            ? multiSelected.includes(opt)
+            : selected === opt;
+
           return (
             <button
               key={opt}
               onClick={() => handleOptionClick(opt)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-150 group border ${
                 isSelected
-                  ? "bg-peak-red/10 border-peak-red/30 scale-[0.99]"
+                  ? "bg-peak-red/10 border-peak-red/30"
                   : "bg-white/3 border-transparent hover:bg-white/6 hover:border-white/10"
               }`}
             >
-              {/* Letter badge */}
               <span
                 className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors ${
                   isSelected
@@ -88,11 +114,9 @@ export default function AgentQuestionCard({
                     : "bg-white/8 text-peak-text-secondary group-hover:bg-peak-red/20 group-hover:text-peak-red"
                 }`}
               >
-                {letter}
+                {allowMultiple && isSelected ? <Check className="w-3.5 h-3.5" /> : letter}
               </span>
-              <span className="text-peak-text text-sm flex-1 leading-snug">
-                {opt}
-              </span>
+              <span className="text-peak-text text-sm flex-1 leading-snug">{opt}</span>
               <ArrowRight
                 className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
                   isSelected ? "text-peak-red/60" : "text-white/15 group-hover:text-white/40"
@@ -103,7 +127,7 @@ export default function AgentQuestionCard({
         })}
       </div>
 
-      {/* Custom answer row */}
+      {/* Custom input */}
       <div className="mx-3 mb-3 mt-1 border-t border-white/5 pt-2">
         {!showCustom ? (
           <button
@@ -145,14 +169,24 @@ export default function AgentQuestionCard({
         )}
       </div>
 
-      {/* Skip */}
-      <div className="pb-3 flex justify-center">
-        <button
-          onClick={onSkip}
-          className="text-peak-text-secondary/50 hover:text-peak-text-secondary text-xs transition-colors"
-        >
-          Skip this question
-        </button>
+      {/* Footer: multi-confirm or skip */}
+      <div className="pb-3 flex items-center justify-center gap-4">
+        {allowMultiple && (
+          <button
+            onClick={handleMultiConfirm}
+            className="px-5 py-2 rounded-xl bg-peak-red hover:bg-peak-red-hover text-white text-sm font-semibold transition-colors"
+          >
+            {multiSelected.length === 0 ? "None — skip" : `Confirm (${multiSelected.length})`}
+          </button>
+        )}
+        {!allowMultiple && (
+          <button
+            onClick={onSkip}
+            className="text-peak-text-secondary/50 hover:text-peak-text-secondary text-xs transition-colors"
+          >
+            Skip this question
+          </button>
+        )}
       </div>
     </div>
   );
