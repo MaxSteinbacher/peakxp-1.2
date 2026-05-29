@@ -65,9 +65,11 @@ const AGENT_DEFS = [
   {
     key: "beginner",
     icon: Sunrise,
-    name: "Beginner Experience Agent",
-    tagline: "Your first time on snow, done right",
-    desc: "Selects beginner-friendly resorts, books first-timer lesson packages, equipment hire and gentle blue runs to build confidence fast.",
+    nameKey: "agent_beginner_name",
+    taglineKey: "agent_beginner_tagline",
+    descKey: "agent_beginner_desc",
+    badgeKey: "agent_badge_beginner",
+    introKey: "agent_intro_beginner",
     color: "text-purple-400",
     bg: "bg-purple-400/10",
     glowColor: "rgba(192,132,252,0.35)",
@@ -77,9 +79,11 @@ const AGENT_DEFS = [
   {
     key: "explorer",
     icon: Compass,
-    name: "New Horizons Experience Agent",
-    tagline: "Discover skiing beyond the usual",
-    desc: "Uncovers hidden gems, emerging ski destinations and off-the-beaten-path resorts across the Alps and beyond for the adventurous traveller.",
+    nameKey: "agent_explorer_name",
+    taglineKey: "agent_explorer_tagline",
+    descKey: "agent_explorer_desc",
+    badgeKey: "agent_badge_explorer",
+    introKey: "agent_intro_explorer",
     color: "text-orange-400",
     bg: "bg-orange-400/10",
     glowColor: "rgba(251,146,60,0.35)",
@@ -114,7 +118,7 @@ export default function ExpertAgents() {
           <span className="inline-block text-peak-blue text-xs font-semibold uppercase tracking-widest mb-3">AI-powered</span>
           <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-peak-text mb-4">{t('expert_agents_title')}</h1>
           <p className="text-peak-text-secondary text-lg max-w-2xl mx-auto">
-            {t('expert_agents_subline')}
+            Specialised AI booking agents that plan, book and manage your entire ski trip — tailored to your style.
           </p>
         </div>
 
