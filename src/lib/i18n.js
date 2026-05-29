@@ -83,6 +83,7 @@ export const TRANSLATIONS = {
     peak_vision: "Peak Vision AI",
     import: "Import",
     expert_agents_title: "Expert Agents",
+    expert_agents_subline: "Specialised AI booking agents that plan, book and manage your entire ski trip — tailored to your style.",
     start_planning: "Start planning",
 
     // ─── My Trips ──────────────────────────────────────────────────────────
@@ -588,6 +589,7 @@ export const TRANSLATIONS = {
     peak_vision: "Peak Vision KI",
     import: "Import",
     expert_agents_title: "Experten-Agenten",
+    expert_agents_subline: "Spezialisierte KI-Buchungsagenten, die Ihren gesamten Skiurlaub planen, buchen und verwalten — ganz nach Ihrem Stil.",
     start_planning: "Planung starten",
     my_trips_title: "Meine Reisen",
     booked: "Gebucht",
@@ -1059,6 +1061,7 @@ export const TRANSLATIONS = {
     peak_vision: "Peak Vision IA",
     import: "Importer",
     expert_agents_title: "Agents Experts",
+    expert_agents_subline: "Des agents de réservation IA spécialisés qui planifient, réservent et gèrent l'intégralité de votre séjour au ski — selon votre style.",
     start_planning: "Commencer",
     my_trips_title: "Mes Voyages",
     booked: "Réservé",
@@ -1529,6 +1532,7 @@ export const TRANSLATIONS = {
     peak_vision: "Peak Vision IA",
     import: "Importa",
     expert_agents_title: "Agenti Esperti",
+    expert_agents_subline: "Agenti di prenotazione AI specializzati che pianificano, prenotano e gestiscono l'intero soggiorno sciistico — su misura per il tuo stile.",
     start_planning: "Inizia a pianificare",
     my_trips_title: "I Miei Viaggi",
     booked: "Prenotato",

@@ -114,7 +114,7 @@ export default function ExpertAgents() {
           <span className="inline-block text-peak-blue text-xs font-semibold uppercase tracking-widest mb-3">AI-powered</span>
           <h1 className="font-display font-extrabold text-4xl sm:text-6xl text-peak-text mb-4">{t('expert_agents_title')}</h1>
           <p className="text-peak-text-secondary text-lg max-w-2xl mx-auto">
-            Specialised AI booking agents that plan, book and manage your entire ski trip — tailored to your style.
+            {t('expert_agents_subline')}
           </p>
         </div>
 
