@@ -544,7 +544,7 @@ export const austrianResorts5 = [
         { name: "Lärchfilzkogel Restaurant", zone: "Summit 2020m", cuisine: "Austrian", price: "€€" },
         { name: "Streuböden Hutte", zone: "Mid-mountain", cuisine: "Alpine", price: "€€" }
       ],
-      skiSchools: 2, groupLessonFrom: 40, privateLessonFrom: 100,
+      skiSchools: 3, groupLessonFrom: 40, privateLessonFrom: 100,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
       creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 48,
       kidsGarden: true, kidsGardenAge: "3-12", babysitting: false,

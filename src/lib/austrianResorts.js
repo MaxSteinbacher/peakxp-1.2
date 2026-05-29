@@ -425,7 +425,8 @@ export const austrianResorts = [
       "Ski und Snowboardschule Scheffau und Kinderkaiserland", "Skischule MountainMind",
       "Skischule Knolln", "Skischule Hochsoll Embacher", "Skischule Westendorf The Reds",
       "Pro Skischule Walter", "Schneesportschule Alpin", "Skischule Top",
-      "Skischule Snowsports", "Snowboardschule About Winter"
+      "Skischule Snowsports", "Snowboardschule About Winter",
+      "Skischule Reith bei Kitzbühel"
     ],
     childcareAvailable: true,
     childcareAgeRange: "from 1 year",
@@ -588,6 +589,7 @@ export const austrianResorts = [
     region: "Tyrol, Austria",
     country: "Austria",
     flag: "🇦🇹",
+    skiSchoolNames: ["Skischule Reith bei Kitzbühel", "Rote Teufel Kitzbühel", "Schneesportschule Kitzbühel", "Skischule Kitzbühel", "Skischule Hahnenkamm", "Skischule Fieberbrunn Herbst"],
     lat: 47.45, lng: 12.39,
     minAltitude: 762, maxAltitude: 2000,
     verticalDrop: 1238,
@@ -628,7 +630,7 @@ export const austrianResorts = [
         { name: "Hahnenkamm Restaurant", zone: "Summit 1712m", cuisine: "Austrian", price: "€€€" },
         { name: "Seidlalm", zone: "Mid-mountain", cuisine: "Alpine", price: "€€" }
       ],
-      skiSchools: 6, groupLessonFrom: 50, privateLessonFrom: 125,
+      skiSchools: 7, groupLessonFrom: 50, privateLessonFrom: 125,
       languages: ["🇦🇹", "🇬🇧", "🇩🇪", "🇮🇹"],
       creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 60,
       kidsGarden: true, kidsGardenAge: "3-12", babysitting: true,
