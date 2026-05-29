@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { useT } from "../../lib/i18n";
 
 const ACTIVITY_ICONS = {
   "Snowshoeing": "🥾", "Ice skating": "⛸", "Curling": "🥌", "Swimming": "🏊",
@@ -7,6 +8,7 @@ const ACTIVITY_ICONS = {
 };
 
 export default function SurroundingsTab({ resort }) {
+  const t = useT();
   const s = resort.surroundings || {};
 
   return (

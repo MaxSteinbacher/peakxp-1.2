@@ -152,7 +152,7 @@ export default function AgentQuestionCard({
                 if (e.key === "Enter") handleCustomSubmit();
                 if (e.key === "Escape") { setShowCustom(false); setCustomValue(""); }
               }}
-              placeholder=t("type_your_answer")
+              placeholder={t("type_your_answer")}
               className="flex-1 bg-transparent text-peak-text text-sm placeholder:text-white/25 outline-none"
             />
             <button
