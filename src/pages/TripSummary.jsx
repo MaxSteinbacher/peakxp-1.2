@@ -130,6 +130,7 @@ function InputField({ label, field, form, errors, updateForm, type = "text", pla
 }
 
 export default function TripSummary() {
+  const t = useT();
   const { session, removeFromBasket, updateBasketItem, getBasketTotal, clearTrip } = useTripPlanner();
   const { user } = useAppAuth();
   const navigate = useNavigate();
@@ -225,12 +226,12 @@ export default function TripSummary() {
     return (
       <div className="min-h-screen bg-peak-bg">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <BackButton onClick={() => setShowCheckout(false)} label="Back to summary" className="mb-6" />
+          <BackButton onClick={() => setShowCheckout(false)} label=t("back") className="mb-6" />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-8">
-                {["Contact details", "Guest info", "Payment"].map((s, i) => (
+                {[t("contact_details"), "Guest info", "Payment"].map((s, i) => (
                   <div key={s} className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i <= checkoutStep ? "bg-peak-red text-white" : "bg-peak-surface text-peak-text-secondary border border-white/10"}`}>
                       {i < checkoutStep ? <Check className="h-4 w-4" /> : i + 1}
@@ -253,7 +254,7 @@ export default function TripSummary() {
                   <InputField label="Phone" field="emergencyPhone" form={form} errors={errors} updateForm={updateForm} placeholder="+41 79 987 6543" />
                   <div>
                     <label className="text-peak-text text-sm font-medium mb-1.5 block">Special requests</label>
-                    <textarea value={form.requests} onChange={(e) => updateForm("requests", e.target.value)} placeholder="Any special requests..."
+                    <textarea value={form.requests} onChange={(e) => updateForm("requests", e.target.value)} placeholder=t("special_requests_trip")
                       className="w-full bg-peak-surface border border-white/10 rounded-lg px-4 py-3 text-peak-text placeholder:text-peak-text-secondary text-sm outline-none focus:border-peak-blue h-24 resize-none" />
                   </div>
                   <button onClick={() => { if (validateCheckout()) setCheckoutStep(1); }} className="w-full py-3 bg-peak-red hover:bg-peak-red-hover text-white font-bold rounded-xl transition-colors">Continue</button>
@@ -280,12 +281,12 @@ export default function TripSummary() {
               {checkoutStep === 2 && (
                 <div className="space-y-5">
                   <h2 className="font-display font-bold text-2xl text-peak-text mb-4">Payment</h2>
-                  <InputField label="Card number" field="cardNumber" form={form} errors={errors} updateForm={updateForm} placeholder="4242 4242 4242 4242" />
+                  <InputField label=t("card_number") field="cardNumber" form={form} errors={errors} updateForm={updateForm} placeholder="4242 4242 4242 4242" />
                   <div className="grid grid-cols-2 gap-4">
                     <InputField label="Expiry date" field="expiry" form={form} errors={errors} updateForm={updateForm} placeholder="MM/YY" />
                     <InputField label="CVV" field="cvv" form={form} errors={errors} updateForm={updateForm} placeholder="123" />
                   </div>
-                  <InputField label="Cardholder name" field="cardName" form={form} errors={errors} updateForm={updateForm} placeholder="John Doe" />
+                  <InputField label=t("cardholder_name") field="cardName" form={form} errors={errors} updateForm={updateForm} placeholder="John Doe" />
                   <div className="flex flex-wrap gap-4 mt-4 mb-4">
                     {[{ icon: Lock, label: "SSL Secured" }, { icon: Check, label: "Instant confirmation" }, { icon: Clock, label: "Free cancellation" }, { icon: Shield, label: "Price guarantee" }].map(b => (
                       <div key={b.label} className="flex items-center gap-1.5 text-peak-blue text-xs font-medium"><b.icon className="h-3.5 w-3.5" />{b.label}</div>
