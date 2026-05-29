@@ -27,15 +27,8 @@ const TAB_KEYS = [
 ];
 
 const placeholderInfo = {
-  equipment: { title: "Equipment Rental", description: "Browse and pre-book premium ski equipment from top rental shops at your destination resort." },
-  "ski-school": { title: "Ski School", description: "Find AI-matched instructors and group lessons tailored to your skill level and goals." },
-  flights: { title: "Flights", description: "Search and book flights to the nearest airports for your chosen ski resort." },
-  train: { title: "Train", description: "Find rail connections to the Alps — often the most scenic and stress-free way to arrive." },
-  "car-rental": { title: "Car Rental", description: "Compare rental cars with ski racks, snow tyres and flexible pick-up options near your resort." },
-  storage: { title: "Storage & Lockers", description: "Reserve on-mountain storage and locker facilities so you ski hands-free every day." },
-  dining: { title: "Dining", description: "Discover the best mountain restaurants, slope-side cafés and après-ski venues." },
-  activities: { title: "Activities", description: "From snowshoeing to spa days — book off-slope activities for the whole group." },
-  childcare: { title: "Childcare", description: "Trusted childcare and crèche services at the resort, so the whole family can enjoy the mountain." },
+  activities: { titleKey: "activities", descKey: "placeholder_activities_desc" },
+  childcare: { titleKey: "childcare", descKey: "placeholder_childcare_desc" },
 };
 
 export default function TripPlanning() {
@@ -55,7 +48,7 @@ export default function TripPlanning() {
     if (activeTab === "storage") return <StorageTab />;
     if (activeTab === "dining") return <DiningTab />;
     const info = placeholderInfo[activeTab];
-    return <PlaceholderTab title={info.title} description={info.description} icon={active?.icon} />;
+    return <PlaceholderTab title={t(info.titleKey)} description={t(info.descKey)} icon={active?.icon} />;
   }
 
   return (

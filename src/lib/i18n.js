@@ -493,6 +493,8 @@ export const TRANSLATIONS = {
     followup_country: "I'd prefer a different country",
     followup_dates: "Can you suggest different dates?",
     followup_top_pick: "Tell me more about the top pick",
+    placeholder_activities_desc: "From snowshoeing to spa days — book off-slope activities for the whole group.",
+    placeholder_childcare_desc: "Trusted childcare and crèche services at the resort, so the whole family can enjoy the mountain.",
 
   },
 
@@ -940,6 +942,8 @@ export const TRANSLATIONS = {
     followup_country: "Ich bevorzuge ein anderes Land",
     followup_dates: "Können Sie andere Termine vorschlagen?",
     followup_top_pick: "Erzählen Sie mir mehr über die Top-Empfehlung",
+    placeholder_activities_desc: "Von Schneeschuhwandern bis Spa-Tagen — buchen Sie Aktivitäten abseits der Piste für die ganze Gruppe.",
+    placeholder_childcare_desc: "Zuverlässige Kinderbetreuung und Krippenservices im Resort, damit die ganze Familie den Berg genießen kann.",
 
   },
 
@@ -1386,6 +1390,8 @@ export const TRANSLATIONS = {
     followup_country: "Je préférerais un autre pays",
     followup_dates: "Pouvez-vous suggérer d'autres dates ?",
     followup_top_pick: "Dites-m'en plus sur le premier choix",
+    placeholder_activities_desc: "Des raquettes aux journées spa — réservez des activités hors-piste pour tout le groupe.",
+    placeholder_childcare_desc: "Services de garde d'enfants et crèches de confiance à la station, pour que toute la famille profite de la montagne.",
 
   },
 
@@ -1832,6 +1838,8 @@ export const TRANSLATIONS = {
     followup_country: "Preferirei un altro paese",
     followup_dates: "Puoi suggerire date diverse?",
     followup_top_pick: "Dimmi di più sulla scelta migliore",
+    placeholder_activities_desc: "Dalle ciaspolate alle giornate spa — prenota attività fuori pista per tutto il gruppo.",
+    placeholder_childcare_desc: "Servizi di assistenza all'infanzia e asilo nido di fiducia al resort, così tutta la famiglia può godersi la montagna.",
 
   },
 };
