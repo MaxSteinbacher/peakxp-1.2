@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useT } from "../../../lib/i18n";
 import { Star, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 
-const MOCK_SHOPS = [
+function getMockShops(t) { return [
   {
     id: "schneider-sport",
     name: "Schneider Sport",
@@ -77,7 +77,7 @@ const MOCK_SHOPS = [
       { item: "Goggles", brand: "Nordica", model: "Dobermann", price: 8 },
     ],
   },
-];
+]; }
 
 const tierColors = {
   Budget: "text-peak-text-secondary border-white/20",
@@ -170,6 +170,7 @@ function ShopCard({ shop, days, selected, onSelect }) {
 
 export default function Step2Shops({ selectedShop, setSelectedShop, onContinue, answers }) {
   const t = useT();
+  const MOCK_SHOPS = getMockShops(t);
   const days = answers?.days || 3;
   const [destination, setDestination] = useState(answers?.destination || "");
 

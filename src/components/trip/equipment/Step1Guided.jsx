@@ -54,7 +54,7 @@ function PillSelector({ options, value, onChange, multi = false }) {
   );
 }
 
-function buildQuestions(selectedEquipment) {
+function buildQuestions(selectedEquipment, t) {
   const hasBoots = selectedEquipment.includes("ski_boots") || selectedEquipment.includes("snowboard_boots");
   const hasHelmet = selectedEquipment.includes("helmet");
   const hasClothing = ["ski_jacket", "ski_pants", "gloves", "back_protector"].some((k) => selectedEquipment.includes(k));
@@ -66,7 +66,7 @@ function buildQuestions(selectedEquipment) {
       tooltip: "Age helps us recommend the right flex and length for your physique and strength.",
       render: (val, set) => (
         <input type="number" value={val || ""} onChange={(e) => set(e.target.value)}
-          placeholder=t("your_age")
+          placeholder={t("your_age")}
           className="w-48 bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-peak-text text-lg outline-none focus:border-peak-blue" />
       ),
     },
@@ -222,7 +222,7 @@ function buildSummary(answers, selectedEquipment) {
 
 export default function Step1Guided({ selectedEquipment, answers, setAnswers, onContinue }) {
   const t = useT();
-  const questions = buildQuestions(selectedEquipment);
+  const questions = buildQuestions(selectedEquipment, t);
   const [qIndex, setQIndex] = useState(0);
   const [showSummary, setShowSummary] = useState(false);
 

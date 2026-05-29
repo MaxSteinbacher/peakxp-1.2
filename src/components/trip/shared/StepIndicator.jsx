@@ -1,6 +1,8 @@
 import { Check } from "lucide-react";
+import { useT } from "../../../lib/i18n";
 
 export default function StepIndicator({ steps, current, label }) {
+  const t = useT();
   return (
     <div className="mb-6">
       <div className="flex items-center gap-0 mb-2">
@@ -22,7 +24,7 @@ export default function StepIndicator({ steps, current, label }) {
           </div>
         ))}
       </div>
-      <p className="text-peak-text-secondary text-xs">Step {current + 1} of {steps.length} — {steps[current]}</p>
+      <p className="text-peak-text-secondary text-xs">{t("step_label")} {current + 1} {t("of_label")} {steps.length} — {steps[current]}</p>
     </div>
   );
 }
