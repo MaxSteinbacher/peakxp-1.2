@@ -102,10 +102,10 @@ function FilterSidebar({ baseList, filters, setFilters, showDistance, destinatio
       <div className="border-b border-white/5 pb-5">
         <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('rating').toUpperCase()}</p>
         <div className="flex flex-wrap gap-1.5">
-          {["Any", "7+", "8+", "8.5+", "9+"].map(r => (
-            <button key={r} onClick={() => setFilters(f => ({ ...f, minRating: r === "Any" ? null : parseFloat(r) }))}
-              className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${(filters.minRating?.toString() + "+") === r || (r === "Any" && !filters.minRating) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-              {r}
+          {[{ val: "Any", label: t("any") }, { val: "7+", label: "7+" }, { val: "8+", label: "8+" }, { val: "8.5+", label: "8.5+" }, { val: "9+", label: "9+" }].map(r => (
+            <button key={r.val} onClick={() => setFilters(f => ({ ...f, minRating: r.val === "Any" ? null : parseFloat(r.val) }))}
+              className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${(filters.minRating?.toString() + "+") === r.val || (r.val === "Any" && !filters.minRating) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
+              {r.label}
             </button>
           ))}
         </div>
