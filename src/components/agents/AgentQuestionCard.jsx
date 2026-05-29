@@ -7,8 +7,8 @@ const SERVICE_ICONS = {
   flights: Plane, train: Train, car: Car,
 };
 
-export default function CompletionPanel({
-  const t = useT(); basket, total, onCheckout, onAddMore }) {
+export default function CompletionPanel({ basket, total, onCheckout, onAddMore }) {
+  const t = useT();
   const tax = Math.round(total * 0.1);
   const grandTotal = total + tax;
 
