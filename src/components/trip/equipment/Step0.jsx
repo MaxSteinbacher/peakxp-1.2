@@ -7,8 +7,8 @@ const EQUIPMENT_TYPES = [
   { key: "ski_boots", label: "Ski Boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/91a7456fa_image.png" },
   { key: "snowboard_boots", label: "Snowboard Boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7e9583c85_image.png" },
   { key: "poles", label: "Poles", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1413d6a6e_image.png" },
-  { key: "helmet", label: "Helmet", emoji: "⛑️" },
-  { key: "back_protector", label: "Back Protector", emoji: "🛡️" },
+  { key: "helmet", label: "Helmet", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/3e7e89c91_image.png" },
+  { key: "back_protector", label: "Back Protector", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/f905b4878_image.png" },
 ];
 
 function toggle(arr, val) {
