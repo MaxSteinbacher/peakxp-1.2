@@ -11,7 +11,7 @@ const dayTripResorts = [
     driveTime: "1h 20min",
     pisteKm: 284,
     lifts: 90,
-    image: "https://picsum.photos/seed/skiwelt/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/d2df41599_image.png",
   },
   {
     id: "kitzski",
@@ -21,7 +21,7 @@ const dayTripResorts = [
     driveTime: "1h 35min",
     pisteKm: 220,
     lifts: 57,
-    image: "https://picsum.photos/seed/kitzski/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/3c7a9d2b0_image.png",
   },
   {
     id: "skijuwel",
@@ -31,7 +31,7 @@ const dayTripResorts = [
     driveTime: "1h 10min",
     pisteKm: 109,
     lifts: 45,
-    image: "https://picsum.photos/seed/skijuwel/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c7cc25995_image.png",
   },
   {
     id: "zillertal",
@@ -41,7 +41,7 @@ const dayTripResorts = [
     driveTime: "1h 40min",
     pisteKm: 167,
     lifts: 52,
-    image: "https://picsum.photos/seed/zillertal/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/695afbaa8_image.png",
   },
   {
     id: "steinplatte",
@@ -51,7 +51,7 @@ const dayTripResorts = [
     driveTime: "1h 05min",
     pisteKm: 42,
     lifts: 14,
-    image: "https://picsum.photos/seed/steinplatte/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b3a2eae8b_image.png",
   },
   {
     id: "stjohann",
@@ -61,7 +61,7 @@ const dayTripResorts = [
     driveTime: "1h 15min",
     pisteKm: 60,
     lifts: 22,
-    image: "https://picsum.photos/seed/stjohann/600/400",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b31f4d590_image.png",
   },
 ];
 
