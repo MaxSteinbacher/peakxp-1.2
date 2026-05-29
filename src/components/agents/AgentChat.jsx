@@ -1,13 +1,26 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ChevronRight, Send } from "lucide-react";
+import { X, ChevronRight, Send, Edit2, CheckCircle2, RefreshCw } from "lucide-react";
+import { resorts } from "@/lib/data";
 import { base44 } from "@/api/base44Client";
 import { useAppAuth } from "../../context/AppAuthContext";
 import AgentOptionsPanel from "./AgentOptionsPanel";
 import AgentQuestionCard from "./AgentQuestionCard";
 
+// ─── Resort context for AI ─────────────────────────────────────────────────
+function buildResortContext() {
+  return resorts
+    .map(
+      (r) =>
+        `ID:${r.id} | ${r.name} (${r.country}) | ${r.pisteKm || "?"}km | ` +
+        `Blue:${r.difficultyBlue || 0}% Red:${r.difficultyRed || 0}% Black:${r.difficultyBlack || 0}% | ` +
+        `Rating:${r.rating || "?"} | From €${r.priceFrom || "?"}/day | Types:${(r.resortTypes || []).join(",")}`
+    )
+    .join("\n");
+}
+
 // ─── Question sequences ────────────────────────────────────────────────────
 const AGENT_QUESTIONS = {
-  "family-trip-agent": [
+  "family": [
     {
       key: "children_ages",
       question: "How many children are coming, and what are their ages?",
@@ -34,7 +47,7 @@ const AGENT_QUESTIONS = {
       options: ["December (early season)", "January (quiet and affordable)", "February (school holidays)", "March (best snow, longer days)", "April (late season deals)", "Flexible on dates"],
     },
   ],
-  "luxury-skiing-agent": [
+  "luxury": [
     {
       key: "experience_type",
       question: "What kind of luxury skiing experience are you after?",
@@ -56,7 +69,7 @@ const AGENT_QUESTIONS = {
       options: ["€10,000–€25,000", "€25,000–€50,000", "€50,000+", "Prefer to discuss after seeing options"],
     },
   ],
-  "budget-experience-agent": [
+  "budget": [
     {
       key: "date_flexibility",
       question: "How flexible are your travel dates?",
@@ -78,7 +91,7 @@ const AGENT_QUESTIONS = {
       options: ["Self-catered apartment (cheapest)", "Budget hotel", "Hostel or shared", "Best value for money — any type"],
     },
   ],
-  "advanced-skiing-agent": [
+  "advanced": [
     {
       key: "terrain",
       question: "What terrain are you chasing?",
@@ -100,7 +113,7 @@ const AGENT_QUESTIONS = {
       options: ["La Grave (most extreme)", "Chamonix (world-class alpinism)", "Verbier (off-piste + luxury)", "Val d'Isère (best all-round expert)", "Surprise me with a hidden gem"],
     },
   ],
-  "beginner-experience-agent": [
+  "beginner": [
     {
       key: "first_time",
       question: "Is this your very first time on skis or snowboard?",
@@ -122,7 +135,7 @@ const AGENT_QUESTIONS = {
       options: ["3 days (weekend)", "4-5 days", "7 days", "More than a week"],
     },
   ],
-  "new-horizons-agent": [
+  "explorer": [
     {
       key: "escape_from",
       question: "What are you trying to get away from?",
@@ -188,6 +201,64 @@ function MessageBubble({ msg, agent, userInitials }) {
   );
 }
 
+// ─── Answer Summary Card ───────────────────────────────────────────────────
+function AnswerSummaryCard({ answers, questionCards, agent, onEdit, onConfirm, loading }) {
+  const pairs = questionCards
+    .filter((q) => answers[q.key])
+    .map((q) => ({ label: q.question, value: answers[q.key] }));
+  return (
+    <div className="w-full rounded-2xl bg-peak-surface border border-white/8 overflow-hidden">
+      <div className="px-5 py-4 border-b border-white/5 flex items-center gap-3">
+        <CheckCircle2 className={`h-5 w-5 ${agent.color} flex-shrink-0`} />
+        <div>
+          <p className="text-peak-text font-semibold text-sm">Here's what I know about you</p>
+          <p className="text-peak-text-secondary text-xs">Review before I find your options</p>
+        </div>
+      </div>
+      <div className="px-5 py-3 space-y-2.5">
+        {pairs.map(({ label, value }, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <span className="text-peak-text-secondary text-xs leading-relaxed flex-1">{label}</span>
+            <span className="text-peak-text text-xs font-medium text-right flex-shrink-0 max-w-[55%]">{value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="px-5 py-4 border-t border-white/5 flex gap-3">
+        <button onClick={onEdit} disabled={loading}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text hover:border-white/20 text-sm transition-colors flex-1 justify-center">
+          <Edit2 className="h-3.5 w-3.5" />Edit answers
+        </button>
+        <button onClick={onConfirm} disabled={loading}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors flex-1 justify-center ${loading ? "bg-peak-red/50 cursor-not-allowed" : "bg-peak-red hover:bg-peak-red-hover"}`}>
+          {loading
+            ? <><RefreshCw className="h-3.5 w-3.5 animate-spin" />Finding options…</>
+            : <><ChevronRight className="h-3.5 w-3.5" />Find my options</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Follow-up chips ───────────────────────────────────────────────────────
+function FollowUpChips({ onSend, disabled }) {
+  const chips = [
+    "Show me more budget-friendly options",
+    "Can you suggest different dates?",
+    "I'd prefer a different country",
+    "Tell me more about the top pick",
+  ];
+  return (
+    <div className="flex flex-wrap gap-2 mt-3">
+      {chips.map((chip) => (
+        <button key={chip} onClick={() => onSend(chip)} disabled={disabled}
+          className="px-3 py-1.5 rounded-full bg-peak-surface border border-white/8 text-peak-text-secondary text-xs hover:border-white/20 hover:text-peak-text transition-colors disabled:opacity-40">
+          {chip}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function now() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
@@ -203,9 +274,10 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState(null);
   const [visible, setVisible] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
-  // Question phase state
-  const [questionPhase, setQuestionPhase] = useState(true);
+  // Phase: "questions" | "summary" | "chat"
+  const [phase, setPhase] = useState("questions");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [collectedAnswers, setCollectedAnswers] = useState({});
   const [showQuestionCard, setShowQuestionCard] = useState(false);
@@ -226,10 +298,10 @@ export default function AgentChat({ agent, isOpen, onClose }) {
       setPlan(null);
       setError(null);
       setInput("");
-      setQuestionPhase(true);
+      setPhase("questions");
       setCurrentQuestionIndex(0);
       setCollectedAnswers({});
-      // Show first question card after short delay
+      setConfirmLoading(false);
       setShowQuestionCard(false);
       if (AGENT_QUESTIONS[agent.key]?.length) {
         setTimeout(() => setShowQuestionCard(true), 400);
@@ -258,9 +330,10 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     setPlan(null);
     setError(null);
     setInput("");
-    setQuestionPhase(true);
+    setPhase("questions");
     setCurrentQuestionIndex(0);
     setCollectedAnswers({});
+    setConfirmLoading(false);
     setShowQuestionCard(false);
     if (AGENT_QUESTIONS[agent.key]?.length) {
       setTimeout(() => setShowQuestionCard(true), 400);
@@ -279,10 +352,9 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     const nextIndex = currentQuestionIndex + 1;
 
     if (nextIndex >= totalQuestions) {
-      // All questions answered — send to AI
+      // All questions answered — show summary card
       setShowQuestionCard(false);
-      setQuestionPhase(false);
-      setTimeout(() => sendCollectedAnswers(newAnswers), 400);
+      setTimeout(() => setPhase("summary"), 350);
     } else {
       // Show next question card
       setShowQuestionCard(false);
@@ -295,30 +367,41 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     const nextIndex = currentQuestionIndex + 1;
     if (nextIndex >= totalQuestions) {
       setShowQuestionCard(false);
-      setQuestionPhase(false);
-      setTimeout(() => sendCollectedAnswers(collectedAnswers), 400);
+      setTimeout(() => setPhase("summary"), 350);
     } else {
       setShowQuestionCard(false);
       setCurrentQuestionIndex(nextIndex);
-      setTimeout(() => setShowQuestionCard(true), 400);
+      setTimeout(() => setShowQuestionCard(true), 350);
     }
+  }
+
+  function handleEditAnswers() {
+    setPhase("questions");
+    setCurrentQuestionIndex(0);
+    setShowQuestionCard(false);
+    setTimeout(() => setShowQuestionCard(true), 200);
+  }
+
+  function handleConfirmAnswers() {
+    setConfirmLoading(true);
+    setTimeout(() => sendCollectedAnswers(collectedAnswers), 300);
   }
 
   async function sendCollectedAnswers(answers) {
     const keys = Object.keys(answers);
     if (keys.length === 0) {
-      // No answers collected — just go straight to free-form
+      setPhase("chat");
       return;
     }
-    const summary = keys.map(k => `${k}: ${answers[k]}`).join(", ");
-    const profileMessage = `User profile: ${summary}`;
-
+    const summary = keys.map(k => `${k}: ${answers[k]}`).join("\n");
+    const profileMessage = `User profile:\n${summary}`;
     const newHistory = [{ role: "user", content: profileMessage }];
     setHistory(newHistory);
     setTyping(true);
 
     try {
-      const promptText = `${agent.systemPrompt}\n\nUser profile summary (from structured intake):\n${profileMessage}\n\nBased on this profile, generate a personalised trip plan. Acknowledge their preferences briefly, then output your options.\n\nAssistant:`;
+      const resortCtx = buildResortContext();
+      const promptText = `${agent.systemPrompt}\n\nAVAILABLE RESORTS IN PEAKXP DATABASE (use exact IDs as primaryResortId):\n${resortCtx}\n\nUser profile summary:\n${profileMessage}\n\nGenerate personalised options using ONLY resorts from the database. Match user needs using resort data (difficulty, types, price, rating). Assistant:`;
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: promptText,
         model: "claude_sonnet_4_6",
@@ -349,10 +432,10 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   async function sendMessage(text) {
     if (!text.trim() || typing) return;
 
-    // If user types during question phase, bypass the cards
-    if (questionPhase) {
+    // If user types during question/summary phase, bypass to chat
+    if (phase !== "chat") {
       setShowQuestionCard(false);
-      setQuestionPhase(false);
+      setPhase("chat");
     }
 
     const userMsg = { role: "user", content: text.trim(), time: now() };
@@ -447,8 +530,8 @@ export default function AgentChat({ agent, isOpen, onClose }) {
             </div>
           ))}
 
-          {/* Inline question card — appears after messages */}
-          {questionPhase && showQuestionCard && currentQuestion && !typing && !plan && (
+          {/* Question card phase */}
+          {phase === "questions" && showQuestionCard && currentQuestion && !typing && !plan && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <AgentQuestionCard
                 question={currentQuestion.question}
@@ -459,8 +542,29 @@ export default function AgentChat({ agent, isOpen, onClose }) {
                 onSkip={handleQuestionSkip}
                 onCustom={handleQuestionAnswer}
                 allowMultiple={currentQuestion.allowMultiple || false}
+                agentColor={agent.color}
+                agentBg={agent.bg}
               />
             </div>
+          )}
+
+          {/* Summary card phase */}
+          {phase === "summary" && !typing && !plan && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <AnswerSummaryCard
+                answers={collectedAnswers}
+                questionCards={questionCards}
+                agent={agent}
+                onEdit={handleEditAnswers}
+                onConfirm={handleConfirmAnswers}
+                loading={confirmLoading}
+              />
+            </div>
+          )}
+
+          {/* Follow-up chips after plan is shown */}
+          {phase === "chat" && plan && !typing && (
+            <FollowUpChips onSend={sendMessage} disabled={typing} />
           )}
 
           {typing && <TypingIndicator agent={agent} />}
@@ -486,7 +590,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
               value={input}
               onChange={handleTextareaInput}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
-              placeholder={questionPhase && showQuestionCard ? "Or reply directly..." : `Message ${agent.name}...`}
+              placeholder={phase !== "chat" && showQuestionCard ? "Or reply directly..." : `Message ${agent.name}...`}
               className="flex-1 bg-transparent text-peak-text text-sm outline-none resize-none leading-relaxed placeholder:text-peak-text-secondary/40"
               style={{ maxHeight: 120 }}
             />
