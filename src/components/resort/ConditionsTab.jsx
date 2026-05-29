@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useT } from "../../lib/i18n";
 import { Snowflake, Wind, Sun } from "lucide-react";
 
 const WEATHER_CODES = {
@@ -27,6 +28,7 @@ function getWeatherInfo(code) {
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function ConditionsTab({ resort }) {
+  const t = useT();
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
 
