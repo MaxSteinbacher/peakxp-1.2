@@ -388,6 +388,7 @@ function AnswerSummaryCard({ intakeAnswers, servicesSelected, questionCards, age
 }
 
 function FollowUpChips({ onSend, disabled }) {
+  const t = useT();
   const chips = [
     t("followup_budget"),
     t("followup_country"),

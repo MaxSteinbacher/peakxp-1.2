@@ -86,6 +86,7 @@ function Counter({ label, value, onChange }) {
 }
 
 export default function AccommodationFilter() {
+  const t = useT();
   const [budget, setBudget] = useState([50, 300]);
   const [propTypes, setPropTypes] = useState([]);
   const [distToSki, setDistToSki] = useState([5]);
