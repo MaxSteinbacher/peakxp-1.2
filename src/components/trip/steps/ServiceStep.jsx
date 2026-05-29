@@ -37,18 +37,32 @@ const ACTIVITIES = [
 ];
 
 export default function ServiceStep({ serviceKey, resortId, agentServiceDetails = {} }) {
-  const { session, addToBasket, markStepComplete, markStepSkipped, setCurrentStep, getNextStep } = useTripPlanner();
+  const { session, addToBasket, markStepComplete, markStepSkipped, completeAndAdvance, setCurrentStep, getNextStep } = useTripPlanner();
   const config = SERVICE_CONFIG[serviceKey] || { icon: Ticket, title: serviceKey, skip: "Skip" };
   const Icon = config.icon;
   const resort = resortId ? getResortById(resortId) : null;
   const resortEntry = session?.resorts?.find(r => r.resortId === resortId);
-  const [selectedPass, setSelectedPass] = useState(1);
+  // Auto-select pass based on trip nights (nights + 1 = ski days, find closest pass)
+  const skiDays = (session?.dates?.nights || session?.dates?.skiDays || 3) + 
+    (session?.dates?.nights ? 1 : 0); // nights -> ski days
+  const passes_for_auto = resort?.liftPasses || [];
+  const autoPassIndex = (() => {
+    if (!passes_for_auto.length) return 1;
+    // Map pass type to days
+    const dayMap = { "1-day": 1, "2-day": 2, "3-day": 3, "4-day": 4, "5-day": 5, "6-day": 6, "7-day": 7 };
+    let best = 0;
+    let bestDiff = Infinity;
+    passes_for_auto.forEach((p, i) => {
+      const d = dayMap[p.type];
+      if (d !== undefined) {
+        const diff = Math.abs(d - skiDays);
+        if (diff < bestDiff) { bestDiff = diff; best = i; }
+      }
+    });
+    return best;
+  })();
+  const [selectedPass, setSelectedPass] = useState(autoPassIndex);
   const [addedCount, setAddedCount] = useState(0);
-
-  function advance() {
-    const next = getNextStep();
-    if (next) setCurrentStep(next.serviceKey, next.resortId);
-  }
 
   function handleAdd(label, price, type, details = {}) {
     addToBasket({
@@ -68,20 +82,16 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     toast.success(`Added to your trip ${emoji[serviceKey] || "✓"}`);
     setAddedCount(c => c + 1);
     if (!config.multi) {
-      markStepComplete(serviceKey, resortId);
-      advance();
+      completeAndAdvance(serviceKey, resortId, false);
     }
   }
 
   function handleSkip() {
-    markStepSkipped(serviceKey, resortId);
-    advance();
+    completeAndAdvance(serviceKey, resortId, true);
   }
 
   function handleContinueMulti() {
-    if (addedCount > 0) markStepComplete(serviceKey, resortId);
-    else markStepSkipped(serviceKey, resortId);
-    advance();
+    completeAndAdvance(serviceKey, resortId, addedCount === 0);
   }
 
   const resortLabel = resort ? `— ${resort.flag} ${resort.name}` : "";
@@ -94,11 +104,17 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     const total = pass ? (pass.adult * g.adults + pass.child * g.children + (pass.senior || 0) * g.seniors) : 0;
 
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
         <div className="flex items-center gap-3 mb-6">
           <Icon className="h-6 w-6 text-peak-blue" />
           <h2 className="font-display font-extrabold text-2xl text-peak-text">Lift passes {resortLabel}</h2>
         </div>
+
+        {skiDays > 0 && (
+          <p className="text-peak-text-secondary text-sm mb-4">
+            Based on your <span className="text-peak-text font-medium">{session.dates.nights}-night trip</span>, we suggest the <span className="text-peak-text font-medium">{passes[selectedPass]?.type} pass</span>. You can change below.
+          </p>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {passes.map((p, i) => (
@@ -106,7 +122,8 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
               className={`p-4 rounded-xl border text-center transition-colors ${i === selectedPass ? "border-peak-red bg-peak-red/10" : "border-white/10 hover:border-white/20"}`}>
               <p className="text-peak-text font-bold text-sm">{p.type}</p>
               <p className="text-peak-text-secondary text-xs mt-1">From €{p.adult}</p>
-              {p.badge && <span className="inline-block mt-2 bg-peak-green/20 text-peak-green text-xs px-2 py-0.5 rounded-full">{p.badge}</span>}
+              {i === autoPassIndex && <span className="inline-block mt-1 bg-peak-blue/20 text-peak-blue text-xs px-2 py-0.5 rounded-full">Suggested</span>}
+              {p.badge && <span className="inline-block mt-1 bg-peak-green/20 text-peak-green text-xs px-2 py-0.5 rounded-full">{p.badge}</span>}
             </button>
           ))}
         </div>
@@ -146,7 +163,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     ];
 
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
         <div className="flex items-center gap-3 mb-6">
           <Icon className="h-6 w-6 text-peak-blue" />
           <h2 className="font-display font-extrabold text-2xl text-peak-text">{config.title} {resortLabel}</h2>
@@ -177,7 +194,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
   // ── ACTIVITIES ──
   if (serviceKey === "activities") {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
         <div className="flex items-center gap-3 mb-2">
           <Icon className="h-6 w-6 text-peak-blue" />
           <h2 className="font-display font-extrabold text-2xl text-peak-text">{config.title} {resortLabel}</h2>
@@ -221,7 +238,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
   const totalPrice = isPerDay ? unitPrice * days : unitPrice * (session.guests.adults + session.guests.children + session.guests.seniors);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
       <div className="flex items-center gap-3 mb-6">
         <Icon className="h-6 w-6 text-peak-blue" />
         <h2 className="font-display font-extrabold text-2xl text-peak-text">{config.title} {resortLabel}</h2>
