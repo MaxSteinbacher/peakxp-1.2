@@ -164,7 +164,7 @@ export default function AccommodationFilter() {
       </Section>
 
       {/* Bedrooms & Bathrooms */}
-      <Section title=t("bedrooms_bathrooms")>
+      <Section title={t("bedrooms_bathrooms")}>
         <div className="space-y-3">
           <Counter label="Min. bedrooms" value={bedrooms} onChange={setBedrooms} />
           <Counter label="Min. bathrooms" value={bathrooms} onChange={setBathrooms} />
@@ -172,12 +172,12 @@ export default function AccommodationFilter() {
       </Section>
 
       {/* Facilities */}
-      <Section title=t("facilities")>
+      <Section title={t("facilities")}>
         <CheckGroup items={facilities} selected={selFacilities} onToggle={toggle(setSelFacilities)} />
       </Section>
 
       {/* Meals */}
-      <Section title=t("meals_included")>
+      <Section title={t("meals_included")}>
         <CheckGroup items={meals} selected={selMeals} onToggle={toggle(setSelMeals)} />
       </Section>
 
@@ -236,7 +236,7 @@ export default function AccommodationFilter() {
       </Section>
 
       {/* Bed preference */}
-      <Section title=t("bed_preference")>
+      <Section title={t("bed_preference")}>
         <div className="flex flex-wrap gap-2">
           {bedTypes.map((b) => (
             <button
@@ -255,7 +255,7 @@ export default function AccommodationFilter() {
       </Section>
 
       {/* Group travelling */}
-      <Section title=t("group_travelling")>
+      <Section title={t("group_travelling")}>
         <CheckGroup items={groupOptions} selected={groupOpts} onToggle={toggle(setGroupOpts)} />
       </Section>
 
@@ -265,7 +265,7 @@ export default function AccommodationFilter() {
       </Section>
 
       {/* Certifications */}
-      <Section title=t("certifications")>
+      <Section title={t("certifications")}>
         <CheckGroup items={sustainabilityCerts} selected={certs} onToggle={toggle(setCerts)} />
       </Section>
 

@@ -1,20 +1,18 @@
 import { useState, useMemo } from "react";
 import { Star, ChevronDown, ChevronUp, X, ExternalLink, MapPin, Calendar } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { savePlan } from "../../lib/bookings";
 import { toast } from "sonner";
 
-const SORT_OPTIONS = [t("sort_recommended"), t("sort_closest_lifts"), t("sort_highest_rated"), t("sort_price_low"), t("sort_open_now")];
-const POPULAR_FILTERS = [t("filter_open_now"), t("filter_panoramic"), t("filter_terrace"), t("filter_apres_ski"), t("filter_vegetarian"), t("filter_kid_friendly")];
-const MEAL_MOMENTS = [t("meal_breakfast"), t("meal_lunch_slopes"), t("filter_apres_ski"), t("meal_dinner"), t("meal_late_night")];
-const PRICE_RANGE = ["\u20ac", "\u20ac\u20ac", "\u20ac\u20ac\u20ac", "\u20ac\u20ac\u20ac\u20ac"];
+const PRICE_RANGE = ["€", "€€", "€€€", "€€€€"];
 
 const RESTAURANTS = [
-  { id: "r1", name: "Le Carve \u2014 Summit", image: "https://picsum.photos/seed/dining1/600/400", cuisines: ["Alpine", "Swiss", "International"], rating: 4.8, reviews: 284, location: "Slope-side \u2014 2100m", distLift: "10m from main gondola", priceRange: "\u20ac\u20ac\u20ac", openNow: true, closesAt: "16:30", moments: [t("meal_lunch_slopes"), t("filter_apres_ski")], highlights: [t("filter_panoramic"), t("filter_terrace"), "Gluten-free menu"], bookingStatus: t("available_today"), verified: true },
-  { id: "r2", name: "Chez Marie \u2014 Village", image: "https://picsum.photos/seed/dining2/600/400", cuisines: ["French", "Swiss"], rating: 4.6, reviews: 193, location: "Village centre", distLift: "400m from cable car", priceRange: "\u20ac\u20ac", openNow: true, closesAt: "22:00", moments: [t("meal_lunch_slopes"), t("meal_dinner")], highlights: ["Fireplace", t("filter_kid_friendly"), "Live music Fridays"], bookingStatus: t("walk_ins"), verified: false },
-  { id: "r3", name: "Apres All \u2014 Bar & Kitchen", image: "https://picsum.photos/seed/dining3/600/400", cuisines: ["International", "Swiss"], rating: 4.5, reviews: 420, location: "Village centre", distLift: "200m from main lift", priceRange: "\u20ac\u20ac", openNow: true, closesAt: "01:00", moments: [t("filter_apres_ski"), t("meal_dinner"), t("meal_late_night")], highlights: ["Live music", t("filter_terrace"), t("filter_panoramic")], bookingStatus: t("available_today"), verified: true },
-  { id: "r4", name: "Berghaus Altitude 2400", image: "https://picsum.photos/seed/dining4/600/400", cuisines: ["Alpine", "International"], rating: 4.7, reviews: 156, location: "Slope-side \u2014 2400m", distLift: "Ski-in ski-out", priceRange: "\u20ac\u20ac\u20ac", openNow: false, closesAt: "15:30", moments: [t("meal_lunch_slopes"), t("meal_breakfast")], highlights: [t("filter_panoramic"), t("filter_terrace")], bookingStatus: t("fully_booked"), verified: true },
-  { id: "r5", name: "La Strada Ristorante", image: "https://picsum.photos/seed/dining5/600/400", cuisines: ["Italian", "International"], rating: 4.4, reviews: 98, location: "Village centre", distLift: "350m from main lift", priceRange: "\u20ac\u20ac", openNow: true, closesAt: "23:00", moments: [t("meal_dinner")], highlights: ["Private dining", "Vegetarian-friendly", t("filter_kid_friendly")], bookingStatus: t("available_today"), verified: false },
+  { id: "r1", name: "Le Carve — Summit", image: "https://picsum.photos/seed/dining1/600/400", cuisines: ["Alpine", "Swiss", "International"], rating: 4.8, reviews: 284, location: "Slope-side — 2100m", distLift: "10m from main gondola", priceRange: "€€€", openNow: true, closesAt: "16:30", moments: ["Lunch on the slopes", "Apres-ski"], highlights: ["Panoramic view", "Terrace", "Gluten-free menu"], bookingStatus: "Available today", verified: true },
+  { id: "r2", name: "Chez Marie — Village", image: "https://picsum.photos/seed/dining2/600/400", cuisines: ["French", "Swiss"], rating: 4.6, reviews: 193, location: "Village centre", distLift: "400m from cable car", priceRange: "€€", openNow: true, closesAt: "22:00", moments: ["Lunch on the slopes", "Dinner"], highlights: ["Fireplace", "Kid-friendly", "Live music Fridays"], bookingStatus: "Walk-ins welcome", verified: false },
+  { id: "r3", name: "Apres All — Bar & Kitchen", image: "https://picsum.photos/seed/dining3/600/400", cuisines: ["International", "Swiss"], rating: 4.5, reviews: 420, location: "Village centre", distLift: "200m from main lift", priceRange: "€€", openNow: true, closesAt: "01:00", moments: ["Apres-ski", "Dinner", "Late night"], highlights: ["Live music", "Terrace", "Panoramic view"], bookingStatus: "Available today", verified: true },
+  { id: "r4", name: "Berghaus Altitude 2400", image: "https://picsum.photos/seed/dining4/600/400", cuisines: ["Alpine", "International"], rating: 4.7, reviews: 156, location: "Slope-side — 2400m", distLift: "Ski-in ski-out", priceRange: "€€€", openNow: false, closesAt: "15:30", moments: ["Lunch on the slopes", "Breakfast"], highlights: ["Panoramic view", "Terrace"], bookingStatus: "Fully booked", verified: true },
+  { id: "r5", name: "La Strada Ristorante", image: "https://picsum.photos/seed/dining5/600/400", cuisines: ["Italian", "International"], rating: 4.4, reviews: 98, location: "Village centre", distLift: "350m from main lift", priceRange: "€€", openNow: true, closesAt: "23:00", moments: ["Dinner"], highlights: ["Private dining", "Vegetarian-friendly", "Kid-friendly"], bookingStatus: "Available today", verified: false },
 ];
 
 const FULL_MENU = {
@@ -22,6 +20,16 @@ const FULL_MENU = {
   Mains: [{ name: "Filet de boeuf frites", price: 38 }, { name: "Tartiflette savoyarde", price: 22 }, { name: "Risotto aux champignons (V)", price: 24 }],
   Desserts: [{ name: "Tarte tatin", price: 11 }, { name: "Coupe de glace", price: 9 }],
   Drinks: [{ name: "Vin chaud", price: 7 }, { name: "Biere locale", price: 8 }],
+};
+
+const MEAL_MOMENTS = ["Breakfast", "Lunch on the slopes", "Apres-ski", "Dinner", "Late night"];
+const MOMENT_EMOJI = { "Breakfast": "☀️", "Lunch on the slopes": "⛷️", "Apres-ski": "🍹", "Dinner": "🌙", "Late night": "🎶" };
+const TIME_SLOTS = {
+  "Breakfast": ["08:00", "08:30", "09:00", "09:30", "10:00"],
+  "Lunch on the slopes": ["12:00", "12:30", "13:00", "13:30", "14:00"],
+  "Apres-ski": ["15:30", "16:00", "16:30", "17:00", "17:30", "18:00"],
+  "Dinner": ["19:00", "19:30", "20:00", "20:30", "21:00"],
+  "Late night": ["22:00", "22:30", "23:00"],
 };
 
 function PriceSymbol({ level }) {
@@ -34,14 +42,12 @@ function PriceSymbol({ level }) {
   );
 }
 
-// Day-by-day slot picker
 function DaySlotPicker({ nights, bookedSlots, onBook, partySize, resortName }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedMoment, setSelectedMoment] = useState(null);
 
   const days = Array.from({ length: nights }, (_, i) => i + 1);
 
-  // Which slots are already booked
   function isBooked(day, moment) {
     return bookedSlots.some(s => s.day === day && s.moment === moment);
   }
@@ -51,8 +57,6 @@ function DaySlotPicker({ nights, bookedSlots, onBook, partySize, resortName }) {
     setSelectedMoment(moment);
     onBook(day, moment);
   }
-
-  const momentEmoji = { t("meal_breakfast"): "☀️", t("meal_lunch_slopes"): "⛷️", t("filter_apres_ski"): "🍹", t("meal_dinner"): "🌙", t("meal_late_night"): "🎶" };
 
   return (
     <div className="bg-peak-surface border border-white/8 rounded-2xl overflow-hidden">
@@ -74,7 +78,7 @@ function DaySlotPicker({ nights, bookedSlots, onBook, partySize, resortName }) {
           <tbody>
             {MEAL_MOMENTS.map(moment => (
               <tr key={moment} className="border-t border-white/5">
-                <td className="px-4 py-2.5 text-xs text-peak-text-secondary whitespace-nowrap">{momentEmoji[moment]} {moment}</td>
+                <td className="px-4 py-2.5 text-xs text-peak-text-secondary whitespace-nowrap">{MOMENT_EMOJI[moment]} {moment}</td>
                 {days.map(d => {
                   const booked = isBooked(d, moment);
                   const isSelected = selectedDay === d && selectedMoment === moment;
@@ -111,7 +115,6 @@ function ReservationModal({ restaurant, day, moment, partySize, tripStart, onClo
   const [selectedTime, setSelectedTime] = useState(null);
   const [confirmed, setConfirmed] = useState(false);
 
-  // Compute actual date from trip start + day offset
   const dateStr = (() => {
     if (!tripStart) return `Day ${day}`;
     const d = new Date(tripStart);
@@ -119,18 +122,7 @@ function ReservationModal({ restaurant, day, moment, partySize, tripStart, onClo
     return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
   })();
 
-  // Generate time slots based on meal moment
-  const timeSlots = (() => {
-    const slotMap = {
-      t("meal_breakfast"): ["08:00", "08:30", "09:00", "09:30", "10:00"],
-      t("meal_lunch_slopes"): ["12:00", "12:30", "13:00", "13:30", "14:00"],
-      t("filter_apres_ski"): ["15:30", "16:00", "16:30", "17:00", "17:30", "18:00"],
-      t("meal_dinner"): ["19:00", "19:30", "20:00", "20:30", "21:00"],
-      t("meal_late_night"): ["22:00", "22:30", "23:00"],
-    };
-    return slotMap[moment] || ["12:00", "13:00", "19:00", "20:00"];
-  })();
-
+  const timeSlots = TIME_SLOTS[moment] || ["12:00", "13:00", "19:00", "20:00"];
   const unavailableSlots = ["13:00", "20:00"];
 
   if (confirmed) return (
@@ -168,12 +160,12 @@ function ReservationModal({ restaurant, day, moment, partySize, tripStart, onClo
         <div>
           <label className="block text-xs text-peak-text-secondary mb-2">Select time</label>
           <div className="flex flex-wrap gap-2">
-            {timeSlots.map(t => {
-              const unavail = unavailableSlots.includes(t);
+            {timeSlots.map(slot => {
+              const unavail = unavailableSlots.includes(slot);
               return (
-                <button key={t} onClick={() => !unavail && setSelectedTime(t)} disabled={unavail}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${unavail ? "opacity-30 cursor-not-allowed border-white/5 text-peak-text-secondary" : selectedTime === t ? "bg-peak-red text-white border-peak-red" : "border-white/10 text-peak-text-secondary hover:text-peak-text hover:border-white/25"}`}>
-                  {t}
+                <button key={slot} onClick={() => !unavail && setSelectedTime(slot)} disabled={unavail}
+                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${unavail ? "opacity-30 cursor-not-allowed border-white/5 text-peak-text-secondary" : selectedTime === slot ? "bg-peak-red text-white border-peak-red" : "border-white/10 text-peak-text-secondary hover:text-peak-text hover:border-white/25"}`}>
+                  {slot}
                 </button>
               );
             })}
@@ -182,7 +174,7 @@ function ReservationModal({ restaurant, day, moment, partySize, tripStart, onClo
         <div>
           <label className="block text-xs text-peak-text-secondary mb-2">Seating preference (optional)</label>
           <div className="flex flex-wrap gap-2">
-            {[t("seating_inside"), t("filter_terrace"), t("seating_bar"), t("seating_private")].map(s => (
+            {["Inside", "Terrace", "Bar", "Private room"].map(s => (
               <button key={s} onClick={() => setSeating(seating === s ? null : s)}
                 className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${seating === s ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
                 {s}
@@ -192,7 +184,7 @@ function ReservationModal({ restaurant, day, moment, partySize, tripStart, onClo
         </div>
         <div>
           <label className="block text-xs text-peak-text-secondary mb-1">Special requests (optional)</label>
-          <input value={requests} onChange={e => setRequests(e.target.value)} placeholder=t("special_requests_placeholder")
+          <input value={requests} onChange={e => setRequests(e.target.value)} placeholder="Allergies, high chair, anniversary..."
             className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
         </div>
         <button onClick={() => setConfirmed(true)} disabled={!selectedTime}
@@ -216,7 +208,7 @@ function RestaurantCard({ restaurant, onReserve }) {
             ✓ Partner
           </div>
         )}
-        <div className={`absolute top-3 right-3 text-xs font-medium px-2.5 py-1 rounded-full ${restaurant.bookingStatus === t("fully_booked") ? "bg-peak-red/80 text-white" : restaurant.bookingStatus === t("walk_ins") ? "bg-peak-green/80 text-white" : "bg-white/10 text-peak-text"}`}>
+        <div className={`absolute top-3 right-3 text-xs font-medium px-2.5 py-1 rounded-full ${restaurant.bookingStatus === "Fully booked" ? "bg-peak-red/80 text-white" : restaurant.bookingStatus === "Walk-ins welcome" ? "bg-peak-green/80 text-white" : "bg-white/10 text-peak-text"}`}>
           {restaurant.bookingStatus}
         </div>
       </div>
@@ -235,14 +227,14 @@ function RestaurantCard({ restaurant, onReserve }) {
         </div>
         <p className="text-xs text-peak-text-secondary mb-1">{restaurant.location} · {restaurant.distLift}</p>
         <p className={`text-xs font-medium mb-3 ${restaurant.openNow ? "text-peak-green" : "text-peak-text-secondary"}`}>
-          {restaurant.openNow ? `Open — closes ${restaurant.closesAt}` : t("closed")}
+          {restaurant.openNow ? `Open — closes ${restaurant.closesAt}` : "Closed"}
         </p>
         <div className="flex flex-wrap gap-1 mb-3">
           {restaurant.highlights.map(h => <span key={h} className="text-xs bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{h}</span>)}
         </div>
         <div className="flex gap-2">
-          <button onClick={onReserve} disabled={restaurant.bookingStatus === t("fully_booked")}
-            className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors ${restaurant.bookingStatus === t("fully_booked") ? "opacity-40 cursor-not-allowed bg-peak-surface text-peak-text-secondary" : "bg-peak-red hover:bg-peak-red-hover text-white"}`}>
+          <button onClick={onReserve} disabled={restaurant.bookingStatus === "Fully booked"}
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors ${restaurant.bookingStatus === "Fully booked" ? "opacity-40 cursor-not-allowed bg-peak-surface text-peak-text-secondary" : "bg-peak-red hover:bg-peak-red-hover text-white"}`}>
             Select for this slot
           </button>
           <button onClick={() => setMenuOpen(m => !m)}
@@ -257,7 +249,7 @@ function RestaurantCard({ restaurant, onReserve }) {
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-1">{section}</p>
                 {items.map(item => (
                   <div key={item.name} className="flex justify-between text-xs text-peak-text-secondary py-1 border-b border-white/5">
-                    <span>{item.name}</span><span className="text-peak-text">\u20ac{item.price}</span>
+                    <span>{item.name}</span><span className="text-peak-text">€{item.price}</span>
                   </div>
                 ))}
               </div>
@@ -283,23 +275,21 @@ function RestaurantCard({ restaurant, onReserve }) {
 }
 
 export default function DiningTab({ agentServiceDetails = {}, onBook }) {
-  const t = useT();
   const { session } = useTripPlanner();
   const resortName = session?.destination?.label || session?.resorts?.[0]?.resortName || "your resort";
   const nights = session?.dates?.nights || 3;
   const partySize = (session?.guests?.adults || 1) + (session?.guests?.children || 0);
   const tripStart = session?.dates?.start || null;
 
-  // Day-by-day: which restaurant is booked for which slot
-  const [bookedSlots, setBookedSlots] = useState([]); // [{day, moment, restaurant}]
-  // Which slot the user is currently picking a restaurant for
-  const [pickingSlot, setPickingSlot] = useState(null); // {day, moment}
-  // Reservation modal
-  const [reservingFor, setReservingFor] = useState(null); // {restaurant, day, moment}
-  // Filters
-  const [sortBy, setSortBy] = useState(t("sort_recommended"));
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [pickingSlot, setPickingSlot] = useState(null);
+  const [reservingFor, setReservingFor] = useState(null);
+  const [sortBy, setSortBy] = useState("Recommended");
   const [popularFilters, setPopularFilters] = useState([]);
   const [momentFilter, setMomentFilter] = useState([]);
+
+  const SORT_OPTIONS = ["Recommended", "Closest to lifts", "Highest rated", "Price: low to high", "Open now first"];
+  const POPULAR_FILTERS = ["Open now", "Panoramic view", "Terrace", "Apres-ski", "Vegetarian", "Kid-friendly"];
 
   const togglePop = (f) => setPopularFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
   const toggleMoment = (m) => setMomentFilter(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
@@ -307,19 +297,18 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
   const filtered = useMemo(() => {
     let res = [...RESTAURANTS];
     if (momentFilter.length) res = res.filter(r => momentFilter.some(m => r.moments.includes(m)));
-    if (popularFilters.includes(t("filter_open_now"))) res = res.filter(r => r.openNow);
-    if (popularFilters.includes(t("filter_panoramic"))) res = res.filter(r => r.highlights.includes(t("filter_panoramic")));
-    if (popularFilters.includes(t("filter_terrace"))) res = res.filter(r => r.highlights.includes(t("filter_terrace")));
-    if (popularFilters.includes(t("filter_kid_friendly"))) res = res.filter(r => r.highlights.includes(t("filter_kid_friendly")));
-    if (popularFilters.includes(t("filter_vegetarian"))) res = res.filter(r => r.highlights.some(h => h.toLowerCase().includes("vegetarian")));
-    if (sortBy === t("sort_highest_rated")) res.sort((a, b) => b.rating - a.rating);
-    if (sortBy === t("sort_open_now")) res.sort((a, b) => (b.openNow ? 1 : 0) - (a.openNow ? 1 : 0));
+    if (popularFilters.includes("Open now")) res = res.filter(r => r.openNow);
+    if (popularFilters.includes("Panoramic view")) res = res.filter(r => r.highlights.includes("Panoramic view"));
+    if (popularFilters.includes("Terrace")) res = res.filter(r => r.highlights.includes("Terrace"));
+    if (popularFilters.includes("Kid-friendly")) res = res.filter(r => r.highlights.includes("Kid-friendly"));
+    if (popularFilters.includes("Vegetarian")) res = res.filter(r => r.highlights.some(h => h.toLowerCase().includes("vegetarian")));
+    if (sortBy === "Highest rated") res.sort((a, b) => b.rating - a.rating);
+    if (sortBy === "Open now first") res.sort((a, b) => (b.openNow ? 1 : 0) - (a.openNow ? 1 : 0));
     return res;
   }, [momentFilter, popularFilters, sortBy]);
 
   function handleSlotBook(day, moment) {
     setPickingSlot({ day, moment });
-    // Pre-filter restaurants by meal moment
     setMomentFilter([moment]);
   }
 
@@ -331,9 +320,7 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
   function handleReservationConfirm() {
     if (!reservingFor) return;
     const { restaurant, day, moment } = reservingFor;
-    // Add to booked slots
     setBookedSlots(prev => [...prev.filter(s => !(s.day === day && s.moment === moment)), { day, moment, restaurant }]);
-    // Add to basket
     onBook?.(`${restaurant.name} — Day ${day} ${moment}`, 0, { restaurant: restaurant.name, day, moment, partySize });
     toast.success(`Table booked at ${restaurant.name} — Day ${day}, ${moment}`);
     setReservingFor(null);
@@ -351,7 +338,6 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
         Plan your meals day by day. {nights} nights · {partySize} guest{partySize !== 1 ? "s" : ""}
       </p>
 
-      {/* Day-by-day grid */}
       <div className="mb-8">
         <DaySlotPicker
           nights={nights}
@@ -362,7 +348,6 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
         />
       </div>
 
-      {/* Restaurant picker — shown when a slot is selected */}
       {pickingSlot && (
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -375,7 +360,6 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
             </button>
           </div>
 
-          {/* Reservation modal inline */}
           {reservingFor && (
             <div className="mb-6">
               <ReservationModal
@@ -390,7 +374,6 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
             </div>
           )}
 
-          {/* Filters */}
           <div className="flex flex-wrap gap-2 mb-3">
             {POPULAR_FILTERS.map(f => (
               <button key={f} onClick={() => togglePop(f)}
@@ -417,7 +400,6 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
         </div>
       )}
 
-      {/* Summary of booked slots */}
       {bookedSlots.length > 0 && !pickingSlot && (
         <div className="mt-6 bg-peak-card border border-white/5 rounded-2xl p-5">
           <p className="text-peak-text font-semibold text-sm mb-3">Your dining plan</p>
