@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../../lib/i18n";
 import { Slider } from "@/components/ui/slider";
 
 function Field({ label, children }) {
@@ -76,8 +77,8 @@ function SliderField({ label, value, onChange, min, max, unit }) {
 const SECTIONS = {
   skis: ({ spec, set }) => (
     <div className="grid grid-cols-2 gap-4">
-      <Field label="Ski type"><Select value={spec.type || ""} onChange={(v) => set("type", v)} options={["All-mountain", "Carving", "Freeride", "Park", "Racing"]} /></Field>
-      <Field label="Ski length (cm)"><NumberInput value={spec.length || ""} onChange={(v) => set("length", v)} placeholder="e.g. 170" /></Field>
+      <Field label=t("ski_type")><Select value={spec.type || ""} onChange={(v) => set("type", v)} options={["All-mountain", "Carving", "Freeride", "Park", "Racing"]} /></Field>
+      <Field label=t("ski_length")><NumberInput value={spec.length || ""} onChange={(v) => set("length", v)} placeholder="e.g. 170" /></Field>
       <Field label="Waist width (mm)"><NumberInput value={spec.waist || ""} onChange={(v) => set("waist", v)} placeholder="e.g. 80" /></Field>
       <Field label="Binding system"><Toggle value={spec.binding} onChange={(v) => set("binding", v)} options={["Integrated", "Separate"]} /></Field>
       <div className="col-span-2"><Field label="Rocker type"><Toggle value={spec.rocker} onChange={(v) => set("rocker", v)} options={["Full rocker", "Camber", "Hybrid"]} /></Field></div>
@@ -85,8 +86,8 @@ const SECTIONS = {
   ),
   snowboard: ({ spec, set }) => (
     <div className="grid grid-cols-2 gap-4">
-      <Field label="Board type"><Select value={spec.type || ""} onChange={(v) => set("type", v)} options={["All-mountain", "Freestyle", "Freeride", "Splitboard"]} /></Field>
-      <Field label="Board length (cm)"><NumberInput value={spec.length || ""} onChange={(v) => set("length", v)} placeholder="e.g. 155" /></Field>
+      <Field label=t("board_type")><Select value={spec.type || ""} onChange={(v) => set("type", v)} options={["All-mountain", "Freestyle", "Freeride", "Splitboard"]} /></Field>
+      <Field label=t("board_length")><NumberInput value={spec.length || ""} onChange={(v) => set("length", v)} placeholder="e.g. 155" /></Field>
       <Field label="Binding size"><Toggle value={spec.bindingSize} onChange={(v) => set("bindingSize", v)} options={["S", "M", "L", "XL"]} /></Field>
       <div className="col-span-2"><SliderField label="Flex rating" value={spec.flex || 5} onChange={(v) => set("flex", v)} min={1} max={10} unit="" /></div>
     </div>
@@ -94,14 +95,14 @@ const SECTIONS = {
   ski_boots: ({ spec, set }) => (
     <div className="grid grid-cols-2 gap-4">
       <Field label="Shell size (EU)"><NumberInput value={spec.size || ""} onChange={(v) => set("size", v)} placeholder="e.g. 42" /></Field>
-      <Field label="Boot type"><Toggle value={spec.bootType} onChange={(v) => set("bootType", v)} options={["Alpine", "Touring", "Freeride"]} /></Field>
+      <Field label=t("boot_type")><Toggle value={spec.bootType} onChange={(v) => set("bootType", v)} options={["Alpine", "Touring", "Freeride"]} /></Field>
       <Field label="Last width"><Toggle value={spec.last} onChange={(v) => set("last", v)} options={["Narrow", "Regular", "Wide"]} /></Field>
       <div className="col-span-2"><SliderField label="Flex index" value={spec.flex || 90} onChange={(v) => set("flex", v)} min={60} max={130} unit="" /></div>
     </div>
   ),
   snowboard_boots: ({ spec, set }) => (
     <div className="grid grid-cols-2 gap-4">
-      <Field label="EU shoe size"><NumberInput value={spec.size || ""} onChange={(v) => set("size", v)} placeholder="e.g. 42" /></Field>
+      <Field label=t("shoe_size_eu")><NumberInput value={spec.size || ""} onChange={(v) => set("size", v)} placeholder="e.g. 42" /></Field>
       <Field label="Flex"><Toggle value={spec.flex} onChange={(v) => set("flex", v)} options={["Soft", "Medium", "Stiff"]} /></Field>
       <div className="col-span-2"><Field label="Lacing system"><Toggle value={spec.lacing} onChange={(v) => set("lacing", v)} options={["Traditional", "BOA", "Speed lace"]} /></Field></div>
     </div>
@@ -110,7 +111,7 @@ const SECTIONS = {
     <div className="grid grid-cols-2 gap-4">
       <Field label="Length (cm)"><NumberInput value={spec.length || ""} onChange={(v) => set("length", v)} placeholder="e.g. 115" /></Field>
       <Field label="Material"><Toggle value={spec.material} onChange={(v) => set("material", v)} options={["Aluminium", "Carbon"]} /></Field>
-      <div className="col-span-2"><Field label="Basket type"><Toggle value={spec.basket} onChange={(v) => set("basket", v)} options={["Piste", "Powder"]} /></Field></div>
+      <div className="col-span-2"><Field label=t("basket_type")><Toggle value={spec.basket} onChange={(v) => set("basket", v)} options={["Piste", "Powder"]} /></Field></div>
     </div>
   ),
   helmet: ({ spec, set }) => (
@@ -159,6 +160,7 @@ const LABELS = {
 };
 
 export default function Step1Expert({ selectedEquipment, specs, setSpecs, onContinue }) {
+  const t = useT();
   function setSpecField(eqKey, field, val) {
     setSpecs((prev) => ({ ...prev, [eqKey]: { ...(prev[eqKey] || {}), [field]: val } }));
   }
