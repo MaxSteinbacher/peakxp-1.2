@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../lib/i18n";
 import { Mountain, Building2, Wrench, GraduationCap, Baby,
   UtensilsCrossed, Plane, Train, Car, Package, Compass, ChevronRight } from "lucide-react";
 
@@ -48,6 +49,7 @@ const AGENT_SERVICE_CONFIG = {
 };
 
 export default function AgentServicesCard({ agentKey, onConfirm }) {
+  const t = useT();
   const config = AGENT_SERVICE_CONFIG[agentKey] || { alwaysIncluded: ["ski-pass", "accommodation"], hidden: [] };
 
   // Optional services = not always included + not hidden
@@ -142,7 +144,7 @@ export default function AgentServicesCard({ agentKey, onConfirm }) {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-peak-red hover:bg-peak-red-hover text-white font-semibold text-sm transition-colors"
         >
           {selected.length === 0
-            ? "Just the basics — find my options"
+            ? t("find_options")
             : `Include ${selected.length} extra service${selected.length > 1 ? "s" : ""} — find my options`}
           <ChevronRight className="w-4 h-4" />
         </button>
