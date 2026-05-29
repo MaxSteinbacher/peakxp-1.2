@@ -32,17 +32,17 @@ export default function Step0({ selectedEquipment, setSelectedEquipment, mode, s
             <button
               key={eq.key}
               onClick={() => setSelectedEquipment((prev) => toggle(prev, eq.key))}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+              className={`flex flex-col items-center rounded-xl border overflow-hidden transition-all duration-200 ${
                 active
                   ? "border-peak-blue/50 bg-peak-blue/10 text-peak-blue"
                   : "border-white/10 bg-peak-card text-peak-text-secondary hover:border-white/25 hover:text-peak-text"
               }`}
             >
               {eq.image
-                ? <img src={eq.image} alt={eq.label} className="w-12 h-9 object-cover rounded-md" />
-                : <span className="text-2xl">{eq.emoji}</span>
+                ? <img src={eq.image} alt={eq.label} className="w-full h-20 object-cover" />
+                : <div className="flex items-center justify-center h-20 w-full"><span className="text-2xl">{eq.emoji}</span></div>
               }
-              <span className="text-xs font-medium text-center leading-tight">{eq.label}</span>
+              <span className="text-xs font-medium text-center leading-tight px-2 py-2">{eq.label}</span>
             </button>
           );
         })}
