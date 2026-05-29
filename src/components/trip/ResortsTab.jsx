@@ -272,17 +272,17 @@ export default function ResortsTab() {
                     <div className="absolute top-3 left-3 bg-peak-bg/80 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-medium text-peak-text">
                       {resort.flag} {Array.isArray(resort.country) ? resort.country[0] : resort.country}
                     </div>
-                    <div className="absolute top-3 right-3 bg-peak-blue text-white text-xs font-bold px-2 py-0.5 rounded">{resort.rating}</div>
+                    <div className="absolute top-3 right-3 bg-peak-blue text-white text-xs font-bold px-2 py-0.5 rounded" title={t('rating')}>{resort.rating}</div>
                   </div>
                   <div className="p-5">
                     <h3 className="font-display font-bold text-peak-text text-lg">{resort.name}</h3>
-                    <p className="text-peak-text-secondary text-sm mt-0.5 mb-1">{resort.pisteKm}km pistes · {resort.lifts} lifts · {resort.maxAltitude}m</p>
+                    <p className="text-peak-text-secondary text-sm mt-0.5 mb-1">{resort.pisteKm}km {t('pistes')} · {resort.lifts} {t('lifts')} · {resort.maxAltitude}m</p>
                     {resort.distanceKm != null && destination?.type === "resort" && (
                       <p className="text-peak-text-secondary text-xs mb-2">{resort.distanceKm} km away</p>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-peak-text-secondary">{resort.ratingLabel}</span>
-                      <span className="text-peak-text font-bold">€{resort.priceFrom}<span className="text-peak-text-secondary text-xs font-normal">/day</span></span>
+                      <span className="text-xs text-peak-text-secondary">{t(resort.ratingLabel?.toLowerCase().replace(' ', '_')) || resort.ratingLabel}</span>
+                      <span className="text-peak-text font-bold">€{resort.priceFrom}<span className="text-peak-text-secondary text-xs font-normal">/{t('day')}</span></span>
                     </div>
                   </div>
                 </Link>
