@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../lib/i18n";
 import { Link } from "react-router-dom";
 import { Minus, Plus, Check, ExternalLink } from "lucide-react";
 import { SEASON_PASSES } from "../../lib/data";
@@ -7,6 +8,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const CURRENT_MONTH = new Date().getMonth();
 
 export default function LiftPassesTab({ resort }) {
+  const t = useT();
   const [selectedPass, setSelectedPass] = useState(1);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
