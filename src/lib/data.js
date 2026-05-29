@@ -11,8 +11,28 @@ import { italianResorts2 } from './italianResorts2.js';
 import { italianResorts3 } from './italianResorts3.js';
 import { frenchResorts } from './frenchResorts.js';
 import { frenchResorts2 } from './frenchResorts2.js';
+import { RESORT_PHOTOS } from './resortImages.js';
 
-export const resorts = [...[
+// Checks whether an image URL is a generic picsum placeholder
+function isPicsum(url) {
+  return typeof url === 'string' && url.includes('picsum.photos');
+}
+
+// Replaces picsum image(s) with real resort photos, rotating by resort index
+function applyRealImages(resort, index) {
+  if (!isPicsum(resort.image) && !isPicsum((resort.images || [])[0])) return resort;
+  const base = index % RESORT_PHOTOS.length;
+  const img0 = RESORT_PHOTOS[base % RESORT_PHOTOS.length];
+  const img1 = RESORT_PHOTOS[(base + 1) % RESORT_PHOTOS.length];
+  const img2 = RESORT_PHOTOS[(base + 2) % RESORT_PHOTOS.length];
+  return {
+    ...resort,
+    image: isPicsum(resort.image) ? img0 : resort.image,
+    images: (resort.images || []).map((img, i) => isPicsum(img) ? RESORT_PHOTOS[(base + i) % RESORT_PHOTOS.length] : img),
+  };
+}
+
+const _rawResorts = [...[
   {
     id: "verbier",
     name: "Verbier",
@@ -360,10 +380,13 @@ export const resorts = [...[
   }
 ], ...austrianResorts, ...austrianResorts2, ...austrianResorts3, ...austrianResorts4, ...austrianResorts5, ...swissResorts, ...swissResorts2, ...swissResorts3, ...italianResorts, ...italianResorts2, ...italianResorts3, ...frenchResorts, ...frenchResorts2];
 
+// Apply real photos to all resorts that still have picsum placeholders
+export const resorts = _rawResorts.map((r, i) => applyRealImages(r, i));
+
 export const trendingCards = [
-  { id: "zermatt", resort: "Zermatt", tag: "Best powder in the Alps", image: "https://picsum.photos/seed/trending1/600/400" },
-  { id: "val-thorens", resort: "Val Thorens", tag: "Top-rated for progression", image: "https://picsum.photos/seed/trending2/600/400" },
-  { id: "courchevel", resort: "Courchevel", tag: "Ultimate luxury skiing", image: "https://picsum.photos/seed/trending3/600/400" },
+  { id: "zermatt", resort: "Zermatt", tag: "Best powder in the Alps", image: RESORT_PHOTOS[10] },
+  { id: "val-thorens", resort: "Val Thorens", tag: "Top-rated for progression", image: RESORT_PHOTOS[3] },
+  { id: "courchevel", resort: "Courchevel", tag: "Ultimate luxury skiing", image: RESORT_PHOTOS[0] },
 ];
 
 export const dashboardData = {
