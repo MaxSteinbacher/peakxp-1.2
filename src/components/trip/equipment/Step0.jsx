@@ -2,11 +2,11 @@ import { Sliders, Sparkles } from "lucide-react";
 import { useT } from "../../../lib/i18n";
 
 const EQUIPMENT_TYPES = [
-  { key: "skis", label: "Skis", emoji: "🎿" },
-  { key: "snowboard", label: "Snowboard", emoji: "🏂" },
-  { key: "ski_boots", label: "Ski Boots", emoji: "👢" },
-  { key: "snowboard_boots", label: "Snowboard Boots", emoji: "👟" },
-  { key: "poles", label: "Poles", emoji: "🥢" },
+  { key: "skis", label: "Skis", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/17847d539_image.png" },
+  { key: "snowboard", label: "Snowboard", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cb2dd3d0d_image.png" },
+  { key: "ski_boots", label: "Ski Boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/91a7456fa_image.png" },
+  { key: "snowboard_boots", label: "Snowboard Boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7e9583c85_image.png" },
+  { key: "poles", label: "Poles", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1413d6a6e_image.png" },
   { key: "helmet", label: "Helmet", emoji: "⛑️" },
   { key: "back_protector", label: "Back Protector", emoji: "🛡️" },
 ];
@@ -38,7 +38,10 @@ export default function Step0({ selectedEquipment, setSelectedEquipment, mode, s
                   : "border-white/10 bg-peak-card text-peak-text-secondary hover:border-white/25 hover:text-peak-text"
               }`}
             >
-              <span className="text-2xl">{eq.emoji}</span>
+              {eq.image
+                ? <img src={eq.image} alt={eq.label} className="w-12 h-9 object-cover rounded-md" />
+                : <span className="text-2xl">{eq.emoji}</span>
+              }
               <span className="text-xs font-medium text-center leading-tight">{eq.label}</span>
             </button>
           );
