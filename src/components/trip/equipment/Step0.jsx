@@ -8,10 +8,6 @@ const EQUIPMENT_TYPES = [
   { key: "snowboard_boots", label: "Snowboard Boots", emoji: "👟" },
   { key: "poles", label: "Poles", emoji: "🥢" },
   { key: "helmet", label: "Helmet", emoji: "⛑️" },
-  { key: "ski_jacket", label: "Ski Jacket", emoji: "🧥" },
-  { key: "ski_pants", label: "Ski Pants", emoji: "👖" },
-  { key: "gloves", label: "Gloves", emoji: "🧤" },
-  { key: "goggles", label: "Goggles", emoji: "🥽" },
   { key: "back_protector", label: "Back Protector", emoji: "🛡️" },
 ];
 
