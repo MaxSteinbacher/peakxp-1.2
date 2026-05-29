@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../../lib/i18n";
 import { Camera, Play } from "lucide-react";
 import WeatherWidget from "../WeatherWidget";
 import ResortMap3D from "../ResortMap3D";
@@ -14,6 +15,7 @@ function LeafRating({ rating }) {
 }
 
 export default function OverviewTab({ resort }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const desc = resort.description || "";
   const isLong = desc.length > 300;
@@ -41,10 +43,10 @@ export default function OverviewTab({ resort }) {
 
           {/* Access and Transport */}
           <div className="bg-peak-card border border-white/5 rounded-xl p-5">
-            <h3 className="font-display font-bold text-peak-text text-base mb-4">Access and Transport</h3>
+            <h3 className="font-display font-bold text-peak-text text-base mb-4">{t("access_transport")}</h3>
             <div className="space-y-3 text-sm">
               <div>
-                <p className="text-peak-text-secondary text-xs uppercase tracking-widest mb-2">Nearest airports</p>
+                <p className="text-peak-text-secondary text-xs uppercase tracking-widest mb-2">{t("nearest_airports")}</p>
                 <div className="space-y-1">
                   {resort.airports?.map(a => (
                     <div key={a.iata} className="flex items-center justify-between">
@@ -60,16 +62,16 @@ export default function OverviewTab({ resort }) {
               </div>
               {resort.shuttle && (
                 <div className="border-t border-white/5 pt-3">
-                  <p className="text-peak-text-secondary text-xs uppercase tracking-widest mb-1">Shuttle service</p>
+                  <p className="text-peak-text-secondary text-xs uppercase tracking-widest mb-1">{t("shuttle_service")}</p>
                   <p className="text-peak-text text-sm">{resort.shuttleDesc}</p>
                 </div>
               )}
               {resort.parking && (
                 <div className="border-t border-white/5 pt-3">
-                  <p className="text-peak-text-secondary text-xs uppercase tracking-widest mb-1">Parking</p>
+                  <p className="text-peak-text-secondary text-xs uppercase tracking-widest mb-1">{t("parking")}</p>
                   <p className="text-peak-text text-sm">
                     {resort.parking.capacity.toLocaleString()} spaces · €{resort.parking.pricePerDay}/day
-                    {resort.parking.includedInPass && <span className="ml-2 text-peak-green text-xs">Included in pass</span>}
+                    {resort.parking.includedInPass && <span className="ml-2 text-peak-green text-xs">{t("included_in_pass")}</span>}
                   </p>
                 </div>
               )}
@@ -78,7 +80,7 @@ export default function OverviewTab({ resort }) {
 
           {/* Environmental */}
           <div className="bg-peak-card border border-white/5 rounded-xl p-5">
-            <h3 className="font-display font-bold text-peak-text text-base mb-4">Environmental Sustainability</h3>
+            <h3 className="font-display font-bold text-peak-text text-base mb-4">{t("environmental_sustainability")}</h3>
             <div className="flex items-center gap-3 mb-3">
               <LeafRating rating={resort.ecoRating || 3} />
               <span className="text-peak-text-secondary text-xs">{resort.ecoRenewable}% renewable electricity</span>
@@ -98,7 +100,7 @@ export default function OverviewTab({ resort }) {
             <p className="text-peak-text-secondary text-xs">
               Carbon offset:{" "}
               {resort.ecoOffsetProgram
-                ? <span className="text-peak-green">Active programme</span>
+                ? <span className="text-peak-green">{t("active_programme")}</span>
                 : "Not available"
               }
             </p>
@@ -106,20 +108,20 @@ export default function OverviewTab({ resort }) {
 
           {/* Interactive 3D Map */}
           <div className="mb-8">
-            <h2 className="font-display font-bold text-peak-text text-xl mb-2">Interactive Resort Map</h2>
+            <h2 className="font-display font-bold text-peak-text text-xl mb-2">{t("interactive_map")}</h2>
             <p className="text-peak-text-secondary text-sm mb-4">Explore slopes, lifts and terrain in 3D. Pan, tilt and zoom freely.</p>
             <ResortMap3D resort={resort} />
             <div className="mt-3 flex items-center gap-2 text-peak-text-secondary text-xs">
               <span>Slope data: OpenStreetMap contributors</span>
               <span>·</span>
               <span>Terrain: MapTiler</span>
-              <a href={`/resort/${resort.id}/map`} className="ml-auto text-peak-blue hover:underline font-medium">Open Route Planner →</a>
+              <a href={`/resort/${resort.id}/map`} className="ml-auto text-peak-blue hover:underline font-medium">{t("open_route_planner")}</a>
             </div>
           </div>
 
           {/* Webcams */}
           <div>
-            <h3 className="font-display font-bold text-peak-text text-base mb-3">Webcams</h3>
+            <h3 className="font-display font-bold text-peak-text text-base mb-3">{t("conditions")}</h3>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
               {resort.webcams?.map(wc => (
                 <div key={wc.name} className="w-64 h-40 bg-peak-surface rounded-xl border border-white/10 flex-shrink-0 relative overflow-hidden">
