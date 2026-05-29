@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useT } from "../lib/i18n";
 import { useNavigate, Link } from "react-router-dom";
 import { useTripPlanner, useUnsavedTripWarning } from "../context/TripPlannerContext";
 import { useAppAuth } from "../context/AppAuthContext";
