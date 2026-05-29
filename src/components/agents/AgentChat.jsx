@@ -407,6 +407,36 @@ function FollowUpChips({ onSend, disabled }) {
   );
 }
 
+// ─── Conversation persistence (localStorage) ──────────────────────────────
+const STORAGE_PREFIX = "peakxp_agent_conv_";
+
+function saveConversation(agentKey, state) {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + agentKey, JSON.stringify({
+      ...state,
+      savedAt: Date.now(),
+    }));
+  } catch {}
+}
+
+function loadConversation(agentKey) {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + agentKey);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    // Expire after 24 hours
+    if (Date.now() - data.savedAt > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(STORAGE_PREFIX + agentKey);
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function clearConversation(agentKey) {
+  try { localStorage.removeItem(STORAGE_PREFIX + agentKey); } catch {}
+}
+
 export default function AgentChat({ agent, isOpen, onClose }) {
   const { user } = useAppAuth();
   const t = useT();
@@ -431,6 +461,27 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   const totalIntakeQ = questionCards.length;
   const totalSteps = totalIntakeQ + 1;
 
+  function handleResume() {
+    if (!savedConvPreview) return;
+    // Restore saved state
+    setMessages(savedConvPreview.messages || []);
+    setHistory(savedConvPreview.history || []);
+    setPhase(savedConvPreview.phase || "chat");
+    setQuestionIndex(savedConvPreview.questionIndex || 0);
+    setIntakeAnswers(savedConvPreview.intakeAnswers || {});
+    setServicesSelected(savedConvPreview.servicesSelected || []);
+    setPlan(savedConvPreview.plan || null);
+    setResumePrompt("none");
+    setSavedConvPreview(null);
+  }
+
+  function handleNewConversation() {
+    if (agent) clearConversation(agent.key);
+    setResumePrompt("none");
+    setSavedConvPreview(null);
+    resetAll(agent);
+  }
+
   function resetAll(ag) {
     setMessages([{ role: "assistant", content: ag.introMessage, time: now() }]);
     setHistory([]);
@@ -449,13 +500,37 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   }
 
   useEffect(() => {
-    if (isOpen && agent) { setVisible(true); resetAll(agent); }
-    else setTimeout(() => setVisible(false), 400);
+    if (isOpen && agent) {
+      setVisible(true);
+      // Check for a saved conversation
+      const saved = loadConversation(agent.key);
+      if (saved && saved.messages && saved.messages.length > 1) {
+        // Has a real conversation — show resume prompt
+        setSavedConvPreview(saved);
+        setResumePrompt("prompt");
+      } else {
+        // No saved conversation — start fresh
+        setResumePrompt("none");
+        setSavedConvPreview(null);
+        resetAll(agent);
+      }
+    } else {
+      setTimeout(() => setVisible(false), 400);
+    }
   }, [isOpen, agent]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, typing, showCard, questionIndex, phase]);
+
+  // Auto-save conversation whenever messages change (only after intro)
+  useEffect(() => {
+    if (!agent || messages.length <= 1 || resumePrompt === "prompt") return;
+    saveConversation(agent.key, {
+      messages, history, phase, questionIndex,
+      intakeAnswers, servicesSelected, plan,
+    });
+  }, [messages, phase, plan]);
 
   function handleTextareaInput(e) {
     setInput(e.target.value);
@@ -598,7 +673,40 @@ export default function AgentChat({ agent, isOpen, onClose }) {
         <div className="h-px flex-shrink-0" style={{ background: `linear-gradient(to right, transparent, ${agent.glowColor || "rgba(56,148,227,0.4)"}, transparent)` }} />
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          {messages.map((msg, i) => (
+
+          {/* Resume prompt — shown when a saved conversation is found */}
+          {resumePrompt === "prompt" && savedConvPreview && (
+            <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+              <div className={`w-16 h-16 rounded-2xl ${agent.bg} flex items-center justify-center mb-5`}>
+                <agent.icon className={`h-8 w-8 ${agent.color}`} />
+              </div>
+              <h3 className="text-peak-text font-display font-bold text-xl mb-2">
+                {t("agent_resume_title")}
+              </h3>
+              <p className="text-peak-text-secondary text-sm mb-1 max-w-xs">
+                {t("agent_resume_desc")} <span className={`font-semibold ${agent.color}`}>{agent.name}</span>
+              </p>
+              <p className="text-peak-text-secondary/50 text-xs mb-8">
+                {t("agent_last_message")}: {savedConvPreview.messages?.slice(-1)[0]?.time || "recently"}
+              </p>
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                <button
+                  onClick={handleResume}
+                  className="w-full py-3 px-6 rounded-xl bg-peak-red hover:bg-peak-red-hover text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                  ↩ {t("agent_continue_conv")}
+                </button>
+                <button
+                  onClick={handleNewConversation}
+                  className="w-full py-3 px-6 rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text hover:border-white/20 text-sm transition-colors"
+                >
+                  {t("agent_new_conv")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {resumePrompt === "none" && messages.map((msg, i) => (
             <div key={i}>
               <MessageBubble msg={msg} agent={agent} userInitials={userInitials} />
               {msg.role === "assistant" && plan && i === messages.length - 1 && (
@@ -607,7 +715,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
             </div>
           ))}
 
-          {phase === "questions" && showCard && currentQuestion && !typing && !plan && (
+          {resumePrompt === "none" && phase === "questions" && showCard && currentQuestion && !typing && !plan && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <AgentQuestionCard
                 question={currentQuestion.question}
@@ -623,13 +731,13 @@ export default function AgentChat({ agent, isOpen, onClose }) {
             </div>
           )}
 
-          {phase === "services" && !typing && !plan && (
+          {resumePrompt === "none" && phase === "services" && !typing && !plan && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <AgentServicesCard agentKey={agent.key} onConfirm={handleServicesConfirm} />
             </div>
           )}
 
-          {phase === "summary" && !typing && !plan && (
+          {resumePrompt === "none" && phase === "summary" && !typing && !plan && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <AnswerSummaryCard
                 intakeAnswers={intakeAnswers}
@@ -644,12 +752,12 @@ export default function AgentChat({ agent, isOpen, onClose }) {
             </div>
           )}
 
-          {phase === "chat" && plan && !typing && (
+          {resumePrompt === "none" && phase === "chat" && plan && !typing && (
             <FollowUpChips onSend={sendMessage} disabled={typing} />
           )}
 
-          {typing && <TypingIndicator agent={agent} />}
-          {error && (
+          {resumePrompt === "none" && typing && <TypingIndicator agent={agent} />}
+          {resumePrompt === "none" && error && (
             <div className="flex items-start gap-3">
               <div className={`w-8 h-8 rounded-xl ${agent.bg} flex items-center justify-center flex-shrink-0`}>
                 <agent.icon className={`h-4 w-4 ${agent.color}`} />
