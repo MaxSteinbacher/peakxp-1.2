@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useT } from "../../lib/i18n";
 import { X, ChevronRight, Send, Edit2, CheckCircle2, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAppAuth } from "../../context/AppAuthContext";
@@ -388,10 +389,10 @@ function AnswerSummaryCard({ intakeAnswers, servicesSelected, questionCards, age
 
 function FollowUpChips({ onSend, disabled }) {
   const chips = [
-    "Show me more budget-friendly options",
-    "I would prefer a different country",
-    "Can you suggest different dates?",
-    "Tell me more about the top pick",
+    t("followup_budget"),
+    t("followup_country"),
+    t("followup_dates"),
+    t("followup_top_pick"),
   ];
   return (
     <div className="flex flex-wrap gap-2 mt-3">
@@ -407,6 +408,7 @@ function FollowUpChips({ onSend, disabled }) {
 
 export default function AgentChat({ agent, isOpen, onClose }) {
   const { user } = useAppAuth();
+  const t = useT();
   const [messages, setMessages] = useState([]);
   const [history, setHistory] = useState([]);
   const [input, setInput] = useState("");
@@ -663,7 +665,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
           <div className="flex items-end gap-3 bg-peak-surface border border-white/10 rounded-2xl px-4 py-3 focus-within:border-white/20 transition-colors">
             <textarea ref={textareaRef} rows={1} value={input} onChange={handleTextareaInput}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
-              placeholder={phase !== "chat" ? "Or type a free answer..." : "Message " + agent.name + "..."}
+              placeholder={phase !== "chat" ? t("or_reply_directly") : t("message_agent") + " " + agent.name + "..."}
               className="flex-1 bg-transparent text-peak-text text-sm outline-none resize-none leading-relaxed placeholder:text-peak-text-secondary/40"
               style={{ maxHeight: 120 }} />
             <button onClick={() => sendMessage(input)} disabled={!input.trim() || typing}
