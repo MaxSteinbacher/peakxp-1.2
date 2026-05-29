@@ -48,7 +48,7 @@ export default function FacilitiesTab({ resort }) {
 
 
       {/* Childcare */}
-      <Section title=t("childcare_kids")>
+      <Section title="Childcare & Kids">
         {f.creche && <Row label={`Crèche / nursery (${f.crecheAgeMin}–${f.crecheAgeMax} yrs)`} value={`From €${f.crecheFrom}/day`} />}
         {f.kidsGarden && <Row label={`Kids ski garden (${f.kidsGardenAge})`} value="Available" highlight />}
         <Row label="Babysitting service" value={f.babysitting ? "Available" : "Not available"} highlight={f.babysitting} />
@@ -62,7 +62,7 @@ export default function FacilitiesTab({ resort }) {
         <Row label="Sizes available" value={(f.lockerSizes || ["S", "M", "L"]).join(" / ")} />
         <Row label="Ski storage" value={f.skiStorage ? `Yes — from €${f.skiStorageFrom}/day` : "No"} highlight={f.skiStorage} />
         <Row label="Boot dryers" value={f.bootDryers ? "Yes" : "No"} highlight={f.bootDryers} />
-        <Row label=t("community_location") value="Base station + mid-mountain" />
+        <Row label="Location" value="Base station + mid-mountain" />
         {resort.skiDepotUrl && (
           <a
             href={resort.skiDepotUrl}
@@ -92,7 +92,7 @@ export default function FacilitiesTab({ resort }) {
       <Section title="Snow Cannons">
         <Row label="Total cannons" value={(resort.snowCannons || 80).toString()} />
         <Row label="Piste coverage" value={`${resort.snowCannonKm || 20}km (${Math.round(((resort.snowCannonKm || 20) / resort.pisteKm) * 100)}% of pistes)`} />
-        <Row label=t("altitude_range") value={`${resort.minAltitude}–${Math.round(resort.maxAltitude * 0.7)}m`} />
+        <Row label="Altitude range" value={`${resort.minAltitude}–${Math.round(resort.maxAltitude * 0.7)}m`} />
         <Row label="Automated system" value="Yes" highlight />
         <Row label="Operating conditions" value="Active below -3°C" />
         <p className="text-peak-text-secondary text-xs mt-3">🔌 Connect API for real-time cannon status</p>

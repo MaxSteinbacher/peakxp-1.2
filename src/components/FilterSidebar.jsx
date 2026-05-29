@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "../lib/i18n";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,6 +13,7 @@ const facilities = [
 ];
 
 export default function FilterSidebar({ filters, setFilters, open, onClose }) {
+  const t = useT();
   const updateFilter = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -45,7 +47,7 @@ export default function FilterSidebar({ filters, setFilters, open, onClose }) {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2 text-peak-text">
               <SlidersHorizontal className="h-5 w-5" />
-              <h3 className="font-display font-bold text-lg">Filters</h3>
+              <h3 className="font-display font-bold text-lg">{t("filters")}</h3>
             </div>
             <button onClick={onClose} className="lg:hidden text-peak-text-secondary hover:text-peak-text">
               <X className="h-5 w-5" />
@@ -54,7 +56,7 @@ export default function FilterSidebar({ filters, setFilters, open, onClose }) {
 
           {/* Country */}
           <div className="mb-6">
-            <h4 className="text-sm font-semibold text-peak-text mb-3">Country</h4>
+            <h4 className="text-sm font-semibold text-peak-text mb-3">{t("country")}</h4>
             <div className="space-y-2">
               {countries.map((c) => (
                 <label key={c} className="flex items-center gap-2 cursor-pointer group">
@@ -88,7 +90,7 @@ export default function FilterSidebar({ filters, setFilters, open, onClose }) {
 
           {/* Difficulty */}
           <div className="mb-6">
-            <h4 className="text-sm font-semibold text-peak-text mb-3">Difficulty</h4>
+            <h4 className="text-sm font-semibold text-peak-text mb-3">{t("difficulty")}</h4>
             <div className="flex flex-wrap gap-2">
               {difficulties.map((d) => (
                 <button
@@ -108,7 +110,7 @@ export default function FilterSidebar({ filters, setFilters, open, onClose }) {
 
           {/* Facilities */}
           <div className="mb-6">
-            <h4 className="text-sm font-semibold text-peak-text mb-3">Facilities</h4>
+            <h4 className="text-sm font-semibold text-peak-text mb-3">{t("facilities")}</h4>
             <div className="space-y-2">
               {facilities.map((f) => (
                 <label key={f.key} className="flex items-center gap-2 cursor-pointer group">
