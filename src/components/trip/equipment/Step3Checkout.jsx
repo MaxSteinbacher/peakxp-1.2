@@ -11,7 +11,7 @@ const LABELS = {
   helmet: "Helmet", back_protector: "Back Protector",
 };
 
-function TrustBadges() {
+function TrustBadges({ t }) {
   return (
     <div className="flex flex-wrap gap-4 mt-4">
       {[
@@ -107,7 +107,7 @@ export default function Step3Checkout({ selectedEquipment, shop, specs, answers,
         </div>
       )}
 
-      <TrustBadges />
+      <TrustBadges t={t} />
 
       <div className="flex gap-3 mt-6 flex-wrap">
         {onBack && (
