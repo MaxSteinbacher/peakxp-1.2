@@ -13,7 +13,7 @@ export function sortByProximity(items, targetLat, targetLon) {
   return [...items]
     .map(item => ({
       ...item,
-      distanceKm: haversineKm(targetLat, targetLon, item.coordinates?.lat || 0, item.coordinates?.lon || 0),
+      distanceKm: haversineKm(targetLat, targetLon, (item.coordinates?.lat ?? item.lat ?? 0), (item.coordinates?.lon ?? item.lng ?? 0)),
     }))
     .sort((a, b) => a.distanceKm - b.distanceKm);
 }
@@ -24,11 +24,12 @@ export function filterByRadius(items, targetLat, targetLon, radiusKm) {
 
 export function getNearestResorts(resorts, targetResortId, count) {
   const target = resorts.find(r => r.id === targetResortId);
-  if (!target || !target.coordinates) return [];
-  const { lat, lon } = target.coordinates;
+  if (!target || (!target.coordinates && !target.lat)) return [];
+  const lat = target.coordinates?.lat ?? target.lat ?? 0;
+  const lon = target.coordinates?.lon ?? target.lng ?? 0;
   return resorts
     .filter(r => r.id !== targetResortId)
-    .map(r => ({ ...r, distanceKm: haversineKm(lat, lon, r.coordinates?.lat || 0, r.coordinates?.lon || 0) }))
+    .map(r => ({ ...r, distanceKm: haversineKm(lat, lon, (r.coordinates?.lat ?? r.lat ?? 0), (r.coordinates?.lon ?? r.lng ?? 0)) }))
     .sort((a, b) => a.distanceKm - b.distanceKm)
     .slice(0, count);
 }
@@ -55,10 +56,10 @@ export function getResortsInDestination(resorts, destination) {
     filtered = resorts;
   }
 
-  const withCoords = filtered.filter(r => r.coordinates?.lat && r.coordinates?.lon);
+  const withCoords = filtered.filter(r => (r.coordinates?.lat ?? r.lat) && (r.coordinates?.lon ?? r.lng));
   if (!withCoords.length) return filtered;
-  const centerLat = withCoords.reduce((s, r) => s + r.coordinates.lat, 0) / withCoords.length;
-  const centerLon = withCoords.reduce((s, r) => s + r.coordinates.lon, 0) / withCoords.length;
+  const centerLat = withCoords.reduce((s, r) => s + (r.coordinates?.lat ?? r.lat ?? 0), 0) / withCoords.length;
+  const centerLon = withCoords.reduce((s, r) => s + r.coordinates?.lon ?? r.lng ?? 0, 0) / withCoords.length;
 
   return filtered
     .map(r => ({ ...r, distanceKm: haversineKm(centerLat, centerLon, r.coordinates?.lat || centerLat, r.coordinates?.lon || centerLon) }))
