@@ -7,6 +7,7 @@ import BookingShell from "./shared/BookingShell";
 import CheckoutFlow from "./shared/CheckoutFlow";
 import RangeSlider from "../shared/RangeSlider";
 import { Checkbox } from "@/components/ui/checkbox";
+import DateRangePicker from "../shared/DateRangePicker";
 
 const STEPS_KEYS = ["search_step", "results", "checkout_step"];
 const SORT_KEYS = ["cheapest", "fastest", "results", "results"];
@@ -220,26 +221,25 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 2 — Dates + times */}
             <div className="border-t border-white/5 pt-5 mb-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Outbound date</label>
-                  <input type="date" value={searchForm.depDate} onChange={e => sf("depDate", e.target.value)}
-                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-peak-blue" />
-                  <select value={searchForm.depTime} onChange={e => sf("depTime", e.target.value)}
-                    className="mt-2 w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                    {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
+              <DateRangePicker
+                startDate={searchForm.depDate}
+                endDate={tripType === "Return" ? searchForm.retDate : null}
+                onStartChange={d => sf("depDate", d)}
+                onEndChange={d => sf("retDate", d)}
+                context="train"
+                placeholder={{ start: "Outbound date", end: tripType === "Return" ? "Return date" : "No return" }}
+                singleDate={tripType !== "Return"}
+              />
+              <div className={`grid gap-4 mt-3 ${tripType === "Return" ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
+                <select value={searchForm.depTime} onChange={e => sf("depTime", e.target.value)}
+                  className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
+                  {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(opt => <option key={opt}>{opt}</option>)}
+                </select>
                 {tripType === "Return" && (
-                  <div>
-                    <label className="block text-xs text-peak-text-secondary mb-1.5">Return date</label>
-                    <input type="date" value={searchForm.retDate} onChange={e => sf("retDate", e.target.value)}
-                      className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-peak-blue" />
-                    <select value={searchForm.retTime} onChange={e => sf("retTime", e.target.value)}
-                      className="mt-2 w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                      {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(t => <option key={t}>{t}</option>)}
-                    </select>
-                  </div>
+                  <select value={searchForm.retTime} onChange={e => sf("retTime", e.target.value)}
+                    className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
+                    {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(opt => <option key={opt}>{opt}</option>)}
+                  </select>
                 )}
               </div>
             </div>
