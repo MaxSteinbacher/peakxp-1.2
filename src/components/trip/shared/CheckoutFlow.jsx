@@ -1,76 +1,98 @@
-import { useState } from "react";
-import { ShieldCheck, RefreshCw, Lock, Zap, ShoppingBag, Bookmark } from "lucide-react";
-import StepIndicator from "./StepIndicator";
-import { savePlan } from "../../../lib/bookings";
-import { toast } from "sonner";
+import { Sliders, Sparkles } from "lucide-react";
+import { useT } from "../../../lib/i18n";
 
-function Input({ label, value, onChange, placeholder, type = "text" }) {
+const EQUIPMENT_TYPES = [
+  { key: "skis", label: "Skis", emoji: "🎿" },
+  { key: "snowboard", label: "Snowboard", emoji: "🏂" },
+  { key: "ski_boots", label: "Ski Boots", emoji: "👢" },
+  { key: "snowboard_boots", label: "Snowboard Boots", emoji: "👟" },
+  { key: "poles", label: "Poles", emoji: "🥢" },
+  { key: "helmet", label: "Helmet", emoji: "⛑️" },
+  { key: "back_protector", label: "Back Protector", emoji: "🛡️" },
+];
+
+function toggle(arr, val) {
+  return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
+}
+
+export default function Step0({ selectedEquipment, setSelectedEquipment, mode, setMode, onContinue }) {
+  const t = useT();
+  const canContinue = selectedEquipment.length > 0 && mode !== null;
+
   return (
     <div>
-      <label className="block text-xs text-peak-text-secondary mb-1">{label}</label>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-    </div>
-  );
-}
+      <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('what_do_you_need')}</h2>
+      <p className="text-peak-text-secondary text-sm mb-6">{t('select_equipment')}</p>
 
-export function TrustBadges() {
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
-      {[
-        [ShieldCheck, "Price guarantee"],
-        [Zap, "Instant confirmation"],
-        [RefreshCw, "Free cancellation on eligible items"],
-        [Lock, "SSL secured"],
-      ].map(([Icon, label]) => (
-        <div key={label} className="flex items-center gap-1.5 text-peak-text-secondary text-xs">
-          <Icon className="h-3.5 w-3.5" />
-          <span>{label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-const CHECKOUT_STEPS = ["Summary", "Your details"];
-
-export default function CheckoutFlow({ summary, guestFields, trustBadges, onComplete, totalPrice, planData }) {
-  // Streamlined: single confirm step — no guest details required for trip basket
-  return (
-    <div className="max-w-2xl mx-auto w-full">
-      <h3 className="font-display font-bold text-xl text-peak-text mb-4">Booking summary</h3>
-      <div className="bg-peak-card border border-white/5 rounded-xl p-5 space-y-3 mb-5">
-        {summary.map(({ label, value }) => (
-          <div key={label} className="flex items-center justify-between text-sm">
-            <span className="text-peak-text-secondary">{label}</span>
-            <span className="text-peak-text font-medium">{value}</span>
-          </div>
-        ))}
-        <div className="border-t border-white/5 pt-3 flex items-center justify-between">
-          <span className="text-peak-text font-semibold">Total</span>
-          <span className="text-peak-text font-bold text-xl">{"\u20ac" + totalPrice}</span>
-        </div>
+      {/* Equipment grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 mb-8">
+        {EQUIPMENT_TYPES.map((eq) => {
+          const active = selectedEquipment.includes(eq.key);
+          return (
+            <button
+              key={eq.key}
+              onClick={() => setSelectedEquipment((prev) => toggle(prev, eq.key))}
+              className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                active
+                  ? "border-peak-blue/50 bg-peak-blue/10 text-peak-blue"
+                  : "border-white/10 bg-peak-card text-peak-text-secondary hover:border-white/25 hover:text-peak-text"
+              }`}
+            >
+              <span className="text-2xl">{eq.emoji}</span>
+              <span className="text-xs font-medium text-center leading-tight">{eq.label}</span>
+            </button>
+          );
+        })}
       </div>
-      <TrustBadges />
-      <div className="flex gap-3 mt-6 flex-wrap">
-        <button
-          onClick={() => onComplete?.({})}
-          className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
-        >
-          <ShoppingBag className="h-4 w-4" /> Add to trip basket
-        </button>
-        {planData && (
-          <button
-            onClick={() => {
-              savePlan("guest", planData);
-              toast.success("Saved to Trip Planning", { description: "View in My Trips", action: { label: "View", onClick: () => { window.location.href = "/my-trips?tab=planning"; } } });
-            }}
-            className="flex-1 py-3 border border-white/10 text-peak-text-secondary rounded-xl flex items-center justify-center gap-2 hover:border-white/25 hover:text-peak-text transition-colors text-sm"
-          >
-            <Bookmark className="h-4 w-4" /> Save to planning
-          </button>
-        )}
+
+      {/* Mode selector */}
+      <h3 className="font-display font-bold text-lg text-peak-text mb-3">{t('how_proceed')}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        {[
+          {
+            key: "expert",
+            titleKey: "i_know_what_i_want",
+            subtitleKey: "choose_own_specs",
+            icon: Sliders,
+          },
+          {
+            key: "guided",
+            titleKey: "help_me_choose",
+            subtitleKey: "answer_questions",
+            icon: Sparkles,
+          },
+        ].map((m) => {
+          const Icon = m.icon;
+          const active = mode === m.key;
+          return (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 ${
+                active
+                  ? "border-peak-blue/50 bg-peak-blue/10"
+                  : "border-white/10 bg-peak-card hover:border-white/25"
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${active ? "bg-peak-blue/20" : "bg-white/5"}`}>
+                <Icon className={`h-5 w-5 ${active ? "text-peak-blue" : "text-peak-text-secondary"}`} />
+              </div>
+              <div>
+                <p className={`font-semibold text-sm mb-0.5 ${active ? "text-peak-text" : "text-peak-text-secondary"}`}>{t(m.titleKey)}</p>
+                <p className="text-peak-text-secondary text-xs">{t(m.subtitleKey)}</p>
+              </div>
+            </button>
+          );
+        })}
       </div>
+
+      <button
+        onClick={onContinue}
+        disabled={!canContinue}
+        className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 disabled:cursor-not-allowed text-white font-display font-bold text-sm rounded-xl transition-colors"
+      >
+        {t('continue')}
+      </button>
     </div>
   );
 }
