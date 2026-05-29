@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { X } from "lucide-react";
+import { useT } from "../../lib/i18n";
 import DateRangePicker from "../shared/DateRangePicker";
 import RangeSlider from "../shared/RangeSlider";
 import { useTripPlanner } from "../../context/TripPlannerContext";
@@ -39,11 +40,8 @@ function withCoordinates(hotels, resortCoords) {
   });
 }
 
-const SORT_OPTIONS = ["Recommended", "Closest to resort", "Price ↑", "Price ↓", "Rating", "Stars"];
 const HOTEL_TYPES = ["Hotel", "Apartment", "Chalet", "B&B", "Boutique"];
 const FACILITIES_LIST = ["Ski storage", "Ski-in ski-out", "Spa", "Pool", "Restaurant", "Bar", "Free WiFi", "Parking", "Airport shuttle", "Pet friendly", "Family rooms"];
-const BOARD_OPTIONS = ["Room only", "Bed and breakfast", "Half board", "Full board", "All inclusive"];
-const CANCEL_OPTIONS = ["Any", "Free cancellation", "Non-refundable"];
 
 const DEFAULT_FILTERS = { distanceKm: 50, priceRange: [50, 1000], stars: [], minRating: null, types: [], facilities: [], boardBasis: [], cancellation: "Any" };
 
@@ -54,7 +52,7 @@ function recommendedScore(h) {
   return prox * 0.5 + rating * 0.3 + stars * 0.2;
 }
 
-function ActiveChips({ filters, onRemove, onClearAll }) {
+function ActiveChips({ filters, onRemove, onClearAll, t }) {
   const chips = [];
   if (filters.distanceKm < 50) chips.push({ key: "dist", label: `≤ ${filters.distanceKm}km` });
   if (filters.priceRange[0] > 50 || filters.priceRange[1] < 1000) chips.push({ key: "price", label: `€${filters.priceRange[0]}–€${filters.priceRange[1]}` });
@@ -74,15 +72,36 @@ function ActiveChips({ filters, onRemove, onClearAll }) {
           <button onClick={() => onRemove(c.key)} className="text-peak-text-secondary hover:text-peak-red"><X className="h-3 w-3" /></button>
         </span>
       ))}
-      <button onClick={onClearAll} className="text-peak-blue text-xs hover:underline">Clear all</button>
+      <button onClick={onClearAll} className="text-peak-blue text-xs hover:underline">{t("accom_clear_all")}</button>
     </div>
   );
 }
 
 export default function AccommodationTab() {
+  const t = useT();
   const { session } = useTripPlanner();
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
+  const SORT_OPTIONS = [
+    { key: "Recommended", label: t("accom_sort_recommended") },
+    { key: "Closest to resort", label: t("accom_sort_closest") },
+    { key: "Price ↑", label: t("accom_sort_price_up") },
+    { key: "Price ↓", label: t("accom_sort_price_down") },
+    { key: "Rating", label: t("accom_sort_rating") },
+    { key: "Stars", label: t("accom_sort_stars") },
+  ];
+  const BOARD_OPTIONS = [
+    { key: "Room only", label: t("accom_room_only") },
+    { key: "Bed and breakfast", label: t("accom_bed_breakfast") },
+    { key: "Half board", label: t("accom_half_board") },
+    { key: "Full board", label: t("accom_full_board") },
+    { key: "All inclusive", label: t("accom_all_inclusive") },
+  ];
+  const CANCEL_OPTIONS = [
+    { key: "Any", label: t("accom_any") },
+    { key: "Free cancellation", label: t("accom_free_cancellation") },
+    { key: "Non-refundable", label: t("accom_non_refundable") },
+  ];
   const [sortBy, setSortBy] = useState("Recommended");
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
@@ -140,15 +159,15 @@ export default function AccommodationTab() {
       {/* Sidebar */}
       <div className="hidden lg:block w-64 flex-shrink-0 space-y-5">
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Distance from resort: {filters.distanceKm < 50 ? `≤ ${filters.distanceKm}km` : "Any"}</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_distance_from")}: {filters.distanceKm < 50 ? `≤ ${filters.distanceKm}km` : t("accom_any")}</p>
           <RangeSlider mode="single" value={filters.distanceKm} onValueChange={v => setFilters(f => ({ ...f, distanceKm: typeof v === "number" ? v : v[0] }))} min={0} max={50} step={1} formatLabel={n => n + "km"} />
         </div>
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/night: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_price_night")}: €{filters.priceRange[0]}–€{filters.priceRange[1]}</p>
           <RangeSlider mode="dual" value={filters.priceRange} onValueChange={v => setFilters(f => ({ ...f, priceRange: v }))} min={50} max={1000} step={10} formatLabel={n => "€" + n} />
         </div>
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Stars</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_stars")}</p>
           <div className="flex flex-wrap gap-1.5">
             {[3, 4, 5].map(s => (
               <button key={s} onClick={() => setFilters(f => ({ ...f, stars: f.stars.includes(s) ? f.stars.filter(x => x !== s) : [...f.stars, s] }))}
@@ -159,7 +178,7 @@ export default function AccommodationTab() {
           </div>
         </div>
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Rating</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_rating")}</p>
           <div className="flex flex-wrap gap-1.5">
             {["Any", "7+", "8+", "9+"].map(r => (
               <button key={r} onClick={() => setFilters(f => ({ ...f, minRating: r === "Any" ? null : parseFloat(r) }))}
@@ -170,7 +189,7 @@ export default function AccommodationTab() {
           </div>
         </div>
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Type</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_type")}</p>
           <div className="space-y-1.5">
             {HOTEL_TYPES.map(t => (
               <label key={t} className="flex items-center gap-2 cursor-pointer">
@@ -181,7 +200,7 @@ export default function AccommodationTab() {
           </div>
         </div>
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Facilities</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_facilities")}</p>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {FACILITIES_LIST.map(f => (
               <label key={f} className="flex items-center gap-2 cursor-pointer">
@@ -192,23 +211,23 @@ export default function AccommodationTab() {
           </div>
         </div>
         <div className="border-b border-white/5 pb-5">
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Board basis</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_board_basis")}</p>
           <div className="flex flex-wrap gap-1.5">
             {BOARD_OPTIONS.map(b => (
-              <button key={b} onClick={() => setFilters(f => ({ ...f, boardBasis: f.boardBasis.includes(b) ? f.boardBasis.filter(x => x !== b) : [...f.boardBasis, b] }))}
-                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${filters.boardBasis.includes(b) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                {b}
+              <button key={b.key} onClick={() => setFilters(f => ({ ...f, boardBasis: f.boardBasis.includes(b.key) ? f.boardBasis.filter(x => x !== b.key) : [...f.boardBasis, b.key] }))}
+                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${filters.boardBasis.includes(b.key) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
+                {b.label}
               </button>
             ))}
           </div>
         </div>
         <div>
-          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Cancellation</p>
+          <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t("accom_cancellation")}</p>
           <div className="flex flex-wrap gap-1.5">
             {CANCEL_OPTIONS.map(c => (
-              <button key={c} onClick={() => setFilters(f => ({ ...f, cancellation: c }))}
-                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${filters.cancellation === c ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                {c}
+              <button key={c.key} onClick={() => setFilters(f => ({ ...f, cancellation: c.key }))}
+                className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${filters.cancellation === c.key ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
+                {c.label}
               </button>
             ))}
           </div>
@@ -223,14 +242,14 @@ export default function AccommodationTab() {
           </div>
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar mb-3">
             {SORT_OPTIONS.map(opt => (
-              <button key={opt} onClick={() => setSortBy(opt)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap flex-shrink-0 transition-colors ${sortBy === opt ? "bg-peak-red text-white" : "bg-peak-surface border border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                {opt}
+              <button key={opt.key} onClick={() => setSortBy(opt.key)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap flex-shrink-0 transition-colors ${sortBy === opt.key ? "bg-peak-red text-white" : "bg-peak-surface border border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+                {opt.label}
               </button>
             ))}
           </div>
-          <ActiveChips filters={filters} onRemove={removeFilter} onClearAll={clearAll} />
-          <p className="text-peak-text-secondary text-sm mb-4">{results.length} properties found</p>
+          <ActiveChips filters={filters} onRemove={removeFilter} onClearAll={clearAll} t={t} />
+          <p className="text-peak-text-secondary text-sm mb-4">{results.length} {t("accom_properties_found")}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -247,13 +266,13 @@ export default function AccommodationTab() {
                   <h3 className="font-display font-bold text-peak-text text-lg">{p.name}</h3>
                   <p className="text-peak-text-secondary text-sm mt-0.5 mb-1">{p.location}</p>
                   {p.distanceKm != null && resortCoords && (
-                    <p className="text-peak-text-secondary text-xs mb-2">{p.distanceKm} km from {resortName}</p>
+                    <p className="text-peak-text-secondary text-xs mb-2">{p.distanceKm} {t("accom_km_from")} {resortName}</p>
                   )}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex">{"★".repeat(p.stars || 0).split("").map((s, i) => <span key={i} className="text-yellow-400 text-xs">★</span>)}</div>
-                    <span className="text-peak-text font-bold">€{p.price}<span className="text-peak-text-secondary text-xs font-normal">/night</span></span>
+                    <span className="text-peak-text font-bold">€{p.price}<span className="text-peak-text-secondary text-xs font-normal">{t("accom_per_night")}</span></span>
                   </div>
-                  <span className="bg-peak-red text-white text-xs font-medium px-3 py-1.5 rounded-lg">View hotel</span>
+                  <span className="bg-peak-red text-white text-xs font-medium px-3 py-1.5 rounded-lg">{t("accom_view_hotel")}</span>
                 </div>
               </Link>
             );
