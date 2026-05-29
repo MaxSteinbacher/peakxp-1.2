@@ -34,6 +34,8 @@ export function buildSearchIndex(resortsArray) {
       region: resort.region || resort.country,
       flag: resort.flag,
       pisteKm: resort.pisteKm,
+      lat: resort.lat ?? null,
+      lng: resort.lng ?? null,
     });
 
     // Collect unique regions
@@ -100,48 +102,64 @@ export function buildSearchIndex(resortsArray) {
 
 export const searchIndex = buildSearchIndex(resorts);
 
+function distKm(lat1, lng1, lat2, lng2) {
+  const dLat = (lat2 - lat1) * 111;
+  const dLng = (lng2 - lng1) * 111 * Math.cos((lat1 * Math.PI) / 180);
+  return Math.sqrt(dLat * dLat + dLng * dLng);
+}
+
 export function searchDestinations(query, index = searchIndex) {
-  if (!query || query.trim().length === 0) {
-    return [];
-  }
+  if (!query || query.trim().length === 0) return [];
 
   const q = query.toLowerCase();
 
-  // Filter and score
+  // Score all index items
   const scored = index
     .map((item) => {
       const label = item.label.toLowerCase();
       const sublabel = item.sublabel.toLowerCase();
-
       let score = 0;
-      if (label === q) score = 1000; // Exact match
-      else if (label.startsWith(q)) score = 100; // Starts with
-      else if (label.includes(q)) score = 10; // Contains in label
-      else if (sublabel.includes(q)) score = 5; // Contains in sublabel
+      if (label === q) score = 1000;
+      else if (label.startsWith(q)) score = 100;
+      else if (label.includes(q)) score = 10;
+      else if (sublabel.includes(q)) score = 5;
       else return null;
-
       return { ...item, score };
     })
-    .filter((item) => item !== null)
+    .filter(Boolean)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 8);
+    .slice(0, 12);
+
+  // If the top match is a specific resort, inject nearby resorts into the results
+  const topResort = scored.find(i => i.type === "resort" && i.score >= 100);
+  const nearbyToInject = [];
+
+  if (topResort && topResort.lat != null && topResort.lng != null) {
+    // Find all resorts within ~100km from the resorts array in the index
+    const resortItems = index.filter(i => i.type === "resort" && i.lat != null && i.lng != null);
+    const nearby = resortItems
+      .filter(r => r.id !== topResort.id)
+      .map(r => ({ ...r, _distKm: Math.round(distKm(topResort.lat, topResort.lng, r.lat, r.lng)) }))
+      .filter(r => r._distKm <= 80)
+      .sort((a, b) => a._distKm - b._distKm)
+      .slice(0, 5)
+      .map(r => ({ ...r, sublabel: `${r._distKm}km from ${topResort.label}`, score: 50 }));
+    nearbyToInject.push(...nearby);
+  }
+
+  // Merge, deduplicate
+  const all = [...scored];
+  nearbyToInject.forEach(n => {
+    if (!all.find(x => x.id === n.id)) all.push(n);
+  });
 
   // Group by type
-  const grouped = {
-    region: [],
-    country: [],
-    resort: [],
-  };
-
-  scored.forEach((item) => {
-    if (grouped[item.type]) {
-      grouped[item.type].push(item);
-    }
-  });
+  const grouped = { region: [], country: [], resort: [] };
+  all.forEach(item => { if (grouped[item.type]) grouped[item.type].push(item); });
 
   return [
     ...grouped.region,
     ...grouped.country,
-    ...grouped.resort,
+    ...grouped.resort.slice(0, 8),
   ];
 }
