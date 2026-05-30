@@ -197,7 +197,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
         <div className="max-w-5xl mx-auto">
           {/* Trip type */}
           <div className="flex gap-2 mb-5">
-            {[{ key: "Round trip", label: t('round_trip') }, { key: "One way", label: t('one_way') }, { key: "Multi-city", label: "Multi-city" }].map(opt => (
+            {[{ key: "Round trip", label: t('round_trip') }, { key: "One way", label: t('one_way') }, { key: "Multi-city", label: t("multi_city") }].map(opt => (
               <button key={opt.key} onClick={() => setTripType(opt.key)}
                 className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${tripType === opt.key ? "bg-peak-red text-white border-peak-red" : "bg-peak-surface border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
                 {opt.label}
@@ -212,7 +212,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">{t('from')}</label>
                 <LocationInput
-                  type="airport" context="departure" placeholder="City or airport — e.g. Barcelona BCN"
+                  type="airport" context="departure" placeholder={t("city_or_airport_placeholder")}
                   value={fromVal} onChange={setFromVal}
                   onSelect={s => { setFromAirportData(s); setFromVal(s.label); }}
                 />
@@ -225,7 +225,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">{t('to')}</label>
                 <LocationInput
-                  type="airport" context="destination" placeholder="Destination airport"
+                  type="airport" context="destination" placeholder={t("destination_airport_placeholder")}
                   value={toVal} onChange={setToVal}
                   onSelect={s => { setToAirportData(s); setToVal(s.label); }}
                 />
@@ -245,7 +245,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                     onStartChange={v => sf("depDate", v)} onEndChange={v => sf("retDate", v)}
                     mode={tripType === "Round trip" ? "range" : "single"}
                     context="flight" minStay={1}
-                    placeholder={{ start: "Departure", end: "Return" }}
+                    placeholder={{ start: t("departure_placeholder"), end: t("return_placeholder") }}
                   />
                 </div>
                 <div>
@@ -259,7 +259,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               <div className="mt-4">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">{t('passengers')}</label>
                 <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 flex flex-wrap gap-4">
-                  {[{ label: `${t('adults')} (12+)`, key: "adults", min: 1 }, { label: `${t('children')} (2–11)`, key: "children", min: 0 }, { label: "Infants", key: "infants", min: 0 }].map(({ label, key, min }) => (
+                  {[{ label: `${t('adults')} (12+)`, key: "adults", min: 1 }, { label: `${t('children')} (2–11)`, key: "children", min: 0 }, { label: t("infants"), key: "infants", min: 0 }].map(({ label, key, min }) => (
                     <div key={key} className="flex items-center gap-3">
                       <span className="text-xs text-peak-text-secondary w-24">{label}</span>
                       <button onClick={() => sf(key, Math.max(min, (searchForm[key] || 0) - 1))} className="w-6 h-6 rounded border border-white/10 text-peak-text-secondary flex items-center justify-center text-sm hover:border-white/25">−</button>
@@ -273,7 +273,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 3 — Filter toggles */}
             <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4">
-              {[{ k: "directOnly", l: t('direct_only') }, { k: "flexible", l: t('flexible_dates') + " ±3 days" }, { k: "nearbyAirports", l: t('include_nearby_airports') }, { k: "carbon", l: t('carbon_offset_included') }].map(({ k, l }) => (
+              {[{ k: "directOnly", l: t('direct_only') }, { k: "flexible", l: t('flexible_dates') + " ±3 days" }, { k: "nearbyAirports", l: t("include_nearby_airports") }, { k: "carbon", l: t("carbon_offset_included") }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -287,19 +287,19 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
           <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mt-4">
             <button onClick={() => setSkiGear(g => ({ ...g, open: !g.open }))}
               className="w-full flex items-center justify-between">
-              <span className="text-peak-text text-sm font-medium">{t('travelling_ski_equipment')}{skiBagCount > 0 ? ` (${skiBagCount} ${t('selected')})` : ""}</span>
+              <span className="text-peak-text text-sm font-medium">{t("travelling_ski_equipment")}{skiBagCount > 0 ? ` (${skiBagCount} ${t('selected')})` : ""}</span>
               {skiGear.open ? <ChevronUp className="h-4 w-4 text-peak-text-secondary" /> : <ChevronDown className="h-4 w-4 text-peak-text-secondary" />}
             </button>
             {skiGear.open && (
               <div className="mt-4 space-y-3">
-                {[{ k: "skiBag", l: t('ski_bag_snowboard') }, { k: "bootBag", l: t('ski_boots_bag') }, { k: "helmetBag", l: t('helmet_bag') }, { k: "poles", l: t('ski_poles_only') }].map(({ k, l }) => (
+                {[{ k: "skiBag", l: t("ski_bag_snowboard") }, { k: "bootBag", l: t("ski_boots_bag") }, { k: "helmetBag", l: t("helmet_bag") }, { k: "poles", l: t("ski_poles_only") }].map(({ k, l }) => (
                   <label key={k} className="flex items-center gap-3 cursor-pointer">
                     <Checkbox checked={skiGear[k]} onCheckedChange={v => setSkiGear(g => ({ ...g, [k]: v }))}
                       className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
                     <span className="text-sm text-peak-text-secondary">{l}</span>
                   </label>
                 ))}
-                <p className="text-peak-text-secondary text-xs mt-2 pt-2 border-t border-white/5">{t('ski_equipment_fees_note')}</p>
+                <p className="text-peak-text-secondary text-xs mt-2 pt-2 border-t border-white/5">{t("ski_equipment_fees_note")}</p>
               </div>
             )}
           </div>
@@ -418,7 +418,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                       <div className="w-40 flex-shrink-0 space-y-1 text-xs">
                         <span className="bg-peak-surface border border-white/10 px-2 py-0.5 rounded-full text-peak-text-secondary">{flight.cabin}</span>
                         <p className={flight.refundable ? "text-peak-green" : "text-peak-red"}>
-                          {flight.refundable ? "✓ Refundable" : "✗ Non-refundable"}
+                          {flight.refundable ? t("refundable") : "✗ " + t("non_refundable")}
                         </p>
                         <p className="text-peak-text-secondary">{flight.baggage}</p>
                         {skiBagCount > 0 && <p className="text-peak-text-secondary">+€35 ski bag est.</p>}
@@ -449,11 +449,11 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
 
                     {expandedFlight === flight.id && (
                       <div className="mt-3 bg-peak-surface rounded-xl p-4 text-xs text-peak-text-secondary space-y-1">
-                        <p><span className="text-peak-text font-medium">Baggage:</span> {flight.baggage}{flight.checkedBag ? " + 1 checked bag" : " — checked bag optional (+€35)"}</p>
-                        <p><span className="text-peak-text font-medium">Cancellation:</span> {flight.refundable ? "Fully refundable up to 24h before" : "Non-refundable fare"}</p>
-                        <p><span className="text-peak-text font-medium">Operated by:</span> {flight.airline} flight {flight.flightNo}</p>
-                        <p><span className="text-peak-text font-medium">CO₂ estimate:</span> ~{flight.co2kg}kg per passenger</p>
-                        {skiBagCount > 0 && <p><span className="text-peak-text font-medium">Ski equipment fee:</span> Estimated €35 each way (confirm at checkout)</p>}
+                        <p><span className="text-peak-text font-medium">{t("baggage_label")}</span> {flight.baggage}{flight.checkedBag ? " + 1 checked bag" : " — checked bag optional (+€35)"}</p>
+                        <p><span className="text-peak-text font-medium">{t("cancellation_label")}</span> {flight.refundable ? "Fully refundable up to 24h before" : "Non-refundable fare"}</p>
+                        <p><span className="text-peak-text font-medium">{t("operated_by")}</span> {flight.airline} flight {flight.flightNo}</p>
+                        <p><span className="text-peak-text font-medium">CO₂:</span> ~{flight.co2kg}kg per passenger</p>
+                        {skiBagCount > 0 && <p><span className="text-peak-text font-medium">{t("ski_equipment_fee")}</span> Estimated €35 each way (confirm at checkout)</p>}
                       </div>
                     )}
                   </div>
