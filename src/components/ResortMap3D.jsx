@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mountain } from "lucide-react";
 
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
-const STYLE_URL = `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${MAPTILER_KEY}`;
+const STYLE_URL = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
 let sdkLoadPromise = null;
 function loadSDK() {
@@ -93,6 +93,11 @@ export default function ResortMap3D({ resort }) {
       if (unmounted || !mapRef.current) return;
       sdk.config.apiKey = MAPTILER_KEY;
 
+      // Prevent map canvas from stealing page focus/scroll on init
+      if (mapRef.current) {
+        mapRef.current.setAttribute("tabindex", "-1");
+        mapRef.current.style.outline = "none";
+      }
       const map = new sdk.Map({
         container: mapRef.current,
         style: STYLE_URL,
@@ -103,9 +108,8 @@ export default function ResortMap3D({ resort }) {
         scrollZoom: true,
         dragRotate: true,
         touchZoomRotate: true,
-        keyboard: true,
+        keyboard: false,
         attributionControl: false,
-        // Fix 1: bounds + performance options
         maxBounds: bounds,
         maxZoom: 16,
         minZoom: 11,
@@ -143,10 +147,10 @@ export default function ResortMap3D({ resort }) {
         mapLoadedRef.current = true;
         if (!unmounted) setLoading(false);
 
-        // Fix 6: flyTo after idle
+        // Use easeTo instead of flyTo — flyTo can trigger browser scroll-into-view
         map.once("idle", () => {
           if (unmounted) return;
-          map.flyTo({ center: [lng, lat], zoom: 13.5, pitch: 65, bearing: 20, duration: 2000, essential: true });
+          map.easeTo({ center: [lng, lat], zoom: 13.5, pitch: 65, bearing: 20, duration: 1500 });
         });
 
         // Fix 8: find first symbol layer for beforeId
@@ -332,7 +336,7 @@ export default function ResortMap3D({ resort }) {
   }
 
   return (
-    <div className="relative w-full h-72 sm:h-[480px] rounded-2xl overflow-hidden border border-white/10">
+    <div className="relative w-full h-72 sm:h-[480px] rounded-2xl overflow-hidden border border-white/10" style={{ scrollMarginTop: 0 }}>
       {loading && (
         <div className="absolute inset-0 z-30 bg-peak-surface flex flex-col items-center justify-center gap-3 rounded-2xl">
           <Mountain className="h-12 w-12 text-peak-text-secondary/40 animate-pulse" />
