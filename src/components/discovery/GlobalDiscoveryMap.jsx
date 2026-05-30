@@ -16,23 +16,23 @@ const GEO = {
         {
           id: "alps", name: "Alps", lat: 46.8, lon: 10.2, bounds: { n: 48.5, s: 43.5, e: 16.5, w: 5.5 },
           subRegions: [
-            { id: "austria-tyrol", name: "Austria Tyrol", lat: 47.25, lon: 11.40 },
-            { id: "austria-salzburg", name: "Austria Salzburg", lat: 47.55, lon: 13.10 },
-            { id: "austria-vorarlberg", name: "Austria Vorarlberg", lat: 47.25, lon: 9.85 },
-            { id: "austria-styria", name: "Austria Styria", lat: 47.35, lon: 14.80 },
-            { id: "austria-carinthia", name: "Austria Carinthia", lat: 46.75, lon: 13.90 },
-            { id: "switzerland-valais", name: "Switzerland Valais", lat: 46.20, lon: 7.55 },
-            { id: "switzerland-graubuenden", name: "Switzerland Graubünden", lat: 46.65, lon: 9.55 },
-            { id: "switzerland-bernese", name: "Switzerland Bernese Oberland", lat: 46.55, lon: 7.95 },
-            { id: "france-savoie", name: "France Savoie", lat: 45.50, lon: 6.55 },
-            { id: "france-haute-savoie", name: "France Haute-Savoie", lat: 46.05, lon: 6.75 },
-            { id: "france-hautes-alpes", name: "France Hautes-Alpes", lat: 44.85, lon: 6.35 },
-            { id: "italy-alto-adige", name: "Italy Alto Adige", lat: 46.65, lon: 11.40 },
-            { id: "italy-trentino", name: "Italy Trentino", lat: 46.10, lon: 11.10 },
-            { id: "italy-valle-daosta", name: "Italy Valle d'Aosta", lat: 45.80, lon: 7.35 },
-            { id: "italy-lombardy", name: "Italy Lombardy", lat: 46.20, lon: 10.30 },
-            { id: "italy-veneto", name: "Italy Veneto", lat: 46.45, lon: 12.05 },
-            { id: "italy-piedmont", name: "Italy Piedmont", lat: 44.85, lon: 7.05 },
+            // Austria — 3 natural ski identities
+            { id: "at-vorarlberg", name: "Vorarlberg", lat: 47.18, lon: 9.95, resortCount: 6, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["vorarlberg"] },
+            { id: "at-tyrol", name: "Tyrol", lat: 47.18, lon: 11.30, resortCount: 21, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["tyrol"] },
+            { id: "at-salzburg", name: "Salzburg", lat: 47.30, lon: 13.10, resortCount: 10, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["salzburg"] },
+            { id: "at-south", name: "Carinthia & Styria", lat: 47.10, lon: 14.20, resortCount: 11, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["carinthia","styria","lower austria","upper austria"] },
+            // Switzerland — 2 distinct arcs
+            { id: "ch-west", name: "Valais & Vaud", lat: 46.30, lon: 7.45, resortCount: 14, flag: "🇨🇭", countryFilter: "Switzerland", regionKeywords: ["valais","vaud","bernese","obwalden","uri","schwyz","st. gallen"] },
+            { id: "ch-east", name: "Graubünden", lat: 46.65, lon: 9.75, resortCount: 6, flag: "🇨🇭", countryFilter: "Switzerland", regionKeywords: ["graubunden","graubünden"] },
+            // France — 3 ski heartlands
+            { id: "fr-savoie", name: "Savoie", lat: 45.42, lon: 6.62, resortCount: 11, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["savoie"] },
+            { id: "fr-haute-savoie", name: "Haute-Savoie", lat: 46.00, lon: 6.65, resortCount: 5, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["haute-savoie","haute savoie"] },
+            { id: "fr-south", name: "Southern Alps", lat: 44.95, lon: 6.25, resortCount: 8, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["hautes-alpes","hautes alpes","isere","alpes-maritimes"] },
+            // Italy — 4 alpine identities
+            { id: "it-alto-adige", name: "South Tyrol", lat: 46.60, lon: 11.70, resortCount: 8, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["alto adige"] },
+            { id: "it-trentino", name: "Trentino", lat: 46.20, lon: 11.15, resortCount: 7, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["trentino","lombardy"] },
+            { id: "it-veneto", name: "Veneto & Dolomites", lat: 46.48, lon: 12.00, resortCount: 2, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["veneto"] },
+            { id: "it-west", name: "Valle d'Aosta & Piedmont", lat: 45.65, lon: 7.10, resortCount: 7, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["aosta","piedmont"] },
           ]
         },
         {
@@ -102,12 +102,13 @@ function loadScript(src) {
 }
 
 function getResortCount(subRegionId) {
-  if (subRegionId.includes("austria")) return 5;
-  if (subRegionId.includes("switzerland")) return 4;
-  if (subRegionId.includes("france")) return 5;
-  if (subRegionId.includes("italy")) return 4;
-  if (subRegionId.includes("andorra")) return 2;
-  if (subRegionId.includes("spain")) return 3;
+  const counts = {
+    "at-vorarlberg": 6, "at-tyrol": 21, "at-salzburg": 10, "at-south": 11,
+    "ch-west": 14, "ch-east": 6,
+    "fr-savoie": 11, "fr-haute-savoie": 5, "fr-south": 8,
+    "it-alto-adige": 8, "it-trentino": 7, "it-veneto": 2, "it-west": 7,
+  };
+  if (counts[subRegionId] !== undefined) return counts[subRegionId];
   if (subRegionId.includes("japan")) return 6;
   if (subRegionId.includes("rockies") || subRegionId.includes("sierra") || subRegionId.includes("cascades")) return 4;
   return 2;
@@ -115,13 +116,21 @@ function getResortCount(subRegionId) {
 
 function getResortsForSubRegion(subRegion) {
   if (!subRegion) return [];
+  // Use regionKeywords + countryFilter for precise matching
+  if (subRegion.regionKeywords && subRegion.countryFilter) {
+    return resorts.filter(r => {
+      const country = Array.isArray(r.country) ? r.country.join(" ") : (r.country || "");
+      const region = (r.region || "").toLowerCase();
+      if (!country.includes(subRegion.countryFilter)) return false;
+      return subRegion.regionKeywords.some(kw => region.includes(kw.toLowerCase()));
+    }).slice(0, 30);
+  }
   const nameLower = subRegion.name.toLowerCase();
   const words = nameLower.split(/[\s\-_]+/).filter(w => w.length > 3);
   return resorts.filter(r => {
     const region = (r.region || "").toLowerCase();
     const country = Array.isArray(r.country) ? r.country.join(" ").toLowerCase() : (r.country || "").toLowerCase();
-    const name = (r.name || "").toLowerCase();
-    return words.some(w => region.includes(w) || country.includes(w) || name.includes(w));
+    return words.some(w => region.includes(w) || country.includes(w));
   }).slice(0, 20);
 }
 
@@ -331,11 +340,26 @@ export default function GlobalDiscoveryMap() {
   }
 
   function getSubRegionPositions(subRegions) {
-    // Always use lat/lon → project() so positions are correct after SVG zoom transform
     return subRegions.map(sr => {
       const p = project(sr.lon, sr.lat);
       return { ...sr, px: p.x, py: p.y };
     });
+  }
+
+  // Convert SVG-space coords to screen-space coords using the current CSS transform
+  // svgTransform is like "scale(S) translate(tx, ty)" 
+  function svgToScreen(px, py) {
+    if (!svgTransform) return { x: px, y: py };
+    const scaleMatch = svgTransform.match(/scale[(]([^)]+)[)]/);
+    const translateMatch = svgTransform.match(/translate[(]([^p]+)px,\s*([^p]+)px[)]/);
+    if (!scaleMatch) return { x: px, y: py };
+    const S = parseFloat(scaleMatch[1]);
+    const tx = translateMatch ? parseFloat(translateMatch[1]) : 0;
+    const ty = translateMatch ? parseFloat(translateMatch[2]) : 0;
+    return {
+      x: (px + tx) * S,
+      y: (py + ty) * S,
+    };
   }
 
   const svgStyle = {
@@ -488,43 +512,76 @@ export default function GlobalDiscoveryMap() {
               );
             })}
 
-            {/* Region: subRegion markers — no outer ring, just dot + label */}
+            {/* Region: subRegion markers rendered in SVG space but tiny — screen overlay handles labels */}
             {phase === "region" && activeRegion && getSubRegionPositions(activeRegion.subRegions).map(sr => {
-              const hovered = hoverId === sr.id;
-              const count = getResortCount(sr.id);
               return (
-                <g
-                  key={sr.id}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => handleSubRegionClick(sr)}
-                  onMouseEnter={e => handleMarkerMouseEnter(sr.id, sr.name, count, e.clientX, e.clientY)}
-                  onMouseLeave={handleMarkerMouseLeave}
-                >
-                  {/* Hit area */}
-                  <circle cx={sr.px} cy={sr.py} r={10} fill="transparent" />
-                  {/* Dot only — no outer ring */}
-                  <circle
-                    cx={sr.px} cy={sr.py} r={hovered ? 4 : 2.5}
-                    fill={hovered ? "#3ECF8E" : "rgba(62,207,142,0.8)"}
-                    stroke={hovered ? "rgba(62,207,142,0.4)" : "none"}
-                    strokeWidth={2}
-                    style={{ transition: "all 0.2s ease", filter: hovered ? "drop-shadow(0 0 6px rgba(62,207,142,0.8))" : "none" }}
-                  />
-                  <text
-                    x={sr.px} y={sr.py + 12}
-                    textAnchor="middle"
-                    fill={hovered ? "white" : "rgba(255,255,255,0.65)"}
-                    fontSize={7} fontWeight={hovered ? 700 : 600}
-                    style={{ pointerEvents: "none", fontFamily: "var(--font-display)", transition: "fill 0.2s ease" }}
-                  >
-                    {sr.name}
-                  </text>
-                </g>
+                <circle key={sr.id} cx={sr.px} cy={sr.py} r={1.5}
+                  fill="rgba(62,207,142,0.6)" style={{ pointerEvents: "none" }} />
               );
             })}
           </g>
         </svg>
       )}
+
+      {/* Subregion bubbles overlay — screen-space so size is independent of SVG zoom */}
+      {phase === "region" && activeRegion && (() => {
+        const positions = getSubRegionPositions(activeRegion.subRegions);
+        return positions.map(sr => {
+          const screen = svgToScreen(sr.px, sr.py);
+          const isHov = hoverId === sr.id;
+          const BUBBLE_R = 28; // fixed screen pixels
+          return (
+            <div
+              key={sr.id}
+              style={{
+                position: "absolute",
+                left: screen.x - BUBBLE_R,
+                top: screen.y - BUBBLE_R,
+                width: BUBBLE_R * 2,
+                height: BUBBLE_R * 2,
+                cursor: "pointer",
+                zIndex: isHov ? 20 : 10,
+                transition: "transform 0.15s ease",
+                transform: isHov ? "scale(1.12)" : "scale(1)",
+              }}
+              onClick={() => handleSubRegionClick(sr)}
+              onMouseEnter={e => { setHoverId(sr.id); const rect = containerRef.current?.getBoundingClientRect(); if (rect) setTooltip({ x: e.clientX - rect.left, y: e.clientY - rect.top, text: sr.name, sub: sr.resortCount ? sr.resortCount + " resorts" : "" }); }}
+              onMouseLeave={() => { setHoverId(null); setTooltip(null); }}
+            >
+              {/* Circle */}
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: "50%",
+                background: isHov ? "rgba(62,207,142,0.35)" : "rgba(62,207,142,0.18)",
+                border: `1.5px solid ${isHov ? "rgba(62,207,142,0.9)" : "rgba(62,207,142,0.5)"}`,
+                boxShadow: isHov ? "0 0 14px rgba(62,207,142,0.5)" : "none",
+                transition: "all 0.2s ease",
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: 1,
+              }}>
+                {sr.flag && (
+                  <span style={{ fontSize: 13, lineHeight: 1 }}>{sr.flag}</span>
+                )}
+                <span style={{
+                  color: isHov ? "white" : "rgba(255,255,255,0.85)",
+                  fontSize: 7,
+                  fontWeight: 700,
+                  fontFamily: "var(--font-display)",
+                  textAlign: "center",
+                  lineHeight: 1.1,
+                  letterSpacing: "0.02em",
+                  maxWidth: BUBBLE_R * 1.6,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}>
+                  {sr.name}
+                </span>
+              </div>
+            </div>
+          );
+        });
+      })()}
 
       {/* PeakMap for map3d phase */}
       {phase === "map3d" && activeSubRegion && (
