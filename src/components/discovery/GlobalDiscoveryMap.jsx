@@ -330,30 +330,9 @@ export default function GlobalDiscoveryMap() {
     return regions.map(r => { const p = project(r.lon, r.lat); return { ...r, px: p.x, py: p.y }; });
   }
 
-  const ALPS_SUBREGION_POSITIONS = {
-    "austria-tyrol":              { x: 720, y: 235 },
-    "austria-salzburg":           { x: 750, y: 220 },
-    "austria-vorarlberg":         { x: 665, y: 230 },
-    "austria-styria":             { x: 775, y: 215 },
-    "austria-carinthia":          { x: 755, y: 245 },
-    "switzerland-valais":         { x: 648, y: 255 },
-    "switzerland-graubuenden":    { x: 690, y: 240 },
-    "switzerland-bernese":        { x: 650, y: 240 },
-    "france-savoie":              { x: 618, y: 258 },
-    "france-haute-savoie":        { x: 620, y: 245 },
-    "france-hautes-alpes":        { x: 625, y: 270 },
-    "italy-alto-adige":           { x: 708, y: 248 },
-    "italy-trentino":             { x: 710, y: 258 },
-    "italy-valle-daosta":         { x: 622, y: 255 },
-    "italy-lombardy":             { x: 690, y: 262 },
-    "italy-veneto":               { x: 725, y: 255 },
-    "italy-piedmont":             { x: 628, y: 268 },
-  };
-
   function getSubRegionPositions(subRegions) {
+    // Always use lat/lon → project() so positions are correct after SVG zoom transform
     return subRegions.map(sr => {
-      const hardcoded = ALPS_SUBREGION_POSITIONS[sr.id];
-      if (hardcoded) return { ...sr, px: hardcoded.x, py: hardcoded.y };
       const p = project(sr.lon, sr.lat);
       return { ...sr, px: p.x, py: p.y };
     });
@@ -420,7 +399,7 @@ export default function GlobalDiscoveryMap() {
                     onMouseLeave={handleMarkerMouseLeave}
                   >
                     <circle
-                      cx={pos.x} cy={pos.y} r={22}
+                      cx={pos.x} cy={pos.y} r={30}
                       fill={hovered ? "rgba(251,52,61,0.2)" : "rgba(251,52,61,0.08)"}
                       stroke={hovered ? "rgba(251,52,61,0.9)" : "rgba(251,52,61,0.45)"}
                       strokeWidth={1.5}
@@ -446,7 +425,7 @@ export default function GlobalDiscoveryMap() {
                   <text x={pos.x} y={pos.y - 35} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={9} fontWeight={500} style={{ pointerEvents: "none" }}>
                     {t('coming_soon')}
                   </text>
-                  <circle cx={pos.x} cy={pos.y} r={22} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} style={{ pointerEvents: "none" }} />
+                  <circle cx={pos.x} cy={pos.y} r={30} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} style={{ pointerEvents: "none" }} />
                   <circle cx={pos.x} cy={pos.y} r={6} fill="rgba(255,255,255,0.3)" style={{ pointerEvents: "none" }} />
                   <text
                     x={pos.x} y={pos.y + 30}
@@ -467,16 +446,16 @@ export default function GlobalDiscoveryMap() {
               const isComingSoon = !!region.comingSoon;
               if (isComingSoon) {
                 return (
-                  <g key={region.id} style={{ cursor: "default", opacity: 0.5 }}>
-                    <circle cx={region.px} cy={region.py} r={8}
-                      fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" strokeWidth={1}
-                      strokeDasharray="3 2" style={{ pointerEvents: "none" }} />
-                    <text x={region.px} y={region.py - 12} textAnchor="middle"
-                      fill="rgba(255,255,255,0.35)" fontSize={7} fontWeight={500}
-                      style={{ pointerEvents: "none" }}>{t("coming_soon")}</text>
-                    <text x={region.px} y={region.py + 16} textAnchor="middle"
-                      fill="rgba(255,255,255,0.35)" fontSize={8} fontWeight={600}
+                  <g key={region.id} style={{ cursor: "default", opacity: 0.45 }}>
+                    <circle cx={region.px} cy={region.py} r={4}
+                      fill="rgba(255,255,255,0.15)" stroke="none"
+                      style={{ pointerEvents: "none" }} />
+                    <text x={region.px} y={region.py + 13} textAnchor="middle"
+                      fill="rgba(255,255,255,0.4)" fontSize={8} fontWeight={600}
                       style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}>{region.name}</text>
+                    <text x={region.px} y={region.py + 22} textAnchor="middle"
+                      fill="rgba(255,255,255,0.25)" fontSize={6} fontWeight={400}
+                      style={{ pointerEvents: "none" }}>{t("coming_soon")}</text>
                   </g>
                 );
               }
