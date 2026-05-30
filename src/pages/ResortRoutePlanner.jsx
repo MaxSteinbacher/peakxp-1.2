@@ -188,6 +188,8 @@ export default function ResortRoutePlanner() {
 
       map.on("load", async () => {
         if (unmounted) return;
+        // Force map to recalculate container dimensions
+        setTimeout(() => { try { map.resize(); } catch {} }, 50);
 
         map.addSource("maptiler-dem", {
           type: "raster-dem",
@@ -292,7 +294,7 @@ export default function ResortRoutePlanner() {
   }
 
   return (
-    <div className="min-h-screen bg-peak-bg flex flex-col">
+    <div style={{ height: "calc(100vh - 64px)", display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--color-peak-bg, #070B1E)" }}>
       {/* Header */}
       <div className="h-14 bg-peak-surface border-b border-white/5 flex items-center px-4 gap-4 flex-shrink-0 z-30 relative">
         <Link to={`/resort/${id}`} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text transition-colors text-sm flex-shrink-0">
@@ -312,7 +314,7 @@ export default function ResortRoutePlanner() {
       </div>
 
       {/* Main area */}
-      <div className="flex-1 relative overflow-hidden">
+      <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
         {loading && (
           <div className="absolute inset-0 z-40 bg-peak-surface flex flex-col items-center justify-center gap-3">
             <Mountain className="h-12 w-12 text-peak-text-secondary/40 animate-pulse" />
