@@ -281,7 +281,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
               <label className="block text-xs text-peak-text-secondary mb-1">Start time</label>
               <select value={prefs.startTime} onChange={e => setPrefs(p => ({ ...p, startTime: e.target.value }))}
                 className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={locType}>{locType}</option>)}
+                {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(slot => <option key={slot}>{slot}</option>)}
               </select>
             </div>
             {(prefs.duration === "Half day" || prefs.duration === "Full day" || needsEndDate) && (
@@ -289,7 +289,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
                 <label className="block text-xs text-peak-text-secondary mb-1">End time</label>
                 <select value={prefs.endTime} onChange={e => setPrefs(p => ({ ...p, endTime: e.target.value }))}
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={locType}>{locType}</option>)}
+                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(slot => <option key={slot}>{slot}</option>)}
                 </select>
               </div>
             )}

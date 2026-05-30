@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Plane, Train, MapPin, Package, LocateFixed, CheckCircle } from "lucide-react";
 import { searchDestinations, searchIndex } from "../../lib/searchIndex";
+import { useT } from "../../lib/i18n";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -225,6 +226,7 @@ export default function LocationInput({
   value, onChange, onSelect, placeholder, type = "general",
   context, prefilledFrom = null, className = ""
 }) {
+  const t = useT();
   const [focused, setFocused] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [highlighted, setHighlighted] = useState(-1);
@@ -344,7 +346,7 @@ export default function LocationInput({
       {showLocationChip && !prefilledFrom && (
         <button onClick={handleUseLocation} className={`mt-1 flex items-center gap-1.5 text-xs cursor-pointer transition-colors ${locateState === "done" ? "text-peak-green" : "text-peak-blue hover:text-peak-blue/80"}`}>
           {locateState === "locating" ? <LocateFixed className="h-3 w-3 animate-spin" /> : locateState === "done" ? <CheckCircle className="h-3 w-3" /> : <LocateFixed className="h-3 w-3" />}
-          {locateState === "locating" ? "Detecting…" : locateState === "done" ? "Location detected" : locateState === "error" ? "Location unavailable — type your city or airport" : "Use my location"}
+          {locateState === "locating" ? t("detecting_location") : locateState === "done" ? t("location_detected") : locateState === "error" ? t("location_unavailable") : t("use_my_location")}
         </button>
       )}
 
