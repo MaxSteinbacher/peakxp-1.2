@@ -54,6 +54,20 @@ function formatTime(mins) {
   return `${h}h ${m.toString().padStart(2, "0")}min`;
 }
 
+// ─── IP-based location fallback (free, no key) ────────────────────────────
+async function getLocationFromIP() {
+  try {
+    // ip-api.com — free, no key, returns city + lat/lon
+    const res = await fetch("https://ip-api.com/json/?fields=city,lat,lon,status", { signal: AbortSignal.timeout(4000) });
+    const data = await res.json();
+    if (data.status === "success" && data.lat && data.lon) {
+      return { city: data.city || "your location", lat: data.lat, lon: data.lon };
+    }
+  } catch {}
+  // Hard fallback: central Europe
+  return { city: "Munich", lat: 48.14, lon: 11.58 };
+}
+
 // ─── Try to get real road time from OSRM (free, no key) ───────────────────
 async function fetchOsrmTime(fromLat, fromLon, toLat, toLon) {
   try {
@@ -132,7 +146,7 @@ export default function DayTrips() {
 
   const [locationState, setLocationState] = useState("idle"); // idle | requesting | granted | denied | error
   const [userCoords, setUserCoords] = useState(null);
-  const [cityName, setCityName] = useState("Munich"); // fallback
+  const [cityName, setCityName] = useState(""); // set via IP or GPS
   const [nearbyResorts, setNearbyResorts] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -203,9 +217,11 @@ export default function DayTrips() {
   // On mount: try to detect location silently (no prompt) using cached permission
   useEffect(() => {
     if (!navigator.geolocation) {
-      setLocationState("error");
-      // Fall back to Munich coords
-      setUserCoords({ lat: 48.14, lon: 11.58 });
+      setLocationState("denied");
+      getLocationFromIP().then(({ city, lat, lon }) => {
+        setCityName(city);
+        setUserCoords({ lat, lon });
+      });
       return;
     }
 
@@ -216,9 +232,11 @@ export default function DayTrips() {
           requestLocation();
         } else if (result.state === "denied") {
           setLocationState("denied");
-          // Use Munich as fallback
-          setUserCoords({ lat: 48.14, lon: 11.58 });
-          setCityName("Munich");
+          // Use IP geolocation as fallback
+          getLocationFromIP().then(({ city, lat, lon }) => {
+            setCityName(city);
+            setUserCoords({ lat, lon });
+          });
         } else {
           setLocationState("idle"); // prompt state — wait for user to click
         }
@@ -247,8 +265,10 @@ export default function DayTrips() {
       },
       () => {
         setLocationState("denied");
-        setUserCoords({ lat: 48.14, lon: 11.58 });
-        setCityName("Munich");
+        getLocationFromIP().then(({ city, lat, lon }) => {
+          setCityName(city);
+          setUserCoords({ lat, lon });
+        });
       },
       { timeout: 8000, maximumAge: 300000 }
     );
@@ -305,7 +325,7 @@ export default function DayTrips() {
           </span>
         </div>
         <h2 className="font-display font-bold text-2xl sm:text-3xl text-peak-text">
-          {t("day_trips_from")} {cityName}
+          {t("day_trips_from")} {cityName || "…"}
         </h2>
         <p className="text-peak-text-secondary text-sm mt-1">{t("day_trips_subline")}</p>
       </div>
