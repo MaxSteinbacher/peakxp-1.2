@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Mountain, ArrowLeft, Heart, Share2, MapPin, Snowflake, Thermometer, Car, ExternalLink } from "lucide-react";
 import { useT } from "../lib/i18n";
@@ -28,6 +28,11 @@ export default function ResortDetail() {
   const { id } = useParams();
   const resort = getResortById(id);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Always start at top of page when navigating to a resort
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [id]);
   const [saved, setSaved] = useState(false);
 
   if (!resort) {
