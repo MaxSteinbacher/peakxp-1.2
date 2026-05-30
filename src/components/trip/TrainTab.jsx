@@ -106,7 +106,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const [toVal, setToVal] = useState("");
   const [fromStationData, setFromStationData] = useState(null);
   const [toStationData, setToStationData] = useState(null);
-  const [searchForm, setSearchForm] = useState({ depDate: "", depTime: "Morning 05:00–12:00", retDate: "", retTime: "Morning 05:00–12:00", adults: 1, youth: 0, children: 0, infants: 0, railcard: "None" });
+  const [searchForm, setSearchForm] = useState({ depDate: "", depTime: t("morning_time"), retDate: "", retTime: t("morning_time"), adults: 1, youth: 0, children: 0, infants: 0, railcard: "None" });
   const [filters, setFilters] = useState({ direct: false, ski: false, bike: false, accessible: false });
   const [skiGear, setSkiGear] = useState({ open: false, skiBag: false, bootBag: false, poles: false });
 
@@ -181,10 +181,10 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
         <div className="max-w-5xl mx-auto">
           {/* Trip type */}
           <div className="flex gap-2 mb-5">
-            {[{ key: "Return", labelKey: "return_journey" }, { key: "Single", labelKey: "single_journey" }, { key: "Open return", labelKey: null }].map(opt => (
+            {[{ key: "Return", labelKey: "return_journey" }, { key: "Single", labelKey: "single_journey" }, { key: "Open return", labelKey: "open_return" }].map(opt => (
               <button key={opt.key} onClick={() => setTripType(opt.key)}
                 className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${tripType === opt.key ? "bg-peak-red text-white border-peak-red" : "bg-peak-surface border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-                {opt.labelKey ? t(opt.labelKey) : opt.key}
+                {t(opt.labelKey)}
               </button>
             ))}
           </div>
@@ -196,7 +196,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">{t('from')}</label>
                 <LocationInput
-                  type="station" context="departure" placeholder="Departure city or station"
+                  type="station" context="departure" placeholder={t("departure_city_station_placeholder")}
                   value={fromVal} onChange={setFromVal}
                   onSelect={s => { setFromStationData(s); setFromVal(s.label); }}
                 />
@@ -209,7 +209,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
               <div className="flex-1">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">{t('to')}</label>
                 <LocationInput
-                  type="station" context="destination" placeholder="Destination station or resort"
+                  type="station" context="destination" placeholder={t("destination_station_placeholder")}
                   value={toVal} onChange={setToVal}
                   onSelect={s => { setToStationData(s); setToVal(s.label); }}
                 />
@@ -227,18 +227,18 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                 onStartChange={d => sf("depDate", d)}
                 onEndChange={d => sf("retDate", d)}
                 context="train"
-                placeholder={{ start: "Outbound date", end: tripType === "Return" ? "Return date" : "No return" }}
+                placeholder={{ start: t("outbound_date"), end: tripType === "Return" ? t("return_date_placeholder") : t("no_return") }}
                 singleDate={tripType !== "Return"}
               />
               <div className={`grid gap-4 mt-3 ${tripType === "Return" ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
                 <select value={searchForm.depTime} onChange={e => sf("depTime", e.target.value)}
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                  {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(opt => <option key={opt}>{opt}</option>)}
+                  {[t("morning_time"), "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(opt => <option key={opt}>{opt}</option>)}
                 </select>
                 {tripType === "Return" && (
                   <select value={searchForm.retTime} onChange={e => sf("retTime", e.target.value)}
                     className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                    {["Morning 05:00–12:00", "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(opt => <option key={opt}>{opt}</option>)}
+                    {[t("morning_time"), "Afternoon 12:00–18:00", "Evening 18:00–00:00"].map(opt => <option key={opt}>{opt}</option>)}
                   </select>
                 )}
               </div>
@@ -250,7 +250,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                 <div>
                   <label className="block text-xs text-peak-text-secondary mb-1.5">{t('passengers')}</label>
                   <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 space-y-2">
-                    {[{ label: t('adults'), key: "adults", min: 1 }, { label: `${t('youth_12_25')}`, key: "youth", min: 0 }, { label: `${t('children')} (4–11)`, key: "children", min: 0 }, { label: t('infants_under_4'), key: "infants", min: 0 }].map(({ label, key, min }) => (
+                    {[{ label: t('adults'), key: "adults", min: 1 }, { label: `${t("youth_12_25")}`, key: "youth", min: 0 }, { label: `${t('children')} (4–11)`, key: "children", min: 0 }, { label: t("infants_under_4"), key: "infants", min: 0 }].map(({ label, key, min }) => (
                       <div key={key} className="flex items-center justify-between">
                         <span className="text-xs text-peak-text-secondary">{label}</span>
                         <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('railcard_discount')}</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t("railcard_discount")}</label>
                   <select value={searchForm.railcard} onChange={e => sf("railcard", e.target.value)}
                     className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-peak-blue">
                     {["None", "Senior railcard", "Youth (BahnCard 25/50)", "Family", "Group", "Interrail pass"].map(r => <option key={r}>{r}</option>)}
@@ -274,7 +274,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 4 — Filters */}
             <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4">
-              {[{ k: "direct", l: t('direct_trains_only') }, { k: "ski", l: t('trains_ski_storage') }, { k: "bike", l: t('trains_bike_space') }, { k: "accessible", l: t('accessible_wheelchair') }].map(({ k, l }) => (
+              {[{ k: "direct", l: t("direct_trains_only") }, { k: "ski", l: t("trains_ski_storage") }, { k: "bike", l: t("trains_bike_space") }, { k: "accessible", l: t("accessible_wheelchair") }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -288,7 +288,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
           <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mt-4">
             <button onClick={() => setSkiGear(g => ({ ...g, open: !g.open }))}
               className="w-full flex items-center justify-between">
-              <span className="text-peak-text text-sm font-medium">{t('travelling_ski_equipment')}</span>
+              <span className="text-peak-text text-sm font-medium">{t("travelling_ski_equipment")}</span>
               {skiGear.open ? <ChevronUp className="h-4 w-4 text-peak-text-secondary" /> : <ChevronDown className="h-4 w-4 text-peak-text-secondary" />}
             </button>
             {skiGear.open && (
@@ -351,7 +351,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('price')}: €{priceRange[0]}–€{priceRange[1]}</p>
                 <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={300} step={5} formatLabel={n => '€' + n} />
               </div>
-              {[{ k: "direct", l: t('direct') }, { k: "ski", l: t('ski_storage') }, { k: "bike", l: t('bike_space') }].map(({ k, l }) => (
+              {[{ k: "direct", l: t("direct") }, { k: "ski", l: t('ski_storage') }, { k: "bike", l: t('bike_space') }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -387,7 +387,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                             <div className="flex-1 h-px bg-white/10" />
                           </div>
                           <p className="text-peak-text-secondary text-xs">{train.duration}</p>
-                          <p className={`text-xs font-medium mt-0.5 ${train.changes === "Direct" || train.changes.startsWith("Direct") ? "text-peak-green" : "text-peak-text-secondary"}`}>{train.changes.startsWith("Direct") ? t('direct') + (train.changes.includes("(") ? " " + train.changes.slice(train.changes.indexOf("(")) : "") : train.changes}</p>
+                          <p className={`text-xs font-medium mt-0.5 ${train.changes === "Direct" || train.changes.startsWith("Direct") ? "text-peak-green" : "text-peak-text-secondary"}`}>{train.changes.startsWith("Direct") ? t("direct") + (train.changes.includes("(") ? " " + train.changes.slice(train.changes.indexOf("(")) : "") : train.changes}</p>
                         </div>
                         <div>
                           <p className="font-display font-bold text-peak-text text-2xl">{train.arr}</p>
@@ -430,11 +430,11 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
                     {expandedTrain === train.id && (
                       <div className="mt-3 bg-peak-surface rounded-xl p-4 text-xs text-peak-text-secondary space-y-1">
-                        <p><span className="text-peak-text font-medium">Platform:</span> {train.platform}</p>
-                        <p><span className="text-peak-text font-medium">Class:</span> {train.class}</p>
-                        <p><span className="text-peak-text font-medium">Cancellation:</span> {train.refundable ? "Refundable up to departure" : "Non-refundable"}</p>
-                        <p><span className="text-peak-text font-medium">Ski bag:</span> {train.skiBag ? "Advance booking required — approx. €15–25" : "Not available on this service"}</p>
-                        <p><span className="text-peak-text font-medium">Amenities:</span> {train.amenities.join(", ")}</p>
+                        <p><span className="text-peak-text font-medium">{t("platform_label")}</span> {train.platform}</p>
+                        <p><span className="text-peak-text font-medium">{t("class_label")}</span> {train.class}</p>
+                        <p><span className="text-peak-text font-medium">{t("cancellation_label")}</span> {train.refundable ? "Refundable up to departure" : "Non-refundable"}</p>
+                        <p><span className="text-peak-text font-medium">{t("ski_bag_label")}</span> {train.skiBag ? "Advance booking required — approx. €15–25" : "Not available on this service"}</p>
+                        <p><span className="text-peak-text font-medium">{t("amenities_label")}</span> {train.amenities.join(", ")}</p>
                       </div>
                     )}
                   </div>
