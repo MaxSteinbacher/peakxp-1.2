@@ -106,7 +106,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
   const [toVal, setToVal] = useState("");
   const [fromStationData, setFromStationData] = useState(null);
   const [toStationData, setToStationData] = useState(null);
-  const [searchForm, setSearchForm] = useState({ depDate: "", depTime: t("morning_time"), retDate: "", retTime: t("morning_time"), adults: 1, youth: 0, children: 0, infants: 0, railcard: "None" });
+  const [searchForm, setSearchForm] = useState({ depDate: "", depTime: "Morning 05:00–12:00", retDate: "", retTime: "Morning 05:00–12:00", adults: 1, youth: 0, children: 0, infants: 0, railcard: "None" });
   const [filters, setFilters] = useState({ direct: false, ski: false, bike: false, accessible: false });
   const [skiGear, setSkiGear] = useState({ open: false, skiBag: false, bootBag: false, poles: false });
 
@@ -140,10 +140,10 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
   const filtered = useMemo(() => {
     let res = [...trainResults];
-    if (filters.direct) res = res.filter(t => t.changes === "Direct" || t.changes.startsWith("Direct"));
-    if (filters.ski) res = res.filter(t => t.amenities.includes("Ski storage"));
-    if (filters.bike) res = res.filter(t => t.amenities.includes("Bike space"));
-    res = res.filter(t => t.price >= priceRange[0] && t.price <= priceRange[1]);
+    if (filters.direct) res = res.filter(tr => tr.changes === "Direct" || tr.changes.startsWith("Direct"));
+    if (filters.ski) res = res.filter(tr => tr.amenities.includes("Ski storage"));
+    if (filters.bike) res = res.filter(tr => tr.amenities.includes("Bike space"));
+    res = res.filter(tr => tr.price >= priceRange[0] && tr.price <= priceRange[1]);
     if (sortBy === "Cheapest") res.sort((a, b) => a.price - b.price);
     else if (sortBy === "Fastest") res.sort((a, b) => a.duration.localeCompare(b.duration));
     else if (sortBy === "Earliest") res.sort((a, b) => a.dep.localeCompare(b.dep));
