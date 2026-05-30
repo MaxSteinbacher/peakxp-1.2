@@ -2,13 +2,13 @@ import { Sliders, Sparkles } from "lucide-react";
 import { useT } from "../../../lib/i18n";
 
 const EQUIPMENT_TYPES = [
-  { key: "skis", label: "Skis", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/17847d539_image.png" },
-  { key: "snowboard", label: "Snowboard", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cb2dd3d0d_image.png" },
-  { key: "ski_boots", label: "Ski Boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/91a7456fa_image.png" },
-  { key: "snowboard_boots", label: "Snowboard Boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7e9583c85_image.png" },
-  { key: "poles", label: "Poles", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1413d6a6e_image.png" },
-  { key: "helmet", label: "Helmet", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/3e7e89c91_image.png" },
-  { key: "back_protector", label: "Back Protector", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/f905b4878_image.png" },
+  { key: "skis", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/17847d539_image.png" },
+  { key: "snowboard", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cb2dd3d0d_image.png" },
+  { key: "ski_boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/91a7456fa_image.png" },
+  { key: "snowboard_boots", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7e9583c85_image.png" },
+  { key: "poles", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1413d6a6e_image.png" },
+  { key: "helmet", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/3e7e89c91_image.png" },
+  { key: "back_protector", image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/f905b4878_image.png" },
 ];
 
 function toggle(arr, val) {
@@ -42,7 +42,7 @@ export default function Step0({ selectedEquipment, setSelectedEquipment, mode, s
                 ? <img src={eq.image} alt={eq.label} className="w-full h-20 object-cover" />
                 : <div className="flex items-center justify-center h-20 w-full"><span className="text-2xl">{eq.emoji}</span></div>
               }
-              <span className="text-xs font-medium text-center leading-tight px-2 py-2">{eq.label}</span>
+              <span className="text-xs font-medium text-center leading-tight px-2 py-2">{t(eq.key)}</span>
             </button>
           );
         })}
