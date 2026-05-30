@@ -30,14 +30,13 @@ function loadSDK() {
         const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
         setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
       };
-      script.onerror = (e) => { sdkLoadPromise = null; reject(e); };
+      script.onerror = reject;
       document.head.appendChild(script);
     } else {
       const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
       setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
     }
   });
-});
 }
 
 function overpassToGeoJSON(data) {
