@@ -10,12 +10,12 @@ import LeftPanel from "../route/LeftPanel";
 import RightPanel from "../route/RightPanel";
 
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
-const STYLE_URL = `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${MAPTILER_KEY}`;
+const STYLE_URL = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
-let sdkLoadPromise = null;
+// Don't cache SDK promise — always check window.maptilersdk first
 function loadSDK() {
-  if (sdkLoadPromise) return sdkLoadPromise;
-  sdkLoadPromise = new Promise((resolve, reject) => {
+  if (window.maptilersdk) return Promise.resolve(window.maptilersdk);
+  return new Promise((resolve, reject) => {
     if (window.maptilersdk) return resolve(window.maptilersdk);
     if (!document.querySelector('link[href*="maptiler-sdk.css"]')) {
       const link = document.createElement("link");
@@ -37,7 +37,7 @@ function loadSDK() {
       setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
     }
   });
-  return sdkLoadPromise;
+});
 }
 
 function overpassToGeoJSON(data) {
@@ -153,7 +153,7 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
     const liftIds = ["lifts-line", "lifts-label"];
     pisteIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none"); });
     liftIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none"); });
-    try { map.setTerrain(layers.terrain ? { exaggeration: 1.5 } : { exaggeration: 0 }); } catch {}
+    try { map.setTerrain(layers.terrain ? { source: "maptiler-dem", exaggeration: 1.5 } : null); } catch {}
   }, [layers, loading]);
 
   useEffect(() => {
@@ -168,7 +168,7 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
       map = new sdk.Map({
         container: mapRef.current, style: STYLE_URL,
         center: [lng, lat], zoom: 13, pitch: 55, bearing: 0,
-        terrain: true, terrainExaggeration: 1.5,
+        antialias: true,
         scrollZoom: true, dragRotate: true, touchZoomRotate: true,
         attributionControl: false,
       });
@@ -177,6 +177,16 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
 
       map.on("load", async () => {
         if (unmounted) return;
+        // Add terrain correctly after map loads
+        try {
+          map.addSource("maptiler-dem", {
+            type: "raster-dem",
+            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`,
+            tileSize: 256,
+          });
+          map.setTerrain({ source: "maptiler-dem", exaggeration: 1.5 });
+        } catch {}
+
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
         map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 4, "line-opacity": 1, "line-cap": "round", "line-join": "round" } });
