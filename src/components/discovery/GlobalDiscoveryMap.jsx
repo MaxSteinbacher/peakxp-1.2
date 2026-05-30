@@ -230,7 +230,7 @@ export default function GlobalDiscoveryMap() {
     prevTransformRef.current = svgTransform;
     if (region.bounds) {
       // Use tight factor (0.72) so the region fills the viewport
-      setSvgTransform(getContinentTransform(region.bounds, 0.72));
+      setSvgTransform(getContinentTransform(region.bounds, 0.62));
     } else if (projRef.current) {
       // For regions without explicit bounds, zoom tightly on their center
       const pos = projRef.current([region.lon, region.lat]);
@@ -501,20 +501,20 @@ export default function GlobalDiscoveryMap() {
                   onMouseLeave={handleMarkerMouseLeave}
                 >
                   {/* Hit area */}
-                  <circle cx={sr.px} cy={sr.py} r={14} fill="transparent" />
+                  <circle cx={sr.px} cy={sr.py} r={10} fill="transparent" />
                   {/* Dot only — no outer ring */}
                   <circle
-                    cx={sr.px} cy={sr.py} r={hovered ? 6 : 4}
+                    cx={sr.px} cy={sr.py} r={hovered ? 4 : 2.5}
                     fill={hovered ? "#3ECF8E" : "rgba(62,207,142,0.8)"}
-                    stroke={hovered ? "rgba(62,207,142,0.5)" : "none"}
-                    strokeWidth={3}
+                    stroke={hovered ? "rgba(62,207,142,0.4)" : "none"}
+                    strokeWidth={2}
                     style={{ transition: "all 0.2s ease", filter: hovered ? "drop-shadow(0 0 6px rgba(62,207,142,0.8))" : "none" }}
                   />
                   <text
-                    x={sr.px} y={sr.py + 15}
+                    x={sr.px} y={sr.py + 12}
                     textAnchor="middle"
-                    fill={hovered ? "white" : "rgba(255,255,255,0.75)"}
-                    fontSize={8} fontWeight={hovered ? 700 : 600}
+                    fill={hovered ? "white" : "rgba(255,255,255,0.65)"}
+                    fontSize={7} fontWeight={hovered ? 700 : 600}
                     style={{ pointerEvents: "none", fontFamily: "var(--font-display)", transition: "fill 0.2s ease" }}
                   >
                     {sr.name}
@@ -531,14 +531,11 @@ export default function GlobalDiscoveryMap() {
         <div style={{ position: "absolute", inset: 0 }}>
           <PeakMap
             center={[activeSubRegion.lon, activeSubRegion.lat]}
-            zoom={activeRegion?.id === "alps" ? 9 : 10}
-            pitch={55}
-            bearing={-10}
+            zoom={10}
+            pitch={45}
+            bearing={0}
             height="h-full"
-            maxBounds={activeRegion?.bounds ? [
-              [activeRegion.bounds.w - 2, activeRegion.bounds.s - 2],
-              [activeRegion.bounds.e + 2, activeRegion.bounds.n + 2]
-            ] : null}
+            terrain={false}
             onMapLoad={(map) => {
               mapInstanceRef.current = map;
               loadResortMarkersForSubRegion(map, activeSubRegion);
