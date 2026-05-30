@@ -176,6 +176,8 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
 
       map.on("load", async () => {
         if (unmounted) return;
+        // Force map to recalculate container dimensions
+        setTimeout(() => { try { map.resize(); } catch {} }, 50);
         // Add terrain correctly after map loads
         try {
           map.addSource("maptiler-dem", {
@@ -296,14 +298,14 @@ function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
         </div>
 
         {/* Map */}
-        <div className="flex-1 relative">
+        <div className="flex-1" style={{ position: "relative", minWidth: 0 }}>
           {loading && (
-            <div className="absolute inset-0 z-10 bg-peak-surface flex flex-col items-center justify-center gap-2">
+            <div style={{ position: "absolute", inset: 0, zIndex: 10 }} className="bg-peak-surface flex flex-col items-center justify-center gap-2">
               <Mountain className="h-8 w-8 text-peak-text-secondary/40 animate-pulse" />
               <p className="text-peak-text-secondary text-xs">Loading terrain...</p>
             </div>
           )}
-          <div ref={mapRef} className="absolute inset-0" />
+          <div ref={mapRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
         </div>
 
         {/* Right panel */}
