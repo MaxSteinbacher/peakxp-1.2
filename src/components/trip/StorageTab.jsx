@@ -185,7 +185,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
     <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={Math.min(step, STEPS_KEYS.length - 1)} onBack={goBack}>
       {preFilled && (
         <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
-          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
+          <p className="text-peak-blue text-xs font-medium">{t('pre_filled_agent')}</p>
         </div>
       )}
 
