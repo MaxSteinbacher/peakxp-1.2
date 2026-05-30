@@ -637,6 +637,17 @@ export const TRANSLATIONS = {
     enter_airports_to_search: "Please enter departure and destination airports to search",
     no_return: "No return",
 
+    day_trips_location_label: "Based on your location",
+    day_trips_enable_location: "Enable location for personalised suggestions",
+    day_trips_enable_desc: "Allow location access to see ski resorts closest to you, with real travel times.",
+    day_trips_enable_btn: "Enable location",
+    by_car: "by car",
+    by_train: "by train",
+    by_plane: "fly + transfer",
+    car_or_train: "car / train",
+    detecting_resorts: "Finding resorts near you…",
+    day_trips_no_location: "Showing resorts near",
+
   },
 
   de: {
@@ -1201,6 +1212,17 @@ export const TRANSLATIONS = {
     enter_airports_to_search: "Bitte Abflug- und Zielflughafen eingeben, um zu suchen",
     no_return: "Kein Rückflug",
 
+    day_trips_location_label: "Basierend auf Ihrem Standort",
+    day_trips_enable_location: "Standort aktivieren für personalisierte Vorschläge",
+    day_trips_enable_desc: "Standortzugriff erlauben, um die nächstgelegenen Skigebiete mit echten Reisezeiten zu sehen.",
+    day_trips_enable_btn: "Standort aktivieren",
+    by_car: "mit dem Auto",
+    by_train: "mit dem Zug",
+    by_plane: "Flug + Transfer",
+    car_or_train: "Auto / Zug",
+    detecting_resorts: "Suche Skigebiete in Ihrer Nähe…",
+    day_trips_no_location: "Skigebiete in der Nähe von",
+
   },
 
   fr: {
@@ -1764,6 +1786,17 @@ export const TRANSLATIONS = {
     enter_airports_to_search: "Veuillez entrer les aéroports de départ et de destination pour rechercher",
     no_return: "Sans retour",
 
+    day_trips_location_label: "Selon votre position",
+    day_trips_enable_location: "Activez la localisation pour des suggestions personnalisées",
+    day_trips_enable_desc: "Autorisez l'accès à la localisation pour voir les stations les plus proches avec les temps de trajet réels.",
+    day_trips_enable_btn: "Activer la localisation",
+    by_car: "en voiture",
+    by_train: "en train",
+    by_plane: "vol + transfert",
+    car_or_train: "voiture / train",
+    detecting_resorts: "Recherche de stations près de vous…",
+    day_trips_no_location: "Stations près de",
+
   },
 
   it: {
@@ -2326,6 +2359,17 @@ export const TRANSLATIONS = {
     preferred_locker_size: "Dimensione armadietto preferita",
     enter_airports_to_search: "Inserisci aeroporti di partenza e destinazione per cercare",
     no_return: "Senza ritorno",
+
+    day_trips_location_label: "In base alla tua posizione",
+    day_trips_enable_location: "Attiva la posizione per suggerimenti personalizzati",
+    day_trips_enable_desc: "Consenti l'accesso alla posizione per vedere i resort più vicini con i tempi di viaggio reali.",
+    day_trips_enable_btn: "Attiva posizione",
+    by_car: "in auto",
+    by_train: "in treno",
+    by_plane: "volo + transfer",
+    car_or_train: "auto / treno",
+    detecting_resorts: "Ricerca resort vicino a te…",
+    day_trips_no_location: "Resort vicino a",
 
   },
 };
