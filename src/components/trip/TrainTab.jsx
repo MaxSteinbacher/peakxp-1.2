@@ -194,7 +194,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
             {/* Row 1 — From / Swap / To */}
             <div className="flex items-start gap-3 mb-5">
               <div className="flex-1">
-                <label className="block text-xs text-peak-text-secondary mb-1.5">From</label>
+                <label className="block text-xs text-peak-text-secondary mb-1.5">{t('from')}</label>
                 <LocationInput
                   type="station" context="departure" placeholder="Departure city or station"
                   value={fromVal} onChange={setFromVal}
@@ -207,7 +207,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
               </button>
 
               <div className="flex-1">
-                <label className="block text-xs text-peak-text-secondary mb-1.5">To</label>
+                <label className="block text-xs text-peak-text-secondary mb-1.5">{t('to')}</label>
                 <LocationInput
                   type="station" context="destination" placeholder="Destination station or resort"
                   value={toVal} onChange={setToVal}
@@ -250,7 +250,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                 <div>
                   <label className="block text-xs text-peak-text-secondary mb-1.5">{t('passengers')}</label>
                   <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 space-y-2">
-                    {[{ label: "Adults", key: "adults", min: 1 }, { label: "Youth (12–25)", key: "youth", min: 0 }, { label: "Children (4–11)", key: "children", min: 0 }, { label: "Infants under 4", key: "infants", min: 0 }].map(({ label, key, min }) => (
+                    {[{ label: t('adults'), key: "adults", min: 1 }, { label: `${t('youth_12_25')}`, key: "youth", min: 0 }, { label: `${t('children')} (4–11)`, key: "children", min: 0 }, { label: t('infants_under_4'), key: "infants", min: 0 }].map(({ label, key, min }) => (
                       <div key={key} className="flex items-center justify-between">
                         <span className="text-xs text-peak-text-secondary">{label}</span>
                         <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Railcard / discount</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('railcard_discount')}</label>
                   <select value={searchForm.railcard} onChange={e => sf("railcard", e.target.value)}
                     className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-peak-blue">
                     {["None", "Senior railcard", "Youth (BahnCard 25/50)", "Family", "Group", "Interrail pass"].map(r => <option key={r}>{r}</option>)}
@@ -274,7 +274,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 4 — Filters */}
             <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4">
-              {[{ k: "direct", l: "Direct trains only" }, { k: "ski", l: "Trains with ski storage" }, { k: "bike", l: "Trains with bike space" }, { k: "accessible", l: "Accessible (wheelchair)" }].map(({ k, l }) => (
+              {[{ k: "direct", l: t('direct_trains_only') }, { k: "ski", l: t('trains_ski_storage') }, { k: "bike", l: t('trains_bike_space') }, { k: "accessible", l: t('accessible_wheelchair') }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -288,19 +288,19 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
           <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mt-4">
             <button onClick={() => setSkiGear(g => ({ ...g, open: !g.open }))}
               className="w-full flex items-center justify-between">
-              <span className="text-peak-text text-sm font-medium">Travelling with ski equipment?</span>
+              <span className="text-peak-text text-sm font-medium">{t('travelling_ski_equipment')}</span>
               {skiGear.open ? <ChevronUp className="h-4 w-4 text-peak-text-secondary" /> : <ChevronDown className="h-4 w-4 text-peak-text-secondary" />}
             </button>
             {skiGear.open && (
               <div className="mt-4 space-y-3">
-                {[{ k: "skiBag", l: "Ski bag (book as oversized luggage on TGV/Eurostar)" }, { k: "bootBag", l: "Ski boot bag" }, { k: "poles", l: "Poles" }].map(({ k, l }) => (
+                {[{ k: "skiBag", l: t('ski_bag_oversized') }, { k: "bootBag", l: t('ski_boot_bag') }, { k: "poles", l: t('poles') }].map(({ k, l }) => (
                   <label key={k} className="flex items-center gap-3 cursor-pointer">
                     <Checkbox checked={skiGear[k]} onCheckedChange={v => setSkiGear(g => ({ ...g, [k]: v }))}
                       className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
                     <span className="text-sm text-peak-text-secondary">{l}</span>
                   </label>
                 ))}
-                <p className="text-peak-text-secondary text-xs mt-2 pt-2 border-t border-white/5">Eurostar and TGV require advance booking for ski bags at extra cost. We will show availability per result.</p>
+                <p className="text-peak-text-secondary text-xs mt-2 pt-2 border-t border-white/5">{t('train_ski_bag_note')}</p>
               </div>
             )}
           </div>
@@ -348,10 +348,10 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
             {/* Filter sidebar */}
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price: €{priceRange[0]}–€{priceRange[1]}</p>
+                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('price')}: €{priceRange[0]}–€{priceRange[1]}</p>
                 <RangeSlider value={priceRange} onValueChange={setPriceRange} min={0} max={300} step={5} formatLabel={n => '€' + n} />
               </div>
-              {[{ k: "direct", l: "Direct only" }, { k: "ski", l: "Ski storage" }, { k: "bike", l: "Bike space" }].map(({ k, l }) => (
+              {[{ k: "direct", l: t('direct') }, { k: "ski", l: t('ski_storage') }, { k: "bike", l: t('bike_space') }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -412,8 +412,8 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
                       {/* Price */}
                       <div className="w-32 flex-shrink-0 text-right">
                         <p className="font-display font-bold text-peak-text text-2xl">€{train.price}</p>
-                        <p className="text-peak-text-secondary text-xs">/ person</p>
-                        <p className="text-peak-text-secondary text-xs">€{train.price * totalPax} total</p>
+                        <p className="text-peak-text-secondary text-xs">/ {t('per_person').replace('per ', '')}</p>
+                                 <p className="text-peak-text-secondary text-xs">€{train.price * totalPax} {t('total').toLowerCase()}</p>
                         <p className="text-peak-green text-xs mt-0.5">Saves ~{train.co2saved}kg CO₂</p>
                         <button onClick={() => { setSelectedTrain(train); setStep(2); }}
                           className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
@@ -449,7 +449,7 @@ export default function TrainTab({ agentServiceDetails = {}, onBook }) {
       {step === 2 && selectedTrain && (
         <div className="max-w-5xl mx-auto">
           <div className="mb-6">
-            <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Optional add-ons</p>
+            <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">{t('optional_addons')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               {ADDONS_TRAIN.map(a => (
                 <button key={a.key} onClick={() => setAddons(prev => prev.includes(a.key) ? prev.filter(k => k !== a.key) : [...prev, a.key])}

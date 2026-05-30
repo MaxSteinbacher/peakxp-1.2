@@ -239,7 +239,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
             <div className="border-t border-white/5 pt-5 mb-5">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
-                  <label className="block text-xs text-peak-text-secondary mb-1.5">Dates</label>
+                  <label className="block text-xs text-peak-text-secondary mb-1.5">{t('dates')}</label>
                   <DateRangePicker
                     startDate={searchForm.depDate} endDate={searchForm.retDate}
                     onStartChange={v => sf("depDate", v)} onEndChange={v => sf("retDate", v)}
@@ -259,7 +259,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               <div className="mt-4">
                 <label className="block text-xs text-peak-text-secondary mb-1.5">{t('passengers')}</label>
                 <div className="bg-peak-surface border border-white/10 rounded-xl px-4 py-3 flex flex-wrap gap-4">
-                  {[{ label: "Adults (12+)", key: "adults", min: 1 }, { label: "Children (2–11)", key: "children", min: 0 }, { label: "Infants", key: "infants", min: 0 }].map(({ label, key, min }) => (
+                  {[{ label: `${t('adults')} (12+)`, key: "adults", min: 1 }, { label: `${t('children')} (2–11)`, key: "children", min: 0 }, { label: "Infants", key: "infants", min: 0 }].map(({ label, key, min }) => (
                     <div key={key} className="flex items-center gap-3">
                       <span className="text-xs text-peak-text-secondary w-24">{label}</span>
                       <button onClick={() => sf(key, Math.max(min, (searchForm[key] || 0) - 1))} className="w-6 h-6 rounded border border-white/10 text-peak-text-secondary flex items-center justify-center text-sm hover:border-white/25">−</button>
@@ -273,7 +273,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
 
             {/* Row 3 — Filter toggles */}
             <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4">
-              {[{ k: "directOnly", l: t('direct_only') }, { k: "flexible", l: t('flexible_dates') + " ±3 days" }, { k: "nearbyAirports", l: "Include nearby airports" }, { k: "carbon", l: "Carbon offset included" }].map(({ k, l }) => (
+              {[{ k: "directOnly", l: t('direct_only') }, { k: "flexible", l: t('flexible_dates') + " ±3 days" }, { k: "nearbyAirports", l: t('include_nearby_airports') }, { k: "carbon", l: t('carbon_offset_included') }].map(({ k, l }) => (
                 <label key={k} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={filters[k]} onCheckedChange={v => setFilters(f => ({ ...f, [k]: v }))}
                     className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -287,19 +287,19 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
           <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mt-4">
             <button onClick={() => setSkiGear(g => ({ ...g, open: !g.open }))}
               className="w-full flex items-center justify-between">
-              <span className="text-peak-text text-sm font-medium">Travelling with ski equipment?{skiBagCount > 0 ? ` (${skiBagCount} selected)` : ""}</span>
+              <span className="text-peak-text text-sm font-medium">{t('travelling_ski_equipment')}{skiBagCount > 0 ? ` (${skiBagCount} ${t('selected')})` : ""}</span>
               {skiGear.open ? <ChevronUp className="h-4 w-4 text-peak-text-secondary" /> : <ChevronDown className="h-4 w-4 text-peak-text-secondary" />}
             </button>
             {skiGear.open && (
               <div className="mt-4 space-y-3">
-                {[{ k: "skiBag", l: "Ski bag / snowboard bag (sports equipment)" }, { k: "bootBag", l: "Ski boots bag (separate piece)" }, { k: "helmetBag", l: "Helmet bag" }, { k: "poles", l: "Ski poles only" }].map(({ k, l }) => (
+                {[{ k: "skiBag", l: t('ski_bag_snowboard') }, { k: "bootBag", l: t('ski_boots_bag') }, { k: "helmetBag", l: t('helmet_bag') }, { k: "poles", l: t('ski_poles_only') }].map(({ k, l }) => (
                   <label key={k} className="flex items-center gap-3 cursor-pointer">
                     <Checkbox checked={skiGear[k]} onCheckedChange={v => setSkiGear(g => ({ ...g, [k]: v }))}
                       className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
                     <span className="text-sm text-peak-text-secondary">{l}</span>
                   </label>
                 ))}
-                <p className="text-peak-text-secondary text-xs mt-2 pt-2 border-t border-white/5">Most airlines charge €20–50 each way for ski equipment. We will show baggage fees per airline in the results.</p>
+                <p className="text-peak-text-secondary text-xs mt-2 pt-2 border-t border-white/5">{t('ski_equipment_fees_note')}</p>
               </div>
             )}
           </div>
@@ -357,15 +357,15 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
             {/* Filter sidebar */}
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/person: €{priceRange[0]}–€{priceRange[1]}</p>
+                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('price_per_person')}: €{priceRange[0]}–€{priceRange[1]}</p>
                 <RangeSlider mode="dual" value={priceRange} onValueChange={setPriceRange} min={0} max={500} step={10} formatLabel={n => '€' + n} />
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest">Stops</p>
-                {["Any stops", "Direct only"].map(s => (
+                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest">{t('stops')}</p>
+                {[t('any_stops'), t('direct_only_filter')].map(s => (
                   <label key={s} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="stops" checked={s === "Direct only" ? filters.directOnly : !filters.directOnly}
-                      onChange={() => setFilters(f => ({ ...f, directOnly: s === "Direct only" }))}
+                      onChange={() => setFilters(f => ({ ...f, directOnly: s === t('direct_only_filter') }))}
                       className="accent-peak-blue" />
                     <span className="text-sm text-peak-text-secondary">{s}</span>
                   </label>
@@ -374,7 +374,7 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
               <label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox checked={filters.carbon} onCheckedChange={v => setFilters(f => ({ ...f, carbon: v }))}
                   className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
-                <span className="text-sm text-peak-text-secondary">Carbon offset</span>
+                <span className="text-sm text-peak-text-secondary">{t('carbon_offset')}</span>
               </label>
             </div>
 
@@ -431,8 +431,8 @@ export default function FlightsTab({ agentServiceDetails = {}, onBook }) {
                       {/* Price */}
                       <div className="w-32 flex-shrink-0 text-right">
                         <p className="font-display font-bold text-peak-text text-2xl">€{flight.price}</p>
-                        <p className="text-peak-text-secondary text-xs">/ person</p>
-                        <p className="text-peak-text-secondary text-xs">€{flight.price * totalPax} total</p>
+                        <p className="text-peak-text-secondary text-xs">/ {t('per_person').replace('per ', '')}</p>
+                        <p className="text-peak-text-secondary text-xs">€{flight.price * totalPax} {t('total').toLowerCase()}</p>
                         <button onClick={() => { setSelectedFlight(flight); setStep(2); }}
                           className="w-full mt-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl py-2.5 transition-colors flex items-center justify-center gap-1">
                           <ShoppingBag className="h-3 w-3" /> {t('select_flight')}

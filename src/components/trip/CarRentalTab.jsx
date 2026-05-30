@@ -345,10 +345,10 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
             {/* Filter sidebar */}
             <div className="hidden lg:block w-56 flex-shrink-0 space-y-5">
               <div>
-                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Price/day: {"\u20ac"}{priceRange[0]}-{"\u20ac"}{priceRange[1]}</p>
+                <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">{t('price_per_day')}: €{priceRange[0]}–€{priceRange[1]}</p>
                 <RangeSlider mode="dual" value={priceRange} onValueChange={setPriceRange} min={0} max={250} step={5} formatLabel={n => '€' + n} />
               </div>
-              {[{ state: filterWinter, set: setFilterWinter, label: "Winter-ready only" }, { state: filterAuto, set: setFilterAuto, label: "Automatic only" }].map(({ state, set, label }) => (
+              {[{ state: filterWinter, set: setFilterWinter, label: t('winter_ready_only') }, { state: filterAuto, set: setFilterAuto, label: t('automatic_only') }].map(({ state, set, label }) => (
                 <label key={label} className="flex items-center gap-2 cursor-pointer">
                   <Checkbox checked={state} onCheckedChange={set} className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
                   <span className="text-sm text-peak-text-secondary">{label}</span>
@@ -390,8 +390,8 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                         <div className="w-36 flex-shrink-0 text-right flex flex-col justify-between">
                           <div>
                             <p className="font-display font-bold text-peak-text text-2xl">{"\u20ac"}{car.pricePerDay}</p>
-                            <p className="text-peak-text-secondary text-xs">/day</p>
-                            <p className="text-peak-text-secondary text-sm mt-0.5">{"\u20ac"}{car.pricePerDay * pickupDays} total</p>
+                            <p className="text-peak-text-secondary text-xs">/{t('day')}</p>
+                            <p className="text-peak-text-secondary text-sm mt-0.5">€{car.pricePerDay * pickupDays} {t('total').toLowerCase()}</p>
                           </div>
                           <div>
                             <button onClick={() => { setSelectedCar(car); setStep(2); }}
@@ -430,7 +430,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
       {step === 2 && selectedCar && (
         <div className="max-w-5xl mx-auto">
           <div className="mb-6">
-            <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Optional add-ons</p>
+            <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">{t('optional_addons')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               {ADDONS_CAR.map(a => (
                 <button key={a.key} onClick={() => setAddons(prev => prev.includes(a.key) ? prev.filter(k => k !== a.key) : [...prev, a.key])}
