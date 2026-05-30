@@ -36,7 +36,7 @@ const GEO = {
           ]
         },
         {
-          id: "pyrenees", name: "Pyrenees", lat: 42.7, lon: 0.5,
+          id: "pyrenees", name: "Pyrenees", comingSoon: true, lat: 42.7, lon: 0.5,
           subRegions: [
             { id: "andorra", name: "Andorra", lat: 42.5, lon: 1.5 },
             { id: "spain-aragon", name: "Spain Aragon", lat: 42.7, lon: -0.4 },
@@ -45,10 +45,7 @@ const GEO = {
             { id: "france-ariege", name: "France Ariège", lat: 42.8, lon: 1.5 },
           ]
         },
-        { id: "scandinavia", name: "Scandinavia", lat: 65.0, lon: 17.0, subRegions: [{ id: "scandinavia-main", name: "Scandinavia", lat: 62, lon: 15 }] },
-        { id: "carpathians", name: "Carpathians", lat: 49.5, lon: 23.0, subRegions: [{ id: "carpathians-main", name: "Carpathians", lat: 49, lon: 22 }] },
-        { id: "caucasus", name: "Caucasus", lat: 42.3, lon: 44.5, subRegions: [{ id: "caucasus-main", name: "Caucasus", lat: 42.5, lon: 44 }] },
-        { id: "scottish-highlands", name: "Scottish Highlands", lat: 57.0, lon: -4.5, subRegions: [{ id: "scottish-highlands-main", name: "Scottish Highlands", lat: 57, lon: -4 }] },
+        { id: "scandinavia", name: "Scandinavia", comingSoon: true, lat: 65.0, lon: 17.0, subRegions: [{ id: "scandinavia-main", name: "Scandinavia", lat: 62, lon: 15 }] },
       ]
     },
     {
@@ -232,11 +229,13 @@ export default function GlobalDiscoveryMap() {
     setTooltip(null);
     prevTransformRef.current = svgTransform;
     if (region.bounds) {
-      setSvgTransform(getContinentTransform(region.bounds, 0.78));
+      // Use tight factor (0.72) so the region fills the viewport
+      setSvgTransform(getContinentTransform(region.bounds, 0.72));
     } else if (projRef.current) {
+      // For regions without explicit bounds, zoom tightly on their center
       const pos = projRef.current([region.lon, region.lat]);
       if (pos) {
-        const S = Math.min(svgSize.w / 280, svgSize.h / 200) * 3.2;
+        const S = Math.min(svgSize.w / 200, svgSize.h / 150) * 4.5;
         const tx = svgSize.w / 2 / S - pos[0];
         const ty = svgSize.h / 2 / S - pos[1];
         setSvgTransform("scale(" + S + ") translate(" + tx + "px, " + ty + "px)");
@@ -249,7 +248,9 @@ export default function GlobalDiscoveryMap() {
     const maptilersdk = window.maptilersdk;
     if (!maptilersdk) return;
     subResorts.forEach(resort => {
-      if (!resort.coordinates?.lon || !resort.coordinates?.lat) return;
+      const lon = resort.coordinates?.lon ?? resort.lng;
+      const lat = resort.coordinates?.lat ?? resort.lat;
+      if (!lon || !lat) return;
       const markerEl = document.createElement("div");
       markerEl.style.cssText = "position:relative;cursor:pointer;";
       const badge = document.createElement("div");
@@ -281,7 +282,7 @@ export default function GlobalDiscoveryMap() {
       });
       markerEl.addEventListener("click", function () { navigate("/resort/" + resort.id); });
       const marker = new maptilersdk.Marker({ element: markerEl })
-        .setLngLat([resort.coordinates.lon, resort.coordinates.lat])
+        .setLngLat([lon, lat])
         .addTo(map);
       markersRef.current.push(marker);
     });
@@ -419,7 +420,7 @@ export default function GlobalDiscoveryMap() {
                     onMouseLeave={handleMarkerMouseLeave}
                   >
                     <circle
-                      cx={pos.x} cy={pos.y} r={44}
+                      cx={pos.x} cy={pos.y} r={22}
                       fill={hovered ? "rgba(251,52,61,0.2)" : "rgba(251,52,61,0.08)"}
                       stroke={hovered ? "rgba(251,52,61,0.9)" : "rgba(251,52,61,0.45)"}
                       strokeWidth={1.5}
@@ -445,7 +446,7 @@ export default function GlobalDiscoveryMap() {
                   <text x={pos.x} y={pos.y - 35} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={9} fontWeight={500} style={{ pointerEvents: "none" }}>
                     {t('coming_soon')}
                   </text>
-                  <circle cx={pos.x} cy={pos.y} r={44} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} style={{ pointerEvents: "none" }} />
+                  <circle cx={pos.x} cy={pos.y} r={22} fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} style={{ pointerEvents: "none" }} />
                   <circle cx={pos.x} cy={pos.y} r={6} fill="rgba(255,255,255,0.3)" style={{ pointerEvents: "none" }} />
                   <text
                     x={pos.x} y={pos.y + 30}
@@ -463,6 +464,22 @@ export default function GlobalDiscoveryMap() {
             {/* Continent: region markers */}
             {phase === "continent" && activeContinent && getRegionPositions(activeContinent.regions).map(region => {
               const hovered = hoverId === region.id;
+              const isComingSoon = !!region.comingSoon;
+              if (isComingSoon) {
+                return (
+                  <g key={region.id} style={{ cursor: "default", opacity: 0.5 }}>
+                    <circle cx={region.px} cy={region.py} r={8}
+                      fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" strokeWidth={1}
+                      strokeDasharray="3 2" style={{ pointerEvents: "none" }} />
+                    <text x={region.px} y={region.py - 12} textAnchor="middle"
+                      fill="rgba(255,255,255,0.35)" fontSize={7} fontWeight={500}
+                      style={{ pointerEvents: "none" }}>{t("coming_soon")}</text>
+                    <text x={region.px} y={region.py + 16} textAnchor="middle"
+                      fill="rgba(255,255,255,0.35)" fontSize={8} fontWeight={600}
+                      style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}>{region.name}</text>
+                  </g>
+                );
+              }
               return (
                 <g
                   key={region.id}
@@ -472,15 +489,15 @@ export default function GlobalDiscoveryMap() {
                   onMouseLeave={handleMarkerMouseLeave}
                 >
                   <circle
-                    cx={region.px} cy={region.py} r={18}
+                    cx={region.px} cy={region.py} r={10}
                     fill={hovered ? "rgba(56,148,227,0.22)" : "rgba(56,148,227,0.1)"}
                     stroke={hovered ? "rgba(56,148,227,0.95)" : "rgba(56,148,227,0.5)"}
                     strokeWidth={1.5}
                     style={{ transition: "all 0.25s ease", filter: hovered ? "drop-shadow(0 0 8px rgba(56,148,227,0.6))" : "none" }}
                   />
-                  <circle cx={region.px} cy={region.py} r={5} fill="#3894E3" style={{ pointerEvents: "none" }} />
+                  <circle cx={region.px} cy={region.py} r={3.5} fill="#3894E3" style={{ pointerEvents: "none" }} />
                   <text
-                    x={region.px} y={region.py + 20}
+                    x={region.px} y={region.py + 17}
                     textAnchor="middle"
                     fill={hovered ? "white" : "rgba(255,255,255,0.75)"}
                     fontSize={9} fontWeight={600}
@@ -492,7 +509,7 @@ export default function GlobalDiscoveryMap() {
               );
             })}
 
-            {/* Region: subRegion markers */}
+            {/* Region: subRegion markers — no outer ring, just dot + label */}
             {phase === "region" && activeRegion && getSubRegionPositions(activeRegion.subRegions).map(sr => {
               const hovered = hoverId === sr.id;
               const count = getResortCount(sr.id);
@@ -504,20 +521,22 @@ export default function GlobalDiscoveryMap() {
                   onMouseEnter={e => handleMarkerMouseEnter(sr.id, sr.name, count, e.clientX, e.clientY)}
                   onMouseLeave={handleMarkerMouseLeave}
                 >
+                  {/* Hit area */}
+                  <circle cx={sr.px} cy={sr.py} r={14} fill="transparent" />
+                  {/* Dot only — no outer ring */}
                   <circle
-                    cx={sr.px} cy={sr.py} r={12}
-                    fill={hovered ? "rgba(62,207,142,0.22)" : "rgba(62,207,142,0.08)"}
-                    stroke={hovered ? "rgba(62,207,142,0.95)" : "rgba(62,207,142,0.45)"}
-                    strokeWidth={1.5}
-                    style={{ transition: "all 0.25s ease", filter: hovered ? "drop-shadow(0 0 8px rgba(62,207,142,0.5))" : "none" }}
+                    cx={sr.px} cy={sr.py} r={hovered ? 6 : 4}
+                    fill={hovered ? "#3ECF8E" : "rgba(62,207,142,0.8)"}
+                    stroke={hovered ? "rgba(62,207,142,0.5)" : "none"}
+                    strokeWidth={3}
+                    style={{ transition: "all 0.2s ease", filter: hovered ? "drop-shadow(0 0 6px rgba(62,207,142,0.8))" : "none" }}
                   />
-                  <circle cx={sr.px} cy={sr.py} r={4} fill="#3ECF8E" style={{ pointerEvents: "none" }} />
                   <text
-                    x={sr.px} y={sr.py + 22}
+                    x={sr.px} y={sr.py + 15}
                     textAnchor="middle"
-                    fill={hovered ? "white" : "rgba(255,255,255,0.7)"}
-                    fontSize={10} fontWeight={600}
-                    style={{ pointerEvents: "none", fontFamily: "var(--font-display)" }}
+                    fill={hovered ? "white" : "rgba(255,255,255,0.75)"}
+                    fontSize={8} fontWeight={hovered ? 700 : 600}
+                    style={{ pointerEvents: "none", fontFamily: "var(--font-display)", transition: "fill 0.2s ease" }}
                   >
                     {sr.name}
                   </text>
@@ -533,10 +552,14 @@ export default function GlobalDiscoveryMap() {
         <div style={{ position: "absolute", inset: 0 }}>
           <PeakMap
             center={[activeSubRegion.lon, activeSubRegion.lat]}
-            zoom={10}
+            zoom={activeRegion?.id === "alps" ? 9 : 10}
             pitch={55}
-            bearing={0}
+            bearing={-10}
             height="h-full"
+            maxBounds={activeRegion?.bounds ? [
+              [activeRegion.bounds.w - 2, activeRegion.bounds.s - 2],
+              [activeRegion.bounds.e + 2, activeRegion.bounds.n + 2]
+            ] : null}
             onMapLoad={(map) => {
               mapInstanceRef.current = map;
               loadResortMarkersForSubRegion(map, activeSubRegion);
