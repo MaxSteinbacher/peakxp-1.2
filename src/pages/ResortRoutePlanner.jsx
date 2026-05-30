@@ -6,7 +6,7 @@ import LeftPanel from "../components/route/LeftPanel";
 import RightPanel from "../components/route/RightPanel";
 
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
-const STYLE_URL = `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${MAPTILER_KEY}`;
+const STYLE_URL = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
 let sdkLoadPromise = null;
 function loadSDK() {
