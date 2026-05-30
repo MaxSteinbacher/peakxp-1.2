@@ -169,7 +169,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
                 startDate={seasonForm.startSeason} endDate={seasonForm.endSeason}
                 onStartChange={v => setSeasonForm(s => ({ ...s, startSeason: v }))} onEndChange={v => setSeasonForm(s => ({ ...s, endSeason: v }))}
                 mode="range" context="storage" maxStay={365}
-                placeholder={{ start: "Season start", end: "Season end" }}
+                placeholder={{ start: t("season_start"), end: t("season_end") }}
               />
             </div>
           </div>
@@ -209,12 +209,12 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
             }} disabled={locating}
               className="flex items-center gap-2 text-peak-blue text-sm font-medium hover:underline disabled:opacity-50">
               <MapPin className="h-4 w-4" />
-              {locating ? "Detecting location..." : t('use_my_location')}
+              {locating ? t("detecting_location") : t('use_my_location')}
             </button>
             <div>
               <label className="block text-xs text-peak-text-secondary mb-1">Or enter your ski area, resort, or nearby town</label>
               <LocationInput
-                type="resort" context="destination" placeholder="e.g. Verbier, Zermatt, Chamonix"
+                type="resort" context="destination" placeholder={t("storage_example_placeholder")}
                 value={location} onChange={setLocation}
                 onSelect={s => setLocation(s.label || s.name || s.city)}
               />
@@ -229,8 +229,8 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
           <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Storage location type</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
             {[
-              { key: "station", label: "At the ski station", desc: "Slope-side or lift building lockers" },
-              { key: "town", label: "In town / village", desc: "Nearby commercial storage, hotels, luggage facilities" },
+              { key: "station", label: t("storage_at_ski_station"), desc: t("storage_at_ski_station_desc") },
+              { key: "town", label: t("storage_in_town"), desc: t("storage_in_town_desc") },
             ].map(opt => (
               <button key={opt.key} onClick={() => toggleAreaType(opt.key)}
                 className={`flex flex-col items-start gap-1 p-5 rounded-xl border text-left transition-all ${areaTypes.includes(opt.key) ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10 bg-peak-card hover:border-white/25"}`}>
@@ -274,14 +274,14 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
                 startDate={prefs.startDate} endDate={needsEndDate ? prefs.endDate : null}
                 onStartChange={v => setPrefs(p => ({ ...p, startDate: v }))} onEndChange={v => setPrefs(p => ({ ...p, endDate: v }))}
                 mode={needsEndDate ? "range" : "single"} context="storage"
-                placeholder={{ start: "Start date", end: "End date" }}
+                placeholder={{ start: t("start_date"), end: t("end_date") }}
               />
             </div>
             <div>
               <label className="block text-xs text-peak-text-secondary mb-1">Start time</label>
               <select value={prefs.startTime} onChange={e => setPrefs(p => ({ ...p, startTime: e.target.value }))}
                 className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
+                {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={locType}>{locType}</option>)}
               </select>
             </div>
             {(prefs.duration === "Half day" || prefs.duration === "Full day" || needsEndDate) && (
@@ -289,7 +289,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
                 <label className="block text-xs text-peak-text-secondary mb-1">End time</label>
                 <select value={prefs.endTime} onChange={e => setPrefs(p => ({ ...p, endTime: e.target.value }))}
                   className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={t}>{t}</option>)}
+                  {Array.from({ length: 48 }, (_, i) => { const h = Math.floor(i / 2).toString().padStart(2, "0"); const m = i % 2 === 0 ? "00" : "30"; return `${h}:${m}`; }).map(t => <option key={locType}>{locType}</option>)}
                 </select>
               </div>
             )}
@@ -345,7 +345,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
               </div>
               <div>
                 <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Location type</p>
-                {["Slope-side", "Village centre", "Train station", "Hotel"].map(t => (
+                {[t("slope_side"), t("village_centre"), t("train_station"), t("hotel")].map(locType => (
                   <label key={t} className="flex items-center gap-2 cursor-pointer mb-2">
                     <Checkbox checked={filterTypes.includes(t)} onCheckedChange={() => toggleFilterType(t)}
                       className="border-peak-text-secondary data-[state=checked]:bg-peak-blue data-[state=checked]:border-peak-blue" />
@@ -370,7 +370,7 @@ export default function StorageTab({ agentServiceDetails = {}, onBook }) {
               </label>
             </div>
             <div className="flex-1">
-              <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} {t('facilities_found')} {location}</p>
+              <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} {t("facilities_found")} {location}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filtered.map(fac => (
                   <ResultCard
