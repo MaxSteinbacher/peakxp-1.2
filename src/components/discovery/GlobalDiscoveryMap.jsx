@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Maximize, Minimize, X, ArrowLeft } from "lucide-react";
+import { ChevronRight, X, ArrowLeft } from "lucide-react";
 import { resorts } from "../../lib/data";
-import PeakMap from "../shared/PeakMap";
 import { useT } from "../../lib/i18n";
 
 // ─── Geography data ───────────────────────────────────────────────────────────
@@ -17,22 +16,22 @@ const GEO = {
           id: "alps", name: "Alps", lat: 46.8, lon: 10.2, bounds: { n: 48.5, s: 43.5, e: 16.5, w: 5.5 },
           subRegions: [
             // Austria — 3 natural ski identities
-            { id: "at-vorarlberg", name: "Vorarlberg", lat: 47.18, lon: 9.95, resortCount: 6, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["vorarlberg"] },
-            { id: "at-tyrol", name: "Tyrol", lat: 47.18, lon: 11.30, resortCount: 21, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["tyrol"] },
-            { id: "at-salzburg", name: "Salzburg", lat: 47.30, lon: 13.10, resortCount: 10, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["salzburg"] },
-            { id: "at-south", name: "Carinthia & Styria", lat: 47.10, lon: 14.20, resortCount: 11, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["carinthia","styria","lower austria","upper austria"] },
+            { id: "at-vorarlberg", name: "Vorarlberg", lat: 47.35, lon: 9.90, resortCount: 6, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["vorarlberg"] },
+            { id: "at-tyrol", name: "Tyrol", lat: 47.30, lon: 11.40, resortCount: 21, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["tyrol"] },
+            { id: "at-salzburg", name: "Salzburg", lat: 47.55, lon: 13.20, resortCount: 10, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["salzburg"] },
+            { id: "at-south", name: "Carinthia & Styria", lat: 47.00, lon: 14.50, resortCount: 11, flag: "🇦🇹", countryFilter: "Austria", regionKeywords: ["carinthia","styria","lower austria","upper austria"] },
             // Switzerland — 2 distinct arcs
-            { id: "ch-west", name: "Valais & Vaud", lat: 46.30, lon: 7.45, resortCount: 14, flag: "🇨🇭", countryFilter: "Switzerland", regionKeywords: ["valais","vaud","bernese","obwalden","uri","schwyz","st. gallen"] },
-            { id: "ch-east", name: "Graubünden", lat: 46.65, lon: 9.75, resortCount: 6, flag: "🇨🇭", countryFilter: "Switzerland", regionKeywords: ["graubunden","graubünden"] },
+            { id: "ch-west", name: "Valais & Vaud", lat: 46.35, lon: 7.30, resortCount: 14, flag: "🇨🇭", countryFilter: "Switzerland", regionKeywords: ["valais","vaud","bernese","obwalden","uri","schwyz","st. gallen"] },
+            { id: "ch-east", name: "Graubünden", lat: 46.70, lon: 9.90, resortCount: 6, flag: "🇨🇭", countryFilter: "Switzerland", regionKeywords: ["graubunden","graubünden"] },
             // France — 3 ski heartlands
-            { id: "fr-savoie", name: "Savoie", lat: 45.42, lon: 6.62, resortCount: 11, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["savoie"] },
-            { id: "fr-haute-savoie", name: "Haute-Savoie", lat: 46.00, lon: 6.65, resortCount: 5, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["haute-savoie","haute savoie"] },
-            { id: "fr-south", name: "Southern Alps", lat: 44.95, lon: 6.25, resortCount: 8, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["hautes-alpes","hautes alpes","isere","alpes-maritimes"] },
+            { id: "fr-savoie", name: "Savoie", lat: 45.30, lon: 6.50, resortCount: 11, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["savoie"] },
+            { id: "fr-haute-savoie", name: "Haute-Savoie", lat: 46.10, lon: 6.35, resortCount: 5, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["haute-savoie","haute savoie"] },
+            { id: "fr-south", name: "Southern Alps", lat: 44.70, lon: 6.20, resortCount: 8, flag: "🇫🇷", countryFilter: "France", regionKeywords: ["hautes-alpes","hautes alpes","isere","alpes-maritimes"] },
             // Italy — 4 alpine identities
-            { id: "it-alto-adige", name: "South Tyrol", lat: 46.60, lon: 11.70, resortCount: 8, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["alto adige"] },
-            { id: "it-trentino", name: "Trentino", lat: 46.20, lon: 11.15, resortCount: 7, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["trentino","lombardy"] },
-            { id: "it-veneto", name: "Veneto & Dolomites", lat: 46.48, lon: 12.00, resortCount: 2, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["veneto"] },
-            { id: "it-west", name: "Valle d'Aosta & Piedmont", lat: 45.65, lon: 7.10, resortCount: 7, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["aosta","piedmont"] },
+            { id: "it-alto-adige", name: "South Tyrol", lat: 46.55, lon: 11.55, resortCount: 8, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["alto adige"] },
+            { id: "it-trentino", name: "Trentino", lat: 46.10, lon: 11.00, resortCount: 7, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["trentino","lombardy"] },
+            { id: "it-veneto", name: "Veneto & Dolomites", lat: 46.40, lon: 12.20, resortCount: 2, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["veneto"] },
+            { id: "it-west", name: "Valle d'Aosta & Piedmont", lat: 45.50, lon: 6.95, resortCount: 7, flag: "🇮🇹", countryFilter: "Italy", regionKeywords: ["aosta","piedmont"] },
           ]
         },
         {
@@ -142,8 +141,6 @@ export default function GlobalDiscoveryMap() {
   const containerRef = useRef(null);
   const worldDataRef = useRef(null);
   const projRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
   const prevTransformRef = useRef("");
 
   const [phase, setPhase] = useState("loading");
@@ -157,7 +154,7 @@ export default function GlobalDiscoveryMap() {
   const [svgTransform, setSvgTransform] = useState("");
   const [hoverId, setHoverId] = useState(null);
   const [tooltip, setTooltip] = useState(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [svgTransitionDone, setSvgTransitionDone] = useState(true);
 
   // ── Mount ────────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -239,7 +236,9 @@ export default function GlobalDiscoveryMap() {
     prevTransformRef.current = svgTransform;
     if (region.bounds) {
       // Use tight factor (0.72) so the region fills the viewport
+      setSvgTransitionDone(false);
       setSvgTransform(getContinentTransform(region.bounds, 0.62));
+      setTimeout(() => setSvgTransitionDone(true), 900);
     } else if (projRef.current) {
       // For regions without explicit bounds, zoom tightly on their center
       const pos = projRef.current([region.lon, region.lat]);
@@ -252,50 +251,6 @@ export default function GlobalDiscoveryMap() {
     }
   }
 
-  function loadResortMarkersForSubRegion(map, subRegion) {
-    const subResorts = getResortsForSubRegion(subRegion);
-    const maptilersdk = window.maptilersdk;
-    if (!maptilersdk) return;
-    subResorts.forEach(resort => {
-      const lon = resort.coordinates?.lon ?? resort.lng;
-      const lat = resort.coordinates?.lat ?? resort.lat;
-      if (!lon || !lat) return;
-      const markerEl = document.createElement("div");
-      markerEl.style.cssText = "position:relative;cursor:pointer;";
-      const badge = document.createElement("div");
-      badge.style.cssText = "width:38px;height:38px;border-radius:50%;background:#070B1E;border:2.5px solid #FB343D;display:flex;align-items:center;justify-content:center;box-shadow:0 0 10px rgba(251,52,61,0.5);";
-      const initials = document.createElement("span");
-      initials.style.cssText = "font-size:11px;font-weight:700;color:white;letter-spacing:0.5px;";
-      initials.textContent = resort.name.substring(0, 2).toUpperCase();
-      badge.appendChild(initials);
-      const ptr = document.createElement("div");
-      ptr.style.cssText = "width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #FB343D;margin:0 auto;";
-      markerEl.appendChild(badge);
-      markerEl.appendChild(ptr);
-      markerEl.addEventListener("mouseenter", function () {
-        const tt = document.createElement("div");
-        tt.id = "resort-tt-" + resort.id;
-        tt.style.cssText = "position:absolute;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(7,11,30,0.95);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 14px;min-width:190px;backdrop-filter:blur(12px);pointer-events:none;z-index:100;";
-        const statsHtml = (resort.pisteKm ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.pisteKm + 'km</span>' : "") +
-          (resort.lifts ? '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:2px 6px;font-size:10px;color:rgba(255,255,255,0.7);margin-right:3px;">' + resort.lifts + ' lifts</span>' : "");
-        tt.innerHTML = '<div style="font-weight:700;color:white;font-size:13px;margin-bottom:3px;">' + resort.name + '</div>' +
-          '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:6px;">' + (resort.region || "") + '</div>' +
-          (statsHtml ? '<div style="margin-bottom:6px;">' + statsHtml + '</div>' : "") +
-          (resort.rating ? '<span style="background:#3894E3;color:white;font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;">★ ' + resort.rating + '</span>' : "") +
-          '<div style="color:#FB343D;font-size:11px;font-weight:600;margin-top:8px;">View resort →</div>';
-        markerEl.appendChild(tt);
-      });
-      markerEl.addEventListener("mouseleave", function () {
-        const tt = document.getElementById("resort-tt-" + resort.id);
-        if (tt) tt.remove();
-      });
-      markerEl.addEventListener("click", function () { navigate("/resort/" + resort.id); });
-      const marker = new maptilersdk.Marker({ element: markerEl })
-        .setLngLat([lon, lat])
-        .addTo(map);
-      markersRef.current.push(marker);
-    });
-  }
 
   function handleSubRegionClick(subRegion) {
     setActiveSubRegion(subRegion);
@@ -306,9 +261,6 @@ export default function GlobalDiscoveryMap() {
 
   function handleBack() {
     if (phase === "map3d") {
-      markersRef.current.forEach(m => { try { m.remove(); } catch {} });
-      markersRef.current = [];
-      mapInstanceRef.current = null;
       setPhase("region");
     } else if (phase === "subregion") {
       setPhase("region");
@@ -369,7 +321,7 @@ export default function GlobalDiscoveryMap() {
     transition: "transform 0.8s cubic-bezier(0.4,0,0.2,1)",
   };
 
-  const containerHeight = isFullscreen ? "100vh" : "520px";
+  const containerHeight = "520px";
 
   return (
     <div ref={containerRef} style={{ position: "relative", overflow: "hidden", borderRadius: 16, background: "#070B1E", height: containerHeight, clipPath: "inset(0 round 16px)" }}>
@@ -523,8 +475,8 @@ export default function GlobalDiscoveryMap() {
         </svg>
       )}
 
-      {/* Subregion bubbles overlay — screen-space so size is independent of SVG zoom */}
-      {phase === "region" && activeRegion && (() => {
+      {/* Subregion bubbles overlay — only shown after pan transition finishes */}
+      {phase === "region" && activeRegion && svgTransitionDone && (() => {
         const positions = getSubRegionPositions(activeRegion.subRegions);
         return positions.map(sr => {
           const screen = svgToScreen(sr.px, sr.py);
@@ -583,23 +535,60 @@ export default function GlobalDiscoveryMap() {
         });
       })()}
 
-      {/* PeakMap for map3d phase */}
-      {phase === "map3d" && activeSubRegion && (
-        <div style={{ position: "absolute", inset: 0 }}>
-          <PeakMap
-            center={[activeSubRegion.lon, activeSubRegion.lat]}
-            zoom={10}
-            pitch={45}
-            bearing={0}
-            height="h-full"
-            terrain={false}
-            onMapLoad={(map) => {
-              mapInstanceRef.current = map;
-              loadResortMarkersForSubRegion(map, activeSubRegion);
-            }}
-          />
-        </div>
-      )}
+      {/* Resort grid for map3d phase — fast 2D, click through to resort detail */}
+      {phase === "map3d" && activeSubRegion && (() => {
+        const subResorts = getResortsForSubRegion(activeSubRegion);
+        return (
+          <div style={{ position: "absolute", inset: 0, overflowY: "auto", background: "#070B1E", padding: "24px" }}>
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 4 }}>
+                {activeSubRegion.flag} {activeSubRegion.name}
+              </p>
+              <h3 style={{ color: "white", fontWeight: 700, fontSize: 18, fontFamily: "var(--font-display)" }}>
+                {subResorts.length} ski resorts
+              </h3>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 12 }}>
+              {subResorts.map(resort => (
+                <div key={resort.id}
+                  onClick={() => navigate("/resort/" + resort.id)}
+                  style={{
+                    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 12, overflow: "hidden", cursor: "pointer",
+                    transition: "border-color 0.15s ease, transform 0.15s ease",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(56,148,227,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{ height: 90, overflow: "hidden", background: "rgba(255,255,255,0.04)" }}>
+                    {resort.image ? (
+                      <img src={resort.image} alt={resort.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: 28 }}>{activeSubRegion.flag}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ padding: "10px 12px" }}>
+                    <p style={{ color: "white", fontWeight: 700, fontSize: 12, fontFamily: "var(--font-display)", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{resort.name}</p>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      {resort.pisteKm && <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>{resort.pisteKm}km</span>}
+                      {resort.lifts && <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>·</span>}
+                      {resort.lifts && <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10 }}>{resort.lifts} lifts</span>}
+                    </div>
+                    {resort.rating && (
+                      <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 3 }}>
+                        <span style={{ color: "#FACC15", fontSize: 10 }}>★</span>
+                        <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>{resort.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Tooltip */}
       {tooltip && (
@@ -625,13 +614,13 @@ export default function GlobalDiscoveryMap() {
       {/* Breadcrumb */}
       {phase !== "world" && phase !== "loading" && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 text-xs whitespace-nowrap">
-          <button onClick={() => { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; mapInstanceRef.current = null; setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(""); }} className="text-white/60 hover:text-white transition-colors">World</button>
+          <button onClick={() => { setPhase("world"); setActiveContinent(null); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(""); }} className="text-white/60 hover:text-white transition-colors">World</button>
           {activeContinent && (
             <>
               <ChevronRight className="h-3 w-3 text-white/30" />
               {phase === "continent"
                 ? <span className="text-white font-medium">{activeContinent.name}</span>
-                : <button onClick={() => { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; mapInstanceRef.current = null; setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(getContinentTransform(activeContinent.bounds)); }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
+                : <button onClick={() => { setPhase("continent"); setActiveRegion(null); setActiveSubRegion(null); setSvgTransform(getContinentTransform(activeContinent.bounds)); }} className="text-white/60 hover:text-white transition-colors">{activeContinent.name}</button>}
             </>
           )}
           {activeRegion && (
@@ -639,7 +628,7 @@ export default function GlobalDiscoveryMap() {
               <ChevronRight className="h-3 w-3 text-white/30" />
               {phase === "region"
                 ? <span className="text-white font-medium">{activeRegion.name}</span>
-                : <button onClick={() => { markersRef.current.forEach(m => { try { m.remove(); } catch {} }); markersRef.current = []; mapInstanceRef.current = null; setPhase("region"); setActiveSubRegion(null); }} className="text-white/60 hover:text-white transition-colors">{activeRegion.name}</button>}
+                : <button onClick={() => { setPhase("region"); setActiveSubRegion(null); }} className="text-white/60 hover:text-white transition-colors">{activeRegion.name}</button>}
             </>
           )}
           {activeSubRegion && (
@@ -659,17 +648,7 @@ export default function GlobalDiscoveryMap() {
         </button>
       )}
 
-      {/* Fullscreen */}
-      <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-        {isFullscreen && (
-          <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:border-white/25 transition-colors">
-            <X className="h-4 w-4 text-white" />
-          </button>
-        )}
-        <button onClick={() => setIsFullscreen(v => !v)} className="w-10 h-10 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:border-white/25 transition-colors">
-          {isFullscreen ? <Minimize className="h-4 w-4 text-white" /> : <Maximize className="h-4 w-4 text-white" />}
-        </button>
-      </div>
+
 
 
     </div>
