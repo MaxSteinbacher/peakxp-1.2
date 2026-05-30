@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapPin, Clock, Car, Train, Plane, Navigation } from "lucide-react";
 import { useT } from "../lib/i18n";
 import { resorts } from "../lib/data";
@@ -56,15 +57,34 @@ function formatTime(mins) {
 
 // ─── IP-based location fallback (free, no key) ────────────────────────────
 async function getLocationFromIP() {
-  try {
-    // ip-api.com — free, no key, returns city + lat/lon
-    const res = await fetch("https://ip-api.com/json/?fields=city,lat,lon,status", { signal: AbortSignal.timeout(4000) });
-    const data = await res.json();
-    if (data.status === "success" && data.lat && data.lon) {
-      return { city: data.city || "your location", lat: data.lat, lon: data.lon };
-    }
-  } catch {}
-  // Hard fallback: central Europe
+  // Try multiple free IP geolocation APIs in sequence
+  const apis = [
+    async () => {
+      const r = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(4000) });
+      const d = await r.json();
+      if (d.latitude && d.longitude) return { city: d.city || d.region || "your location", lat: d.latitude, lon: d.longitude };
+      return null;
+    },
+    async () => {
+      const r = await fetch("https://ip-api.com/json/?fields=city,lat,lon,status", { signal: AbortSignal.timeout(4000) });
+      const d = await r.json();
+      if (d.status === "success") return { city: d.city || "your location", lat: d.lat, lon: d.lon };
+      return null;
+    },
+    async () => {
+      const r = await fetch("https://freeipapi.com/api/json", { signal: AbortSignal.timeout(4000) });
+      const d = await r.json();
+      if (d.latitude && d.longitude) return { city: d.cityName || "your location", lat: d.latitude, lon: d.longitude };
+      return null;
+    },
+  ];
+  for (const api of apis) {
+    try {
+      const result = await api();
+      if (result) return result;
+    } catch {}
+  }
+  // Final fallback: central Europe
   return { city: "Munich", lat: 48.14, lon: 11.58 };
 }
 
@@ -102,8 +122,15 @@ function ResortCard({ resort }) {
     plane: t("by_plane"),
   }[resort.mode] || "";
 
+  const navigate = useNavigate();
   return (
-    <div className="group rounded-xl overflow-hidden bg-peak-card border border-white/5 hover:border-peak-blue/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+    <div
+      className="group rounded-xl overflow-hidden bg-peak-card border border-white/5 hover:border-peak-blue/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+      onClick={() => navigate(`/resort/${resort.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === "Enter" && navigate(`/resort/${resort.id}`)}
+    >
       <div className="relative h-32 overflow-hidden">
         <img
           src={resort.image || `https://picsum.photos/seed/${resort.id}/400/250`}
@@ -119,7 +146,11 @@ function ResortCard({ resort }) {
       </div>
       <div className="p-3">
         <h3 className="font-display font-bold text-peak-text text-sm leading-tight mb-0.5 truncate">{resort.name}</h3>
-        <p className="text-peak-text-secondary text-xs mb-2 truncate">{resort.region}, {resort.country}</p>
+        <p className="text-peak-text-secondary text-xs mb-2 truncate">
+          {resort.region && resort.region !== resort.country
+            ? `${resort.region}, ${resort.country}`
+            : resort.country}
+        </p>
         <div className="flex items-center gap-2 text-xs text-peak-text-secondary mb-2">
           <span>{resort.pisteKm}km</span>
           <span className="text-white/20">·</span>
@@ -144,6 +175,7 @@ function ResortCard({ resort }) {
 export default function DayTrips() {
   const t = useT();
 
+  const navigate = useNavigate();
   const [locationState, setLocationState] = useState("idle"); // idle | requesting | granted | denied | error
   const [userCoords, setUserCoords] = useState(null);
   const [cityName, setCityName] = useState(""); // set via IP or GPS
