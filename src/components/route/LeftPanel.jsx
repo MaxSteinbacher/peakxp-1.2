@@ -15,7 +15,7 @@ function Toggle({ checked, onChange }) {
 
 const TYPE_COLORS = { start: "#2d6a4f", waypoint: "#FB343D", end: "#1a1a2e" };
 
-export default function LeftPanel({ routePoints, layers, setLayers, onDelete, onRename, onTypeChange, onClear, onReverse, onReorder, savedRoutes, onLoadRoute, routeMode, setRouteMode, routeModes = [] }) {
+export default function LeftPanel({ routePoints, onDelete, onRename, onTypeChange, onClear, onReverse, onReorder, savedRoutes, onLoadRoute, routeMode, setRouteMode, routeModes = [] }) {
   function handleDragStart(e, idx) { e.dataTransfer.setData("dragIdx", idx); }
   function handleDrop(e, idx) {
     const from = parseInt(e.dataTransfer.getData("dragIdx"));
@@ -86,22 +86,6 @@ export default function LeftPanel({ routePoints, layers, setLayers, onDelete, on
           </div>
         </div>
       )}
-
-      {/* Layer toggles */}
-      <div className="p-4 border-b border-white/5">
-        <p className="text-peak-text font-bold text-sm mb-3">Map layers</p>
-        {[
-          { key: "slopes", label: "Slopes (colour-coded)" },
-          { key: "lifts", label: "Lifts" },
-          { key: "liftStatus", label: "Lift status" },
-          { key: "terrain", label: "3D terrain" },
-        ].map(({ key, label }) => (
-          <div key={key} className="flex items-center justify-between gap-3 py-1.5">
-            <span className="text-peak-text text-xs">{label}</span>
-            <Toggle checked={layers[key]} onChange={v => setLayers(l => ({ ...l, [key]: v }))} />
-          </div>
-        ))}
-      </div>
 
       {/* Saved routes */}
       <div className="p-4">
