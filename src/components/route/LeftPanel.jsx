@@ -15,7 +15,7 @@ function Toggle({ checked, onChange }) {
 
 const TYPE_COLORS = { start: "#2d6a4f", waypoint: "#FB343D", end: "#1a1a2e" };
 
-export default function LeftPanel({ routePoints, layers, setLayers, onDelete, onRename, onTypeChange, onClear, onReverse, onReorder, savedRoutes, onLoadRoute }) {
+export default function LeftPanel({ routePoints, layers, setLayers, onDelete, onRename, onTypeChange, onClear, onReverse, onReorder, savedRoutes, onLoadRoute, routeMode, setRouteMode, routeModes = [] }) {
   function handleDragStart(e, idx) { e.dataTransfer.setData("dragIdx", idx); }
   function handleDrop(e, idx) {
     const from = parseInt(e.dataTransfer.getData("dragIdx"));
@@ -69,6 +69,23 @@ export default function LeftPanel({ routePoints, layers, setLayers, onDelete, on
           </div>
         )}
       </div>
+
+      {/* Route mode selector */}
+      {routeModes && routeModes.length > 0 && (
+        <div className="p-4 border-b border-white/5">
+          <p className="text-peak-text font-bold text-sm mb-3">Route mode</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {routeModes.map(mode => (
+              <button key={mode.key} onClick={() => setRouteMode && setRouteMode(mode.key)}
+                style={{ textAlign: "left", padding: "8px 10px", borderRadius: 8, border: routeMode === mode.key ? "1.5px solid rgba(251,52,61,0.5)" : "1px solid rgba(255,255,255,0.08)", background: routeMode === mode.key ? "rgba(251,52,61,0.12)" : "rgba(255,255,255,0.03)", cursor: "pointer", transition: "all 0.15s" }}>
+                <span style={{ fontSize: 16 }}>{mode.icon}</span>
+                <p style={{ fontSize: 11, fontWeight: 700, color: routeMode === mode.key ? "white" : "rgba(255,255,255,0.7)", marginTop: 3, lineHeight: 1.2 }}>{mode.label}</p>
+                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", lineHeight: 1.2, marginTop: 2 }}>{mode.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Layer toggles */}
       <div className="p-4 border-b border-white/5">
