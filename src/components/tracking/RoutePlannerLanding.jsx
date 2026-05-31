@@ -395,7 +395,7 @@ export default function RoutePlannerLanding() {
           }}
           className="bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-peak-red-hover transition-colors">
           <Plus className="h-4 w-4" />
-          New route
+          Start planning
         </button>
       </div>
 
