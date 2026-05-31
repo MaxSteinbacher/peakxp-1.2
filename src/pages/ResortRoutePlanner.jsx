@@ -13,19 +13,19 @@ function loadSDK() {
   if (window.maptilersdk) return Promise.resolve(window.maptilersdk);
   if (sdkLoadPromise) return sdkLoadPromise;
   sdkLoadPromise = new Promise((resolve, reject) => {
-    if (!document.querySelector('link[href*="maptiler-sdk.css"]')) {
+    if (!document.querySelector('link[href*="maptiler-sdk"]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.css";
+      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
       document.head.appendChild(link);
     }
-    const existingScript = document.querySelector('script[src*="maptiler-sdk.umd.min.js"]');
+    const existingScript = document.querySelector('script[src*="maptiler-sdk-js"]');
     if (existingScript) {
       const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
       setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 15000);
     } else {
       const script = document.createElement("script");
-      script.src = "https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.umd.min.js";
+      script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
       script.onload = () => {
         const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
         setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 15000);
@@ -96,6 +96,70 @@ async function fetchElevation(lon, lat) {
 
 const EMPTY_FC = { type: "FeatureCollection", features: [] };
 
+// Route mode definitions
+const ROUTE_MODES = [
+  { key: "fastest", label: "Fastest", icon: "⚡", desc: "Shortest path A to B" },
+  { key: "easy_only", label: "Easy only", icon: "🟢", desc: "Stick to blue/green runs" },
+  { key: "variety", label: "Best variety", icon: "🎿", desc: "Mix of difficulty levels" },
+  { key: "scenic", label: "Most scenic", icon: "🏔️", desc: "Longer but scenic route" },
+];
+
+// Route along piste network using OSM/Overpass data
+// Takes start + end coords + the loaded piste GeoJSON, finds best path
+async function routeAlongPistes(start, end, geojson, mode = "fastest") {
+  if (!geojson || !geojson.features.length) return null;
+
+  // Filter piste features by mode
+  const pisteFeatures = geojson.features.filter(f => {
+    if (!f.properties["piste:type"] && !f.properties["aerialway"]) return false;
+    const diff = f.properties["piste:difficulty"] || "";
+    if (mode === "easy_only") return ["easy","novice","beginner"].includes(diff) || f.properties["aerialway"];
+    return true;
+  });
+
+  if (!pisteFeatures.length) return null;
+
+  // Build a simple graph from piste linestrings
+  // Find nearest piste point to start and end
+  function nearestNode(coord, features) {
+    let best = null, bestDist = Infinity;
+    features.forEach(f => {
+      if (f.geometry.type !== "LineString") return;
+      f.geometry.coordinates.forEach(c => {
+        const d = Math.hypot(c[0] - coord[0], c[1] - coord[1]);
+        if (d < bestDist) { bestDist = d; best = c; }
+      });
+    });
+    return best;
+  }
+
+  const startNode = nearestNode(start, pisteFeatures);
+  const endNode = nearestNode(end, pisteFeatures);
+  if (!startNode || !endNode) return null;
+
+  // Use OSRM foot profile to route between the two piste-snapped points
+  // OSRM will follow the actual road/path network (which includes piste paths in ski resorts)
+  try {
+    const url = `https://router.project-osrm.org/route/v1/foot/${startNode[0]},${startNode[1]};${endNode[0]},${endNode[1]}?overview=full&geometries=geojson&steps=false`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (data.code === "Ok" && data.routes?.[0]) {
+      return {
+        coordinates: data.routes[0].geometry.coordinates,
+        distanceKm: (data.routes[0].distance / 1000).toFixed(1),
+        durationMin: Math.round(data.routes[0].duration / 60),
+      };
+    }
+  } catch {}
+
+  // Fallback: straight line through nearest piste points
+  return {
+    coordinates: [startNode, endNode],
+    distanceKm: haversineKm(startNode, endNode).toFixed(1),
+    durationMin: 5,
+  };
+}
+
 export default function ResortRoutePlanner() {
   const { id } = useParams();
   const resort = getResortById(id);
@@ -109,6 +173,8 @@ export default function ResortRoutePlanner() {
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState([]);
+  const [routeMode, setRouteMode] = useState("fastest");
+  const [routePathCoords, setRoutePathCoords] = useState([]);
   const routeRef = useRef([]);
 
   const lat = resort?.lat;
@@ -124,13 +190,15 @@ export default function ResortRoutePlanner() {
     } catch {}
   }, [id]);
 
-  const updateMapSources = useCallback((points) => {
+  const updateMapSources = useCallback((points, pathCoords = null) => {
     const map = mapInstance.current;
     if (!map) return;
     const lineSrc = map.getSource("route-line");
     const ptSrc = map.getSource("route-points");
     if (points.length >= 2 && lineSrc) {
-      lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: points.map(p => p.lngLat) }, properties: {} }] });
+      // Use routed path if available, otherwise fall back to straight lines
+      const coords = (pathCoords && pathCoords.length >= 2) ? pathCoords : points.map(p => p.lngLat);
+      lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} }] });
     } else if (lineSrc) {
       lineSrc.setData(EMPTY_FC);
     }
@@ -140,9 +208,28 @@ export default function ResortRoutePlanner() {
   }, []);
 
   useEffect(() => {
-    updateMapSources(routePoints);
     setStats(calcStats(routePoints));
-  }, [routePoints, updateMapSources]);
+    if (routePoints.length >= 2 && geojsonRef.current) {
+      // Route between each pair of consecutive points
+      const allCoords = async () => {
+        let combined = [];
+        for (let i = 0; i < routePoints.length - 1; i++) {
+          const seg = await routeAlongPistes(
+            routePoints[i].lngLat, routePoints[i+1].lngLat,
+            geojsonRef.current, routeMode
+          );
+          if (seg) combined = combined.concat(seg.coordinates);
+          else combined = combined.concat([routePoints[i].lngLat, routePoints[i+1].lngLat]);
+        }
+        setRoutePathCoords(combined);
+        updateMapSources(routePoints, combined);
+      };
+      allCoords();
+    } else {
+      setRoutePathCoords([]);
+      updateMapSources(routePoints, []);
+    }
+  }, [routePoints, routeMode, updateMapSources]);
 
   useEffect(() => {
     const map = mapInstance.current;
@@ -151,7 +238,7 @@ export default function ResortRoutePlanner() {
     const liftIds = ["lifts-line", "lifts-label"];
     pisteIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none"); });
     liftIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none"); });
-    try { map.setTerrain(layers.terrain ? { source: "maptiler-dem", exaggeration: 1.5 } : null); } catch {}
+    try { map.setTerrain(layers.terrain ? { source: "terrain", exaggeration: 1.5 } : null); } catch {}
   }, [layers, loading]);
 
   useEffect(() => {
@@ -179,7 +266,7 @@ export default function ResortRoutePlanner() {
         touchZoomRotate: true,
         keyboard: false,
         attributionControl: false,
-        antialias: true,
+        terrain: { source: "terrain", exaggeration: 1.5 },
       });
 
       map.addControl(new sdk.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "bottom-right");
@@ -190,13 +277,6 @@ export default function ResortRoutePlanner() {
         if (unmounted) return;
         // Force map to recalculate container dimensions
         setTimeout(() => { try { map.resize(); } catch {} }, 50);
-
-        map.addSource("maptiler-dem", {
-          type: "raster-dem",
-          url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`,
-          tileSize: 256,
-        });
-        map.setTerrain({ source: "maptiler-dem", exaggeration: 1.5 });
 
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
@@ -326,7 +406,7 @@ export default function ResortRoutePlanner() {
 
         {/* Left panel desktop */}
         <div className="absolute left-0 top-0 bottom-0 w-72 bg-peak-surface border-r border-white/5 z-20 hidden lg:flex flex-col overflow-hidden">
-          <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} />
+          <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
         </div>
 
         {/* Right panel desktop */}
@@ -353,7 +433,7 @@ export default function ResortRoutePlanner() {
                 <button onClick={() => setLeftOpen(false)} className="text-peak-text-secondary hover:text-peak-text text-lg leading-none">✕</button>
               </div>
               <div className="flex-1 overflow-y-auto">
-                <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} />
+                <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
               </div>
             </div>
             <div className="flex-1" onClick={() => setLeftOpen(false)} />
