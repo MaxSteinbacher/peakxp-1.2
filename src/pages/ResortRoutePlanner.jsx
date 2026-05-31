@@ -1,88 +1,54 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Mountain, List, BarChart2 } from "lucide-react";
+import { ArrowLeft, List, BarChart2 } from "lucide-react";
 import { getResortById } from "../lib/data";
 import LeftPanel from "../components/route/LeftPanel";
 import RightPanel from "../components/route/RightPanel";
 
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
-const STYLE_URL = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
+const MAP_STYLE = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
-let sdkLoadPromise = null;
-function loadSDK() {
-  if (window.maptilersdk) return Promise.resolve(window.maptilersdk);
-  if (sdkLoadPromise) return sdkLoadPromise;
-  sdkLoadPromise = new Promise((resolve, reject) => {
-    if (!document.querySelector('link[href*="maptiler-sdk"]')) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
-      document.head.appendChild(link);
-    }
-    const existingScript = document.querySelector('script[src*="maptiler-sdk-js"]');
-    if (existingScript) {
-      const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
-      setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 15000);
-    } else {
-      const script = document.createElement("script");
-      script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
-      script.onload = () => {
-        const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
-        setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 15000);
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    }
-  });
-  return sdkLoadPromise;
-}
+const ROUTE_MODES = [
+  { key: "fastest", label: "Fastest", icon: "⚡", desc: "Shortest path A to B" },
+  { key: "easy_only", label: "Easy only", icon: "🟢", desc: "Blue & green runs only" },
+  { key: "variety", label: "Best variety", icon: "🎿", desc: "Mix of difficulty levels" },
+  { key: "scenic", label: "Most scenic", icon: "🏔️", desc: "Longest, most scenic" },
+];
 
-function overpassToGeoJSON(data) {
-  const nodes = {};
-  data.elements.forEach(el => { if (el.type === "node") nodes[el.id] = [el.lon, el.lat]; });
-  const features = [];
-  data.elements.forEach(el => {
-    if (el.type === "way" && el.nodes) {
-      const coords = el.nodes.map(nid => nodes[nid]).filter(Boolean);
-      if (coords.length < 2) return;
-      features.push({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: { ...el.tags, _id: el.id } });
-    }
-  });
-  return { type: "FeatureCollection", features };
-}
+const EMPTY_FC = { type: "FeatureCollection", features: [] };
 
 function haversineKm(a, b) {
   const R = 6371;
   const dLat = (b[1] - a[1]) * Math.PI / 180;
   const dLon = (b[0] - a[0]) * Math.PI / 180;
-  const s = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * Math.PI / 180) * Math.cos(b[1] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+  const s = Math.sin(dLat/2)**2 + Math.cos(a[1]*Math.PI/180)*Math.cos(b[1]*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
 }
 
-function calcStats(points) {
+function calcStats(points, pathCoords) {
   if (points.length < 2) return { distanceKm: "0.0", totalDescent: 0, totalAscent: 0, estimatedMinutes: 0 };
-  let dist = 0, descent = 0, ascent = 0;
+  let dist = 0;
+  const coords = (pathCoords && pathCoords.length >= 2) ? pathCoords : points.map(p => p.lngLat);
+  for (let i = 1; i < coords.length; i++) dist += haversineKm(coords[i-1], coords[i]);
+  let descent = 0, ascent = 0;
   for (let i = 1; i < points.length; i++) {
-    dist += haversineKm(points[i - 1].lngLat, points[i].lngLat);
-    if (points[i].elevation != null && points[i - 1].elevation != null) {
-      const diff = points[i - 1].elevation - points[i].elevation;
-      if (diff > 0) descent += diff;
-      else ascent += Math.abs(diff);
+    if (points[i].elevation != null && points[i-1].elevation != null) {
+      const diff = points[i-1].elevation - points[i].elevation;
+      if (diff > 0) descent += diff; else ascent += Math.abs(diff);
     }
   }
   return { distanceKm: dist.toFixed(1), totalDescent: Math.round(descent), totalAscent: Math.round(ascent), estimatedMinutes: Math.round(dist / 30 * 60) };
 }
 
-function nearestPointOnLine(point, lineCoords) {
+function nearestPointOnFeatures(coord, features) {
   let best = null, bestDist = Infinity;
-  for (let i = 0; i < lineCoords.length - 1; i++) {
-    const [x1, y1] = lineCoords[i], [x2, y2] = lineCoords[i + 1];
-    const dx = x2 - x1, dy = y2 - y1;
-    const t = Math.max(0, Math.min(1, ((point[0] - x1) * dx + (point[1] - y1) * dy) / (dx * dx + dy * dy)));
-    const px = x1 + t * dx, py = y1 + t * dy;
-    const d = haversineKm(point, [px, py]) * 1000;
-    if (d < bestDist) { bestDist = d; best = [px, py]; }
-  }
+  features.forEach(f => {
+    if (f.geometry.type !== "LineString") return;
+    f.geometry.coordinates.forEach(c => {
+      const d = Math.hypot(c[0]-coord[0], c[1]-coord[1]) * 111000;
+      if (d < bestDist) { bestDist = d; best = c; }
+    });
+  });
   return { point: best, dist: bestDist };
 }
 
@@ -94,70 +60,45 @@ async function fetchElevation(lon, lat) {
   } catch { return null; }
 }
 
-const EMPTY_FC = { type: "FeatureCollection", features: [] };
-
-// Route mode definitions
-const ROUTE_MODES = [
-  { key: "fastest", label: "Fastest", icon: "⚡", desc: "Shortest path A to B" },
-  { key: "easy_only", label: "Easy only", icon: "🟢", desc: "Stick to blue/green runs" },
-  { key: "variety", label: "Best variety", icon: "🎿", desc: "Mix of difficulty levels" },
-  { key: "scenic", label: "Most scenic", icon: "🏔️", desc: "Longer but scenic route" },
-];
-
-// Route along piste network using OSM/Overpass data
-// Takes start + end coords + the loaded piste GeoJSON, finds best path
-async function routeAlongPistes(start, end, geojson, mode = "fastest") {
-  if (!geojson || !geojson.features.length) return null;
-
-  // Filter piste features by mode
+async function routeAlongPistes(start, end, geojson, mode) {
+  if (!geojson?.features?.length) return null;
   const pisteFeatures = geojson.features.filter(f => {
-    if (!f.properties["piste:type"] && !f.properties["aerialway"]) return false;
     const diff = f.properties["piste:difficulty"] || "";
-    if (mode === "easy_only") return ["easy","novice","beginner"].includes(diff) || f.properties["aerialway"];
-    return true;
+    const hasPiste = f.properties["piste:type"];
+    const hasLift = f.properties["aerialway"];
+    if (mode === "easy_only") return ["easy","novice","beginner"].includes(diff) || hasLift;
+    return hasPiste || hasLift;
   });
-
   if (!pisteFeatures.length) return null;
 
-  // Build a simple graph from piste linestrings
-  // Find nearest piste point to start and end
-  function nearestNode(coord, features) {
-    let best = null, bestDist = Infinity;
-    features.forEach(f => {
-      if (f.geometry.type !== "LineString") return;
-      f.geometry.coordinates.forEach(c => {
-        const d = Math.hypot(c[0] - coord[0], c[1] - coord[1]);
-        if (d < bestDist) { bestDist = d; best = c; }
-      });
-    });
-    return best;
-  }
+  const { point: snapStart } = nearestPointOnFeatures(start, pisteFeatures);
+  const { point: snapEnd } = nearestPointOnFeatures(end, pisteFeatures);
+  if (!snapStart || !snapEnd) return null;
 
-  const startNode = nearestNode(start, pisteFeatures);
-  const endNode = nearestNode(end, pisteFeatures);
-  if (!startNode || !endNode) return null;
-
-  // Use OSRM foot profile to route between the two piste-snapped points
-  // OSRM will follow the actual road/path network (which includes piste paths in ski resorts)
   try {
-    const url = `https://router.project-osrm.org/route/v1/foot/${startNode[0]},${startNode[1]};${endNode[0]},${endNode[1]}?overview=full&geometries=geojson&steps=false`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const s = `${snapStart[0]},${snapStart[1]}`;
+    const e = `${snapEnd[0]},${snapEnd[1]}`;
+    const url = `https://router.project-osrm.org/route/v1/foot/${s};${e}?overview=full&geometries=geojson`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
     const data = await res.json();
     if (data.code === "Ok" && data.routes?.[0]) {
-      return {
-        coordinates: data.routes[0].geometry.coordinates,
-        distanceKm: (data.routes[0].distance / 1000).toFixed(1),
-        durationMin: Math.round(data.routes[0].duration / 60),
-      };
+      return data.routes[0].geometry.coordinates;
     }
   } catch {}
+  return [snapStart, snapEnd];
+}
 
-  // Fallback: straight line through nearest piste points
-  return {
-    coordinates: [startNode, endNode],
-    distanceKm: haversineKm(startNode, endNode).toFixed(1),
-    durationMin: 5,
-  };
+function overpassToGeoJSON(data) {
+  const nodes = {};
+  data.elements.forEach(el => { if (el.type === "node") nodes[el.id] = [el.lon, el.lat]; });
+  const features = [];
+  data.elements.forEach(el => {
+    if (el.type === "way" && el.nodes) {
+      const coords = el.nodes.map(n => nodes[n]).filter(Boolean);
+      if (coords.length >= 2) features.push({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: { ...el.tags } });
+    }
+  });
+  return { type: "FeatureCollection", features };
 }
 
 export default function ResortRoutePlanner() {
@@ -166,292 +107,293 @@ export default function ResortRoutePlanner() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const geojsonRef = useRef(null);
+  const routeRef = useRef([]);
+  const pathRef = useRef([]);
+
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [routePoints, setRoutePoints] = useState([]);
+  const [routePathCoords, setRoutePathCoords] = useState([]);
+  const [routeMode, setRouteMode] = useState("fastest");
   const [layers, setLayers] = useState({ slopes: true, lifts: true, liftStatus: true, terrain: true });
   const [stats, setStats] = useState({ distanceKm: "0.0", totalDescent: 0, totalAscent: 0, estimatedMinutes: 0 });
+  const [savedRoutes, setSavedRoutes] = useState([]);
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
-  const [savedRoutes, setSavedRoutes] = useState([]);
-  const [routeMode, setRouteMode] = useState("fastest");
-  const [routePathCoords, setRoutePathCoords] = useState([]);
-  const routeRef = useRef([]);
-
-  const lat = resort?.lat;
-  const lng = resort?.lng;
 
   useEffect(() => { routeRef.current = routePoints; }, [routePoints]);
+  useEffect(() => { pathRef.current = routePathCoords; }, [routePathCoords]);
 
+  // Load saved routes
   useEffect(() => {
     if (!id) return;
-    try {
-      const raw = localStorage.getItem(`routes:${id}`);
-      if (raw) setSavedRoutes(JSON.parse(raw));
-    } catch {}
+    try { const raw = localStorage.getItem(`routes:${id}`); if (raw) setSavedRoutes(JSON.parse(raw)); } catch {}
   }, [id]);
 
-  const updateMapSources = useCallback((points, pathCoords = null) => {
-    const map = mapInstance.current;
-    if (!map) return;
-    const lineSrc = map.getSource("route-line");
-    const ptSrc = map.getSource("route-points");
-    if (points.length >= 2 && lineSrc) {
-      // Use routed path if available, otherwise fall back to straight lines
-      const coords = (pathCoords && pathCoords.length >= 2) ? pathCoords : points.map(p => p.lngLat);
-      lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: {} }] });
-    } else if (lineSrc) {
-      lineSrc.setData(EMPTY_FC);
-    }
-    if (ptSrc) {
-      ptSrc.setData({ type: "FeatureCollection", features: points.map((p, i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i + 1, type: p.type, id: p.id } })) });
-    }
-  }, []);
-
-  useEffect(() => {
-    setStats(calcStats(routePoints));
-    if (routePoints.length >= 2 && geojsonRef.current) {
-      // Route between each pair of consecutive points
-      const allCoords = async () => {
-        let combined = [];
-        for (let i = 0; i < routePoints.length - 1; i++) {
-          const seg = await routeAlongPistes(
-            routePoints[i].lngLat, routePoints[i+1].lngLat,
-            geojsonRef.current, routeMode
-          );
-          if (seg) combined = combined.concat(seg.coordinates);
-          else combined = combined.concat([routePoints[i].lngLat, routePoints[i+1].lngLat]);
-        }
-        setRoutePathCoords(combined);
-        updateMapSources(routePoints, combined);
-      };
-      allCoords();
-    } else {
-      setRoutePathCoords([]);
-      updateMapSources(routePoints, []);
-    }
-  }, [routePoints, routeMode, updateMapSources]);
-
+  // Layer visibility
   useEffect(() => {
     const map = mapInstance.current;
     if (!map || loading) return;
-    const pisteIds = ["pistes-black", "pistes-red", "pistes-blue", "pistes-green", "piste-labels"];
-    const liftIds = ["lifts-line", "lifts-label"];
-    pisteIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none"); });
-    liftIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none"); });
+    const pisteIds = ["pistes-black","pistes-red","pistes-blue","pistes-green","piste-labels"];
+    const liftIds = ["lifts-line","lifts-label"];
+    pisteIds.forEach(lid => { try { map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none"); } catch {} });
+    liftIds.forEach(lid => { try { map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none"); } catch {} });
     try { map.setTerrain(layers.terrain ? { source: "terrain", exaggeration: 1.5 } : null); } catch {}
   }, [layers, loading]);
 
+  // Re-route when mode changes
   useEffect(() => {
-    if (!lat || !lng || (lat === 0 && lng === 0)) { setLoading(false); return; }
-    let map = null, unmounted = false;
+    const pts = routeRef.current;
+    if (pts.length < 2 || !geojsonRef.current) return;
+    (async () => {
+      let combined = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const seg = await routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current, routeMode);
+        if (seg) combined = combined.concat(seg);
+        else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
+      }
+      setRoutePathCoords(combined);
+      const lineSrc = mapInstance.current?.getSource("route-line");
+      if (lineSrc && combined.length >= 2) {
+        lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: combined }, properties: {} }] });
+      }
+    })();
+  }, [routeMode]);
 
-    loadSDK().then(sdk => {
-      if (unmounted || !mapRef.current) return;
+  // Stats update
+  useEffect(() => {
+    setStats(calcStats(routePoints, routePathCoords));
+  }, [routePoints, routePathCoords]);
+
+  // ── Map initialization — same pattern as TrackingRecord ──────────────────
+  useEffect(() => {
+    if (!resort?.lat || !resort?.lng) { setLoading(false); return; }
+    const lat = resort.lat, lng = resort.lng;
+    let unmounted = false;
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
+    script.onload = () => {
+      if (unmounted) return;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
+      document.head.appendChild(link);
+
+      const sdk = window.maptilersdk;
       sdk.config.apiKey = MAPTILER_KEY;
 
-      if (mapRef.current) {
-        mapRef.current.setAttribute("tabindex", "-1");
-        mapRef.current.style.outline = "none";
-      }
-
-      map = new sdk.Map({
+      const map = new sdk.Map({
         container: mapRef.current,
-        style: STYLE_URL,
+        style: MAP_STYLE,
         center: [lng, lat],
         zoom: 13,
         pitch: 55,
         bearing: 0,
-        scrollZoom: true,
-        dragRotate: true,
-        touchZoomRotate: true,
-        keyboard: false,
-        attributionControl: false,
         terrain: { source: "terrain", exaggeration: 1.5 },
       });
 
       map.addControl(new sdk.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "bottom-right");
       map.addControl(new sdk.ScaleControl({ unit: "metric" }), "bottom-left");
-      map.addControl(new sdk.FullscreenControl(), "top-right");
 
       map.on("load", async () => {
         if (unmounted) return;
-        // Force map to recalculate container dimensions
-        setTimeout(() => { try { map.resize(); } catch {} }, 50);
 
+        // Route drawing sources
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
-        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 4, "line-opacity": 1, "line-cap": "round", "line-join": "round" } });
+        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 4, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
         map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 8, "circle-color": "#FB343D", "circle-stroke-width": 2, "circle-stroke-color": "#ffffff" } });
         map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 10, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
 
-        const pad = 0.08;
-        const S = lat - pad, N = lat + pad, W = lng - pad, E = lng + pad;
-        const query = `[out:json][timeout:15];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E});relation["piste:type"="downhill"](${S},${W},${N},${E}););out body;>;out skel qt;`;
-
+        // Fetch piste data from Overpass
+        const pad = 0.09;
+        const [S, N, W, E] = [lat-pad, lat+pad, lng-pad, lng+pad];
+        const query = `[out:json][timeout:20];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
         try {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 15000);
-          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: controller.signal });
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 18000);
+          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
           const data = await res.json();
           if (unmounted) return;
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
-
           map.addSource("openski-data", { type: "geojson", data: geojson });
           [
-            { id: "pistes-black", difficulty: "expert", color: "#1a1a2e", width: 3.5 },
-            { id: "pistes-red", difficulty: "advanced", color: "#e63946", width: 3 },
-            { id: "pistes-blue", difficulty: "intermediate", color: "#3894E3", width: 3 },
-            { id: "pistes-green", difficulty: ["easy", "novice"], color: "#2d6a4f", width: 3 },
+            { id: "pistes-black", difficulty: "expert", color: "#333", width: 4 },
+            { id: "pistes-red", difficulty: "advanced", color: "#e63946", width: 3.5 },
+            { id: "pistes-blue", difficulty: "intermediate", color: "#3894E3", width: 3.5 },
+            { id: "pistes-green", difficulty: ["easy","novice"], color: "#2d6a4f", width: 3.5 },
           ].forEach(({ id: lid, difficulty, color, width }) => {
             const filter = Array.isArray(difficulty)
-              ? ["in", ["get", "piste:difficulty"], ["literal", difficulty]]
-              : ["==", ["get", "piste:difficulty"], difficulty];
+              ? ["in", ["get","piste:difficulty"], ["literal", difficulty]]
+              : ["==", ["get","piste:difficulty"], difficulty];
             map.addLayer({ id: lid, type: "line", source: "openski-data", filter, paint: { "line-color": color, "line-width": width, "line-opacity": 0.9 } });
           });
-          map.addLayer({ id: "piste-labels", type: "symbol", source: "openski-data", filter: ["has", "name"], layout: { "text-field": ["get", "name"], "text-size": 11, "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff", "text-halo-color": "#1a1a2e", "text-halo-width": 1.5 } });
-          map.addLayer({ id: "lifts-line", type: "line", source: "openski-data", filter: ["has", "aerialway"], paint: { "line-color": "#FB343D", "line-width": 2, "line-opacity": 0.85, "line-dasharray": [2, 1] } });
-          map.addLayer({ id: "lifts-label", type: "symbol", source: "openski-data", filter: ["all", ["has", "aerialway"], ["has", "name"]], layout: { "text-field": ["get", "name"], "text-size": 10, "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"] }, paint: { "text-color": "#FB343D", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
+          map.addLayer({ id: "piste-labels", type: "symbol", source: "openski-data", filter: ["has","name"], layout: { "text-field": ["get","name"], "text-size": 11, "text-font": ["Open Sans Bold","Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff", "text-halo-color": "#0a0a1a", "text-halo-width": 1.5 } });
+          map.addLayer({ id: "lifts-line", type: "line", source: "openski-data", filter: ["has","aerialway"], paint: { "line-color": "#FB343D", "line-width": 2, "line-dasharray": [2,1], "line-opacity": 0.85 } });
+          map.addLayer({ id: "lifts-label", type: "symbol", source: "openski-data", filter: ["all",["has","aerialway"],["has","name"]], layout: { "text-field": ["get","name"], "text-size": 10, "text-font": ["Open Sans Regular","Arial Unicode MS Regular"] }, paint: { "text-color": "#FB343D", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
         } catch {}
 
+        // Click handler — snap to piste + route
         map.on("click", async e => {
+          if (unmounted) return;
           const { lngLat } = e;
           let coord = [lngLat.lng, lngLat.lat];
           let snapName = null;
           const gj = geojsonRef.current;
           if (gj) {
-            let bestDist = Infinity, bestPt = null, bestPisteName = null;
-            gj.features.forEach(f => {
-              if (f.properties["piste:type"] && f.geometry.type === "LineString") {
-                const { point, dist } = nearestPointOnLine(coord, f.geometry.coordinates);
-                if (dist < 50 && dist < bestDist) { bestDist = dist; bestPt = point; bestPisteName = f.properties.name || null; }
-              }
-            });
-            if (bestPt) { coord = bestPt; snapName = bestPisteName; }
+            const pisteOnly = gj.features.filter(f => f.properties["piste:type"]);
+            const { point, dist } = nearestPointOnFeatures(coord, pisteOnly);
+            if (point && dist < 60) { coord = point; snapName = pisteOnly.find(f => f.geometry.coordinates.includes(point))?.properties?.name || null; }
           }
-          const pts = routeRef.current;
-          const idx = pts.length;
           const elevation = await fetchElevation(coord[0], coord[1]);
-          const newPt = { id: Date.now(), lngLat: coord, name: snapName || `Point ${idx + 1}`, elevation, type: idx === 0 ? "start" : "waypoint" };
-          setRoutePoints(prev => [...prev, newPt]);
+          const prev = routeRef.current;
+          const newPt = { id: Date.now(), lngLat: coord, name: snapName || `Point ${prev.length + 1}`, elevation, type: prev.length === 0 ? "start" : "waypoint" };
+          const newPts = [...prev, newPt];
+          setRoutePoints(newPts);
+
+          // Update point markers
+          const ptSrc = map.getSource("route-points");
+          if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: newPts.map((p, i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+
+          // Route from previous point to this one
+          if (newPts.length >= 2) {
+            const prev2 = newPts[newPts.length-2];
+            const seg = await routeAlongPistes(prev2.lngLat, coord, gj, routeRef.current.length > 0 ? "fastest" : "fastest");
+            const existing = pathRef.current;
+            const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
+            setRoutePathCoords(combined);
+            const lineSrc = map.getSource("route-line");
+            if (lineSrc && combined.length >= 2) lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: combined }, properties: {} }] });
+          }
         });
 
-        if (!unmounted) setLoading(false);
+        mapInstance.current = map;
+        setMapLoaded(true);
+        setLoading(false);
       });
-
-      mapInstance.current = map;
-    }).catch(() => { if (!unmounted) setLoading(false); });
+    };
+    script.onerror = () => setLoading(false);
+    document.head.appendChild(script);
 
     return () => {
       unmounted = true;
-      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
+      if (mapInstance.current) { try { mapInstance.current.remove(); } catch {} mapInstance.current = null; }
     };
-  }, [lat, lng]);
+  }, [resort?.id]);
 
-  function handleDelete(ptId) { setRoutePoints(prev => prev.filter(p => p.id !== ptId)); }
+  function handleDelete(ptId) {
+    const newPts = routePoints.filter(p => p.id !== ptId);
+    setRoutePoints(newPts);
+    setRoutePathCoords([]);
+    const lineSrc = mapInstance.current?.getSource("route-line");
+    const ptSrc = mapInstance.current?.getSource("route-points");
+    if (lineSrc) lineSrc.setData(EMPTY_FC);
+    if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: newPts.map((p,i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+  }
   function handleRename(ptId, name) { setRoutePoints(prev => prev.map(p => p.id === ptId ? { ...p, name } : p)); }
   function handleTypeChange(ptId, type) { setRoutePoints(prev => prev.map(p => p.id === ptId ? { ...p, type } : p)); }
-  function handleClear() { setRoutePoints([]); }
+  function handleClear() {
+    setRoutePoints([]); setRoutePathCoords([]);
+    const lineSrc = mapInstance.current?.getSource("route-line");
+    const ptSrc = mapInstance.current?.getSource("route-points");
+    if (lineSrc) lineSrc.setData(EMPTY_FC);
+    if (ptSrc) ptSrc.setData(EMPTY_FC);
+  }
   function handleReverse() { setRoutePoints(prev => [...prev].reverse()); }
-  function handleReorder(newArr) { setRoutePoints(newArr); }
-
+  function handleReorder(arr) { setRoutePoints(arr); }
   function handleSave() {
     if (routePoints.length < 2 || !resort) return;
-    const route = { id: Date.now(), name: `My route at ${resort.name}`, resortId: resort.id, resortName: resort.name, points: routePoints, stats, createdAt: new Date().toISOString() };
+    const route = { id: Date.now(), name: `Route at ${resort.name}`, resortId: resort.id, resortName: resort.name, points: routePoints, pathCoords: routePathCoords, stats, createdAt: new Date().toISOString() };
     const updated = [route, ...savedRoutes];
     localStorage.setItem(`routes:${id}`, JSON.stringify(updated));
     setSavedRoutes(updated);
   }
-
-  function handleLoadRoute(route) { setRoutePoints(route.points); }
-
-  if (!resort) {
-    return (
-      <div className="min-h-screen bg-peak-bg flex items-center justify-center">
-        <p className="text-peak-text-secondary">Resort not found.</p>
-      </div>
-    );
+  function handleLoadRoute(route) {
+    setRoutePoints(route.points);
+    const path = route.pathCoords || [];
+    setRoutePathCoords(path);
+    const lineSrc = mapInstance.current?.getSource("route-line");
+    const ptSrc = mapInstance.current?.getSource("route-points");
+    if (lineSrc && path.length >= 2) lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: path }, properties: {} }] });
+    if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: route.points.map((p,i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
   }
 
+  if (!resort) return <div className="min-h-screen bg-peak-bg flex items-center justify-center"><p className="text-peak-text-secondary">Resort not found.</p></div>;
+
   return (
-    <div style={{ height: "calc(100vh - 64px)", display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--color-peak-bg, #070B1E)" }}>
+    <div style={{ height: "calc(100vh - 64px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
-      <div className="h-14 bg-peak-surface border-b border-white/5 flex items-center px-4 gap-4 flex-shrink-0 z-30 relative">
-        <Link to={`/resort/${id}`} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text transition-colors text-sm flex-shrink-0">
-          <ArrowLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">{resort.name}</span>
+      <div className="h-14 bg-peak-surface border-b border-white/5 flex items-center px-4 gap-4 flex-shrink-0 z-30">
+        <Link to={`/resort/${id}`} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text transition-colors text-sm">
+          <ArrowLeft className="h-4 w-4" /><span className="hidden sm:inline">{resort.name}</span>
         </Link>
         <div className="w-px h-5 bg-white/10 hidden sm:block" />
         <span className="font-display font-bold text-peak-text text-lg hidden sm:block">Route Planner</span>
         <div className="flex items-center gap-3 ml-auto text-sm">
           <span className="text-peak-text-secondary hidden md:block">{stats.distanceKm} km</span>
-          <span className="text-peak-text-secondary hidden md:block">{stats.totalDescent.toLocaleString()} m</span>
+          <span className="text-peak-text-secondary hidden md:block">{stats.totalDescent} m ↓</span>
           <span className="text-peak-text-secondary hidden md:block">~{stats.estimatedMinutes} min</span>
-          <button onClick={handleSave} disabled={routePoints.length < 2} className="bg-peak-red text-white px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
-            Save route
-          </button>
+          <button onClick={handleSave} disabled={routePoints.length < 2} className="bg-peak-red text-white px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">Save route</button>
         </div>
       </div>
 
-      {/* Main area */}
-      <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
+      {/* Main */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0, position: "relative" }}>
+
+        {/* Loading overlay */}
         {loading && (
-          <div className="absolute inset-0 z-40 bg-peak-surface flex flex-col items-center justify-center gap-3">
-            <Mountain className="h-12 w-12 text-peak-text-secondary/40 animate-pulse" />
-            <p className="text-peak-text-secondary text-sm">Loading 3D terrain...</p>
+          <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#070B1E", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+            <div style={{ fontSize: 36, animation: "pulse 2s infinite" }}>⛷️</div>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Loading resort map…</p>
           </div>
         )}
 
-        <div ref={mapRef} className="absolute inset-0" />
-
-        {/* Left panel desktop */}
-        <div className="absolute left-0 top-0 bottom-0 w-72 bg-peak-surface border-r border-white/5 z-20 hidden lg:flex flex-col overflow-hidden">
-          <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
+        {/* Left panel */}
+        <div className="w-60 flex-shrink-0 bg-peak-surface border-r border-white/5 overflow-y-auto hidden lg:block z-10">
+          <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers}
+            onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange}
+            onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder}
+            savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute}
+            routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
         </div>
 
-        {/* Right panel desktop */}
-        <div className="absolute right-0 top-0 bottom-0 w-64 bg-peak-surface/90 backdrop-blur-sm border-l border-white/5 z-20 hidden lg:flex flex-col overflow-hidden">
-          <RightPanel stats={stats} routePoints={routePoints} resortId={id} routeName={`My route at ${resort.name}`} />
+        {/* Map */}
+        <div style={{ flex: 1, position: "relative", minWidth: 0, minHeight: 0 }}>
+          <div ref={mapRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
+        </div>
+
+        {/* Right panel */}
+        <div className="w-60 flex-shrink-0 bg-peak-surface/90 border-l border-white/5 overflow-y-auto hidden lg:block z-10">
+          <RightPanel stats={stats} routePoints={routePoints} resortId={id} routeName={`Route at ${resort.name}`} />
         </div>
 
         {/* Mobile FABs */}
-        <div className="lg:hidden">
-          <button onClick={() => setLeftOpen(o => !o)} className="absolute bottom-20 left-4 z-30 bg-peak-surface border border-white/10 rounded-full p-3 shadow-lg">
-            <List className="h-5 w-5 text-peak-text" />
-          </button>
-          <button onClick={() => setRightOpen(o => !o)} className="absolute bottom-20 right-4 z-30 bg-peak-surface border border-white/10 rounded-full p-3 shadow-lg">
-            <BarChart2 className="h-5 w-5 text-peak-text" />
-          </button>
-        </div>
+        <button onClick={() => setLeftOpen(o => !o)} className="lg:hidden absolute bottom-20 left-4 z-30 bg-peak-surface border border-white/10 rounded-full p-3 shadow-lg"><List className="h-5 w-5 text-peak-text" /></button>
+        <button onClick={() => setRightOpen(o => !o)} className="lg:hidden absolute bottom-20 right-4 z-30 bg-peak-surface border border-white/10 rounded-full p-3 shadow-lg"><BarChart2 className="h-5 w-5 text-peak-text" /></button>
 
-        {/* Mobile left sheet */}
         {leftOpen && (
           <div className="lg:hidden absolute inset-0 z-40 flex">
-            <div className="w-80 max-w-[85vw] bg-peak-surface h-full flex flex-col overflow-hidden shadow-2xl">
+            <div className="w-72 max-w-[85vw] bg-peak-surface h-full overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between p-4 border-b border-white/5">
-                <span className="font-bold text-peak-text text-sm">Route and Layers</span>
-                <button onClick={() => setLeftOpen(false)} className="text-peak-text-secondary hover:text-peak-text text-lg leading-none">✕</button>
+                <span className="font-bold text-peak-text text-sm">Route & Layers</span>
+                <button onClick={() => setLeftOpen(false)} className="text-peak-text-secondary text-xl leading-none">×</button>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
-              </div>
+              <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
             </div>
             <div className="flex-1" onClick={() => setLeftOpen(false)} />
           </div>
         )}
-
-        {/* Mobile right sheet */}
         {rightOpen && (
           <div className="lg:hidden absolute inset-0 z-40 flex justify-end">
             <div className="flex-1" onClick={() => setRightOpen(false)} />
-            <div className="w-72 max-w-[85vw] bg-peak-surface h-full flex flex-col overflow-hidden shadow-2xl">
+            <div className="w-72 max-w-[85vw] bg-peak-surface h-full overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between p-4 border-b border-white/5">
                 <span className="font-bold text-peak-text text-sm">Route Stats</span>
-                <button onClick={() => setRightOpen(false)} className="text-peak-text-secondary hover:text-peak-text text-lg leading-none">✕</button>
+                <button onClick={() => setRightOpen(false)} className="text-peak-text-secondary text-xl leading-none">×</button>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                <RightPanel stats={stats} routePoints={routePoints} resortId={id} routeName={`My route at ${resort.name}`} />
-              </div>
+              <RightPanel stats={stats} routePoints={routePoints} resortId={id} routeName={`Route at ${resort.name}`} />
             </div>
           </div>
         )}
