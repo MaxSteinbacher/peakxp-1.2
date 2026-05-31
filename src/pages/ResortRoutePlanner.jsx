@@ -60,32 +60,126 @@ async function fetchElevation(lon, lat) {
   } catch { return null; }
 }
 
-async function routeAlongPistes(start, end, geojson, mode) {
-  if (!geojson?.features?.length) return null;
-  const pisteFeatures = geojson.features.filter(f => {
-    const diff = f.properties["piste:difficulty"] || "";
-    const hasPiste = f.properties["piste:type"];
-    const hasLift = f.properties["aerialway"];
-    if (mode === "easy_only") return ["easy","novice","beginner"].includes(diff) || hasLift;
-    return hasPiste || hasLift;
-  });
-  if (!pisteFeatures.length) return null;
+// ─── Piste graph router — Dijkstra on OSM piste/lift network ──────────────
+function buildPisteGraph(features, mode) {
+  const nodes = new Map(); // "lon,lat" → index
+  const edges = []; // [{from, to, dist, coords, difficulty}]
 
-  const { point: snapStart } = nearestPointOnFeatures(start, pisteFeatures);
-  const { point: snapEnd } = nearestPointOnFeatures(end, pisteFeatures);
-  if (!snapStart || !snapEnd) return null;
+  function nodeKey(c) { return `${c[0].toFixed(5)},${c[1].toFixed(5)}`; }
+  function getOrAdd(c) {
+    const k = nodeKey(c);
+    if (!nodes.has(k)) nodes.set(k, { idx: nodes.size, coord: c });
+    return nodes.get(k).idx;
+  }
 
-  try {
-    const s = `${snapStart[0]},${snapStart[1]}`;
-    const e = `${snapEnd[0]},${snapEnd[1]}`;
-    const url = `https://router.project-osrm.org/route/v1/foot/${s};${e}?overview=full&geometries=geojson`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    const data = await res.json();
-    if (data.code === "Ok" && data.routes?.[0]) {
-      return data.routes[0].geometry.coordinates;
+  const DIFFICULTY_WEIGHT = { easy: 1, novice: 1, beginner: 1, intermediate: 1.5, advanced: 2.5, expert: 4 };
+
+  features.forEach(f => {
+    if (f.geometry.type !== "LineString") return;
+    const diff = f.properties["piste:difficulty"] || "intermediate";
+    const isLift = !!f.properties["aerialway"];
+
+    if (mode === "easy_only" && !isLift && !["easy","novice","beginner"].includes(diff)) return;
+
+    let weight = isLift ? 0.3 : (DIFFICULTY_WEIGHT[diff] || 1.5);
+    if (mode === "scenic") weight *= 0.5; // prefer longer routes
+    if (mode === "variety" && !isLift) weight = 1; // uniform weight
+
+    const coords = f.geometry.coordinates;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const a = getOrAdd(coords[i]);
+      const b = getOrAdd(coords[i+1]);
+      const segCoords = coords.slice(i, i+2);
+      const d = haversineKm(coords[i], coords[i+1]) * weight;
+      // Pistes are one-directional downhill; lifts bidirectional
+      edges.push({ from: a, to: b, dist: d, coords: segCoords });
+      if (isLift) edges.push({ from: b, to: a, dist: d, coords: [...segCoords].reverse() });
     }
-  } catch {}
-  return [snapStart, snapEnd];
+  });
+
+  // Build adjacency list
+  const adj = new Map();
+  edges.forEach((e, idx) => {
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    adj.get(e.from).push({ to: e.to, dist: e.dist, edgeIdx: idx });
+  });
+
+  return { nodes, edges, adj };
+}
+
+function dijkstra(graph, startCoord, endCoord) {
+  const { nodes, edges, adj } = graph;
+
+  // Find nearest graph nodes to start/end
+  function nearest(coord) {
+    let best = null, bestDist = Infinity;
+    nodes.forEach(({ idx, coord: nc }) => {
+      const d = haversineKm(coord, nc);
+      if (d < bestDist) { bestDist = d; best = idx; }
+    });
+    return { idx: best, dist: bestDist };
+  }
+
+  const { idx: startIdx, dist: startSnap } = nearest(startCoord);
+  const { idx: endIdx, dist: endSnap } = nearest(endCoord);
+  if (startIdx === null || endIdx === null) return null;
+  if (startSnap > 0.5 || endSnap > 0.5) return null; // >500m from network
+
+  if (startIdx === endIdx) return [startCoord, endCoord];
+
+  // Dijkstra
+  const dist = new Map([[startIdx, 0]]);
+  const prev = new Map();
+  const prevEdge = new Map();
+  const visited = new Set();
+  const pq = [[0, startIdx]]; // [priority, nodeIdx]
+
+  while (pq.length > 0) {
+    pq.sort((a, b) => a[0] - b[0]);
+    const [d, u] = pq.shift();
+    if (visited.has(u)) continue;
+    visited.add(u);
+    if (u === endIdx) break;
+
+    const neighbors = adj.get(u) || [];
+    for (const { to, dist: edgeDist, edgeIdx } of neighbors) {
+      const nd = d + edgeDist;
+      if (!dist.has(to) || nd < dist.get(to)) {
+        dist.set(to, nd);
+        prev.set(to, u);
+        prevEdge.set(to, edgeIdx);
+        pq.push([nd, to]);
+      }
+    }
+  }
+
+  if (!prev.has(endIdx) && startIdx !== endIdx) return null;
+
+  // Reconstruct path
+  const pathCoords = [];
+  let cur = endIdx;
+  const edgePath = [];
+  while (prev.has(cur)) {
+    edgePath.unshift(prevEdge.get(cur));
+    cur = prev.get(cur);
+  }
+
+  edgePath.forEach(ei => {
+    const seg = edges[ei].coords;
+    if (pathCoords.length === 0) pathCoords.push(...seg);
+    else pathCoords.push(...seg.slice(1));
+  });
+
+  return pathCoords.length >= 2 ? pathCoords : null;
+}
+
+function routeAlongPistes(start, end, geojson, mode) {
+  if (!geojson?.features?.length) return null;
+  try {
+    const graph = buildPisteGraph(geojson.features, mode || "fastest");
+    const path = dijkstra(graph, start, end);
+    return path;
+  } catch { return null; }
 }
 
 function overpassToGeoJSON(data) {
@@ -109,6 +203,7 @@ export default function ResortRoutePlanner() {
   const geojsonRef = useRef(null);
   const routeRef = useRef([]);
   const pathRef = useRef([]);
+  const routeModeRef = useRef("fastest");
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -122,6 +217,7 @@ export default function ResortRoutePlanner() {
   const [rightOpen, setRightOpen] = useState(false);
 
   useEffect(() => { routeRef.current = routePoints; }, [routePoints]);
+  useEffect(() => { routeModeRef.current = routeMode; }, [routeMode]);
   useEffect(() => { pathRef.current = routePathCoords; }, [routePathCoords]);
 
   // Load saved routes
@@ -133,22 +229,26 @@ export default function ResortRoutePlanner() {
   // Layer visibility
   useEffect(() => {
     const map = mapInstance.current;
-    if (!map || loading) return;
+    if (!map) return;
     const pisteIds = ["pistes-black","pistes-red","pistes-blue","pistes-green","piste-labels"];
     const liftIds = ["lifts-line","lifts-label"];
-    pisteIds.forEach(lid => { try { map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none"); } catch {} });
-    liftIds.forEach(lid => { try { map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none"); } catch {} });
+    pisteIds.forEach(lid => {
+      if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none");
+    });
+    liftIds.forEach(lid => {
+      if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none");
+    });
     try { map.setTerrain(layers.terrain ? { source: "terrain", exaggeration: 1.5 } : null); } catch {}
-  }, [layers, loading]);
+  }, [layers]);
 
   // Re-route when mode changes
   useEffect(() => {
     const pts = routeRef.current;
     if (pts.length < 2 || !geojsonRef.current) return;
-    (async () => {
+    (() => {
       let combined = [];
       for (let i = 0; i < pts.length - 1; i++) {
-        const seg = await routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current, routeMode);
+        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current, routeMode);
         if (seg) combined = combined.concat(seg);
         else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
       }
@@ -260,7 +360,7 @@ export default function ResortRoutePlanner() {
           // Route from previous point to this one
           if (newPts.length >= 2) {
             const prev2 = newPts[newPts.length-2];
-            const seg = await routeAlongPistes(prev2.lngLat, coord, gj, routeRef.current.length > 0 ? "fastest" : "fastest");
+            const seg = routeAlongPistes(prev2.lngLat, coord, gj, routeModeRef.current);
             const existing = pathRef.current;
             const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
             setRoutePathCoords(combined);
