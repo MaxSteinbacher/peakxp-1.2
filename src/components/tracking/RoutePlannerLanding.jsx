@@ -6,38 +6,9 @@ import LocationInput from "../shared/LocationInput";
 import { retrieve, persist, KEYS } from "../../lib/persistence";
 import { useAppAuth } from "../../context/AppAuthContext";
 import { getResortById } from "../../lib/data";
-import LeftPanel from "../route/LeftPanel";
-import RightPanel from "../route/RightPanel";
 
-const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
-const STYLE_URL = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
 // Don't cache SDK promise — always check window.maptilersdk first
-function loadSDK() {
-  if (window.maptilersdk) return Promise.resolve(window.maptilersdk);
-  return new Promise((resolve, reject) => {
-    if (window.maptilersdk) return resolve(window.maptilersdk);
-    if (!document.querySelector('link[href*="maptiler-sdk.css"]')) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
-      document.head.appendChild(link);
-    }
-    if (!document.querySelector('script[src*="maptiler-sdk.umd.min.js"]')) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
-      script.onload = () => {
-        const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
-        setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    } else {
-      const check = setInterval(() => { if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); } }, 50);
-      setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
-    }
-  });
-}
 
 function overpassToGeoJSON(data) {
   const nodes = {};
@@ -87,13 +58,6 @@ function nearestPointOnLine(point, lineCoords) {
   return { point: best, dist: bestDist };
 }
 
-async function fetchElevation(lon, lat) {
-  try {
-    const res = await fetch(`https://api.maptiler.com/elevation/point?lon=${lon}&lat=${lat}&key=${MAPTILER_KEY}`);
-    const data = await res.json();
-    return data.elevation ?? null;
-  } catch { return null; }
-}
 
 function generateGPX(route) {
   const pts = route.points.map(p =>
@@ -115,205 +79,11 @@ ${trkpts}
 const EMPTY_FC = { type: "FeatureCollection", features: [] };
 
 // ── Embedded route planner map ───────────────────────────────────────────────
-function ResortMapPlanner({ resort, initialRoute, onSave, savedRoutes }) {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-  const geojsonRef = useRef(null);
-  const [loading, setLoading] = useState(true);
-  const [routePoints, setRoutePoints] = useState(initialRoute?.points || []);
-  const [layers, setLayers] = useState({ slopes: true, lifts: true, liftStatus: true, terrain: true });
-  const [stats, setStats] = useState(() => calcStats(initialRoute?.points || []));
-  const routeRef = useRef([]);
-
-  const lat = resort?.lat;
-  const lng = resort?.lng;
-
-  useEffect(() => { routeRef.current = routePoints; }, [routePoints]);
-
-  const updateMapSources = useCallback((points) => {
-    const map = mapInstance.current;
-    if (!map) return;
-    const lineSrc = map.getSource("route-line");
-    const ptSrc = map.getSource("route-points");
-    if (points.length >= 2 && lineSrc) {
-      lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: points.map(p => p.lngLat) }, properties: {} }] });
-    } else if (lineSrc) { lineSrc.setData(EMPTY_FC); }
-    if (ptSrc) {
-      ptSrc.setData({ type: "FeatureCollection", features: points.map((p, i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i + 1, type: p.type, id: p.id } })) });
-    }
-  }, []);
-
-  useEffect(() => { updateMapSources(routePoints); setStats(calcStats(routePoints)); }, [routePoints, updateMapSources]);
-
-  useEffect(() => {
-    const map = mapInstance.current;
-    if (!map || loading) return;
-    const pisteIds = ["pistes-black", "pistes-red", "pistes-blue", "pistes-green", "piste-labels"];
-    const liftIds = ["lifts-line", "lifts-label"];
-    pisteIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none"); });
-    liftIds.forEach(lid => { if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none"); });
-    try { map.setTerrain(layers.terrain ? { source: "terrain", exaggeration: 1.5 } : null); } catch {}
-  }, [layers, loading]);
-
-  useEffect(() => {
-    if (!lat || !lng) { setLoading(false); return; }
-    let map = null, unmounted = false;
-
-    // Small rAF delay ensures the container div has painted and has real pixel dimensions
-    const raf = requestAnimationFrame(() => {
-    loadSDK().then(sdk => {
-      if (unmounted || !mapRef.current) return;
-      sdk.config.apiKey = MAPTILER_KEY;
-      map = new sdk.Map({
-        container: mapRef.current, style: STYLE_URL,
-        center: [lng, lat], zoom: 13, pitch: 55, bearing: 0,
-        terrain: { source: "terrain", exaggeration: 1.5 },
-        scrollZoom: true, dragRotate: true, touchZoomRotate: true,
-        attributionControl: false,
-      });
-      map.addControl(new sdk.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "bottom-right");
-      map.addControl(new sdk.ScaleControl({ unit: "metric" }), "bottom-left");
-
-      map.on("load", async () => {
-        if (unmounted) return;
-        // Force map to recalculate container dimensions
-        setTimeout(() => { try { map.resize(); } catch {} }, 50);
-        map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
-        map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
-        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 4, "line-opacity": 1, "line-cap": "round", "line-join": "round" } });
-        map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 8, "circle-color": "#FB343D", "circle-stroke-width": 2, "circle-stroke-color": "#ffffff" } });
-        map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 10, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
-
-        const pad = 0.08;
-        const S = lat - pad, N = lat + pad, W = lng - pad, E = lng + pad;
-        const query = `[out:json][timeout:15];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E});relation["piste:type"="downhill"](${S},${W},${N},${E}););out body;>;out skel qt;`;
-        try {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 15000);
-          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: controller.signal });
-          const data = await res.json();
-          if (unmounted) return;
-          const geojson = overpassToGeoJSON(data);
-          geojsonRef.current = geojson;
-          map.addSource("openski-data", { type: "geojson", data: geojson });
-          [
-            { id: "pistes-black", difficulty: "expert", color: "#1a1a2e", width: 3.5 },
-            { id: "pistes-red", difficulty: "advanced", color: "#e63946", width: 3 },
-            { id: "pistes-blue", difficulty: "intermediate", color: "#3894E3", width: 3 },
-            { id: "pistes-green", difficulty: ["easy", "novice"], color: "#2d6a4f", width: 3 },
-          ].forEach(({ id: lid, difficulty, color, width }) => {
-            const filter = Array.isArray(difficulty) ? ["in", ["get", "piste:difficulty"], ["literal", difficulty]] : ["==", ["get", "piste:difficulty"], difficulty];
-            map.addLayer({ id: lid, type: "line", source: "openski-data", filter, paint: { "line-color": color, "line-width": width, "line-opacity": 0.9 } });
-          });
-          map.addLayer({ id: "piste-labels", type: "symbol", source: "openski-data", filter: ["has", "name"], layout: { "text-field": ["get", "name"], "text-size": 11, "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff", "text-halo-color": "#1a1a2e", "text-halo-width": 1.5 } });
-          map.addLayer({ id: "lifts-line", type: "line", source: "openski-data", filter: ["has", "aerialway"], paint: { "line-color": "#FB343D", "line-width": 2, "line-opacity": 0.85, "line-dasharray": [2, 1] } });
-          map.addLayer({ id: "lifts-label", type: "symbol", source: "openski-data", filter: ["all", ["has", "aerialway"], ["has", "name"]], layout: { "text-field": ["get", "name"], "text-size": 10, "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"] }, paint: { "text-color": "#FB343D", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
-        } catch {}
-
-        map.on("click", async e => {
-          const { lngLat } = e;
-          let coord = [lngLat.lng, lngLat.lat];
-          let snapName = null;
-          const gj = geojsonRef.current;
-          if (gj) {
-            let bestDist = Infinity, bestPt = null, bestPisteName = null;
-            gj.features.forEach(f => {
-              if (f.properties["piste:type"] && f.geometry.type === "LineString") {
-                const { point, dist } = nearestPointOnLine(coord, f.geometry.coordinates);
-                if (dist < 50 && dist < bestDist) { bestDist = dist; bestPt = point; bestPisteName = f.properties.name || null; }
-              }
-            });
-            if (bestPt) { coord = bestPt; snapName = bestPisteName; }
-          }
-          const pts = routeRef.current;
-          const idx = pts.length;
-          const elevation = await fetchElevation(coord[0], coord[1]);
-          const newPt = { id: Date.now(), lngLat: coord, name: snapName || `Point ${idx + 1}`, elevation, type: idx === 0 ? "start" : "waypoint" };
-          setRoutePoints(prev => [...prev, newPt]);
-        });
-
-        if (initialRoute?.points?.length) updateMapSources(initialRoute.points);
-        if (!unmounted) setLoading(false);
-      });
-
-      mapInstance.current = map;
-    }).catch(() => { if (!unmounted) setLoading(false); });
-    }); // end rAF
-
-    return () => {
-      unmounted = true;
-      cancelAnimationFrame(raf);
-      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
-    };
-  }, [lat, lng]);
-
-  function handleSave() {
-    if (routePoints.length < 2 || !resort) return;
-    const route = {
-      id: Date.now(), name: `My route at ${resort.name}`,
-      resortId: resort.id, resortName: resort.name,
-      points: routePoints, stats, createdAt: new Date().toISOString(),
-    };
-    onSave(route);
-  }
-
-  return (
-    <div className="rounded-2xl overflow-hidden border border-white/5" style={{ height: 520 }}>
-      {/* Mini header */}
-      <div className="h-12 bg-peak-surface border-b border-white/5 flex items-center px-4 gap-3 flex-shrink-0">
-        <Map className="h-4 w-4 text-peak-blue flex-shrink-0" />
-        <span className="font-bold text-peak-text text-sm">{resort.name}</span>
-        <span className="text-peak-text-secondary text-xs ml-1">{stats.distanceKm} km · {stats.totalDescent} m descent</span>
-        <button onClick={handleSave} disabled={routePoints.length < 2}
-          className="ml-auto bg-peak-red text-white px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-opacity">
-          Save route
-        </button>
-      </div>
-
-      {/* Map + panels */}
-      <div className="flex" style={{ height: "calc(520px - 48px)" }}>
-        {/* Left panel */}
-        <div className="w-64 flex-shrink-0 bg-peak-surface border-r border-white/5 overflow-y-auto hidden lg:block">
-          <LeftPanel
-            routePoints={routePoints} layers={layers} setLayers={setLayers}
-            onDelete={id => setRoutePoints(prev => prev.filter(p => p.id !== id))}
-            onRename={(id, name) => setRoutePoints(prev => prev.map(p => p.id === id ? { ...p, name } : p))}
-            onTypeChange={(id, type) => setRoutePoints(prev => prev.map(p => p.id === id ? { ...p, type } : p))}
-            onClear={() => setRoutePoints([])}
-            onReverse={() => setRoutePoints(prev => [...prev].reverse())}
-            onReorder={setRoutePoints}
-            savedRoutes={savedRoutes}
-            onLoadRoute={r => setRoutePoints(r.points)}
-          />
-        </div>
-
-        {/* Map */}
-        <div className="flex-1" style={{ position: "relative", minWidth: 0 }}>
-          {loading && (
-            <div style={{ position: "absolute", inset: 0, zIndex: 10 }} className="bg-peak-surface flex flex-col items-center justify-center gap-2">
-              <Mountain className="h-8 w-8 text-peak-text-secondary/40 animate-pulse" />
-              <p className="text-peak-text-secondary text-xs">Loading terrain...</p>
-            </div>
-          )}
-          <div ref={mapRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
-        </div>
-
-        {/* Right panel */}
-        <div className="w-56 flex-shrink-0 bg-peak-surface/90 border-l border-white/5 overflow-y-auto hidden lg:block">
-          <RightPanel stats={stats} routePoints={routePoints} resortId={resort.id} routeName={`My route at ${resort.name}`} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Main landing ─────────────────────────────────────────────────────────────
 export default function RoutePlannerLanding() {
   const { user } = useAppAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [selectedResort, setSelectedResort] = useState(null);
-  const [initialRoute, setInitialRoute] = useState(null);
   const [savedRoutes, setSavedRoutes] = useState([]);
   const searchRef = useRef(null);
 
@@ -331,13 +101,7 @@ export default function RoutePlannerLanding() {
   function handleSelectResort(item) {
     const resort = getResortById(item.id);
     setSelectedResort(resort);
-    setInitialRoute(null);
     setQuery(item.label);
-  }
-
-  function handleSaveRoute(route) {
-    const updated = [route, ...savedRoutes];
-    persistRoutes(updated);
   }
 
   function handleDeleteRoute(routeId) {
@@ -348,7 +112,6 @@ export default function RoutePlannerLanding() {
     const resort = getResortById(route.resortId);
     if (!resort) return;
     setSelectedResort(resort);
-    setInitialRoute(route);
     setQuery(resort.name);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -385,8 +148,7 @@ export default function RoutePlannerLanding() {
             if (selectedResort) {
               navigate(`/resort/${selectedResort.id}/map`);
             } else {
-              setInitialRoute(null);
-              setQuery("");
+                        setQuery("");
               setTimeout(() => {
                 searchRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
                 searchRef.current?.querySelector("input")?.focus();
@@ -407,18 +169,6 @@ export default function RoutePlannerLanding() {
           onSelect={item => handleSelectResort(item)}
         />
       </div>
-
-      {/* Embedded planner */}
-      {selectedResort && (
-        <div className="mb-8">
-          <ResortMapPlanner
-            resort={selectedResort}
-            initialRoute={initialRoute}
-            onSave={handleSaveRoute}
-            savedRoutes={savedRoutes}
-          />
-        </div>
-      )}
 
       {/* Saved routes */}
       <div>
