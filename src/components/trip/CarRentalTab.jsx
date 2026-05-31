@@ -364,7 +364,7 @@ export default function CarRentalTab({ agentServiceDetails = {}, onBook }) {
                     <div className="flex">
                       {/* Image strip */}
                       <div className="w-40 flex-shrink-0 relative">
-                        <img src={`https://picsum.photos/seed/${car.name.replace(/\s/g, "")}/300/200`} alt={car.name} className="w-full h-full object-cover min-h-[140px]" />
+                        <img src="https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b769ca74c_image.png" alt={car.name} className="w-full h-full object-cover min-h-[140px]" />
                         <span className="absolute top-2 left-2 bg-peak-bg/80 backdrop-blur-sm text-peak-text text-xs font-semibold px-2 py-1 rounded-lg">{car.category}</span>
                         <span className={`absolute top-2 right-2 bg-peak-bg/80 backdrop-blur-sm text-xs font-semibold px-2 py-1 rounded-lg ${statusColor[car.status]}`}>{car.status}</span>
                       </div>
