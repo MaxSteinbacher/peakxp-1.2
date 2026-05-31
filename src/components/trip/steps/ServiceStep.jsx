@@ -26,14 +26,14 @@ const SERVICE_CONFIG = {
 };
 
 const ACTIVITIES = [
-  { name: "Snowshoeing tour", price: 45 },
-  { name: "Spa day", price: 85 },
-  { name: "Sledging", price: 25 },
-  { name: "Guided off-piste", price: 120 },
-  { name: "Ice skating", price: 15 },
-  { name: "Snow tubing", price: 20 },
-  { name: "Horse-drawn sleigh", price: 60 },
-  { name: "Helicopter tour", price: 250 },
+  { name: "Snowshoeing tour", price: 45, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/0cdb43cb0_image.png" },
+  { name: "Spa day", price: 85, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e3bff5a32_image.png" },
+  { name: "Sledging", price: 25, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e6f8b9ad5_image.png" },
+  { name: "Guided off-piste", price: 120, image: null },
+  { name: "Ice skating", price: 15, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ee9b48b50_image.png" },
+  { name: "Snow tubing", price: 20, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/df536a0be_image.png" },
+  { name: "Horse-drawn sleigh", price: 60, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/9c9ea53ce_image.png" },
+  { name: "Helicopter tour", price: 250, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/92c72e7cb_image.png" },
 ];
 
 export default function ServiceStep({ serviceKey, resortId, agentServiceDetails = {} }) {
@@ -203,7 +203,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {ACTIVITIES.map(act => (
             <div key={act.name} className="bg-peak-card border border-white/5 rounded-xl overflow-hidden">
-              <img src={`https://picsum.photos/seed/${act.name.replace(/\s/g, "")}/400/300`} alt={act.name} className="w-full h-28 object-cover" />
+              <img src={act.image || `https://picsum.photos/seed/${act.name.replace(/\s/g, "")}/400/300`} alt={act.name} className="w-full h-28 object-cover" />
               <div className="p-3">
                 <h4 className="text-peak-text text-xs font-semibold mb-1">{act.name}</h4>
                 <p className="text-peak-text-secondary text-xs mb-2">From €{act.price}</p>
