@@ -60,126 +60,136 @@ async function fetchElevation(lon, lat) {
   } catch { return null; }
 }
 
-// ─── Piste graph router — Dijkstra on OSM piste/lift network ──────────────
-function buildPisteGraph(features, mode) {
-  const nodes = new Map(); // "lon,lat" → index
-  const edges = []; // [{from, to, dist, coords, difficulty}]
+// ─── Piste graph router ────────────────────────────────────────────────────
+// Grid-snapped node keys so nearby coords share the same bucket
+function gridKey(lon, lat, res = 4) {
+  return `${(lon * res).toFixed(0)},${(lat * res).toFixed(0)}`;
+}
 
-  function nodeKey(c) { return `${c[0].toFixed(5)},${c[1].toFixed(5)}`; }
-  function getOrAdd(c) {
-    const k = nodeKey(c);
-    if (!nodes.has(k)) nodes.set(k, { idx: nodes.size, coord: c });
-    return nodes.get(k).idx;
+function buildPisteGraph(features) {
+  // Two-pass: first collect all coords, then merge nearby nodes via grid
+  const coordGrid = new Map(); // gridKey → nodeIdx
+  const nodeCoords = [];       // nodeIdx → [lon, lat]
+  const edges = [];
+
+  function getNode(c) {
+    const k = gridKey(c[0], c[1]);
+    if (!coordGrid.has(k)) {
+      coordGrid.set(k, nodeCoords.length);
+      nodeCoords.push(c);
+    }
+    return coordGrid.get(k);
   }
-
-  const DIFFICULTY_WEIGHT = { easy: 1, novice: 1, beginner: 1, intermediate: 1.5, advanced: 2.5, expert: 4 };
 
   features.forEach(f => {
     if (f.geometry.type !== "LineString") return;
-    const diff = f.properties["piste:difficulty"] || "intermediate";
     const isLift = !!f.properties["aerialway"];
+    const isPiste = !!f.properties["piste:type"];
+    if (!isLift && !isPiste) return;
 
-    if (mode === "easy_only" && !isLift && !["easy","novice","beginner"].includes(diff)) return;
-
-    let weight = isLift ? 0.3 : (DIFFICULTY_WEIGHT[diff] || 1.5);
-    if (mode === "scenic") weight *= 0.5; // prefer longer routes
-    if (mode === "variety" && !isLift) weight = 1; // uniform weight
+    const diff = f.properties["piste:difficulty"] || "intermediate";
+    const WEIGHT = { easy: 1, novice: 1, beginner: 1, intermediate: 1.4, advanced: 2, expert: 3 };
+    const w = isLift ? 0.5 : (WEIGHT[diff] ?? 1.4);
 
     const coords = f.geometry.coordinates;
     for (let i = 0; i < coords.length - 1; i++) {
-      const a = getOrAdd(coords[i]);
-      const b = getOrAdd(coords[i+1]);
-      const segCoords = coords.slice(i, i+2);
-      const d = haversineKm(coords[i], coords[i+1]) * weight;
-      // Pistes are one-directional downhill; lifts bidirectional
-      edges.push({ from: a, to: b, dist: d, coords: segCoords });
-      if (isLift) edges.push({ from: b, to: a, dist: d, coords: [...segCoords].reverse() });
+      const a = getNode(coords[i]);
+      const b = getNode(coords[i + 1]);
+      if (a === b) continue;
+      const d = haversineKm(coords[i], coords[i + 1]);
+      const segCoords = [coords[i], coords[i + 1]];
+      edges.push({ from: a, to: b, dist: d * w, segCoords });
+      // Add reverse edge: lifts go both ways; pistes also added in reverse
+      // with higher cost (going uphill on piste = almost impossible but keep connected)
+      edges.push({ from: b, to: a, dist: d * (isLift ? w : w * 8), segCoords: [coords[i+1], coords[i]] });
     }
   });
 
-  // Build adjacency list
   const adj = new Map();
   edges.forEach((e, idx) => {
     if (!adj.has(e.from)) adj.set(e.from, []);
-    adj.get(e.from).push({ to: e.to, dist: e.dist, edgeIdx: idx });
+    adj.get(e.from).push({ to: e.to, dist: e.dist, idx });
   });
 
-  return { nodes, edges, adj };
+  return { nodeCoords, edges, adj };
 }
 
 function dijkstra(graph, startCoord, endCoord) {
-  const { nodes, edges, adj } = graph;
+  const { nodeCoords, edges, adj } = graph;
+  if (!nodeCoords.length) return null;
 
-  // Find nearest graph nodes to start/end
+  // Snap click coords to nearest node
   function nearest(coord) {
-    let best = null, bestDist = Infinity;
-    nodes.forEach(({ idx, coord: nc }) => {
-      const d = haversineKm(coord, nc);
-      if (d < bestDist) { bestDist = d; best = idx; }
-    });
-    return { idx: best, dist: bestDist };
+    let best = -1, bestD = Infinity;
+    for (let i = 0; i < nodeCoords.length; i++) {
+      const d = haversineKm(coord, nodeCoords[i]);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return { idx: best, dist: bestD };
   }
 
-  const { idx: startIdx, dist: startSnap } = nearest(startCoord);
-  const { idx: endIdx, dist: endSnap } = nearest(endCoord);
-  if (startIdx === null || endIdx === null) return null;
-  if (startSnap > 0.5 || endSnap > 0.5) return null; // >500m from network
+  const { idx: S, dist: dS } = nearest(startCoord);
+  const { idx: E, dist: dE } = nearest(endCoord);
+  if (S < 0 || E < 0 || dS > 1.5 || dE > 1.5) return null; // >1.5 km from any piste
 
-  if (startIdx === endIdx) return [startCoord, endCoord];
+  if (S === E) return [startCoord, endCoord];
 
-  // Dijkstra
-  const dist = new Map([[startIdx, 0]]);
-  const prev = new Map();
-  const prevEdge = new Map();
-  const visited = new Set();
-  const pq = [[0, startIdx]]; // [priority, nodeIdx]
+  const distArr = new Float64Array(nodeCoords.length).fill(Infinity);
+  distArr[S] = 0;
+  const prevNode = new Int32Array(nodeCoords.length).fill(-1);
+  const prevEdgeIdx = new Int32Array(nodeCoords.length).fill(-1);
+  const visited = new Uint8Array(nodeCoords.length);
 
-  while (pq.length > 0) {
+  // Min-heap via sorted array (sufficient for ~5k nodes)
+  const pq = [[0, S]];
+
+  while (pq.length) {
     pq.sort((a, b) => a[0] - b[0]);
     const [d, u] = pq.shift();
-    if (visited.has(u)) continue;
-    visited.add(u);
-    if (u === endIdx) break;
-
-    const neighbors = adj.get(u) || [];
-    for (const { to, dist: edgeDist, edgeIdx } of neighbors) {
-      const nd = d + edgeDist;
-      if (!dist.has(to) || nd < dist.get(to)) {
-        dist.set(to, nd);
-        prev.set(to, u);
-        prevEdge.set(to, edgeIdx);
+    if (visited[u]) continue;
+    visited[u] = 1;
+    if (u === E) break;
+    for (const { to, dist: w, idx } of (adj.get(u) || [])) {
+      const nd = d + w;
+      if (nd < distArr[to]) {
+        distArr[to] = nd;
+        prevNode[to] = u;
+        prevEdgeIdx[to] = idx;
         pq.push([nd, to]);
       }
     }
   }
 
-  if (!prev.has(endIdx) && startIdx !== endIdx) return null;
+  if (prevNode[E] === -1) return null;
 
-  // Reconstruct path
-  const pathCoords = [];
-  let cur = endIdx;
+  // Reconstruct
   const edgePath = [];
-  while (prev.has(cur)) {
-    edgePath.unshift(prevEdge.get(cur));
-    cur = prev.get(cur);
+  let cur = E;
+  while (prevEdgeIdx[cur] !== -1) {
+    edgePath.unshift(prevEdgeIdx[cur]);
+    cur = prevNode[cur];
+    if (cur === S) break;
   }
 
+  const path = [];
   edgePath.forEach(ei => {
-    const seg = edges[ei].coords;
-    if (pathCoords.length === 0) pathCoords.push(...seg);
-    else pathCoords.push(...seg.slice(1));
+    const seg = edges[ei].segCoords;
+    if (!path.length) path.push(...seg);
+    else path.push(seg[1]);
   });
 
-  return pathCoords.length >= 2 ? pathCoords : null;
+  return path.length >= 2 ? path : null;
 }
 
-function routeAlongPistes(start, end, geojson, mode) {
+function routeAlongPistes(start, end, geojson) {
   if (!geojson?.features?.length) return null;
   try {
-    const graph = buildPisteGraph(geojson.features, mode || "fastest");
-    const path = dijkstra(graph, start, end);
-    return path;
-  } catch { return null; }
+    const graph = buildPisteGraph(geojson.features);
+    return dijkstra(graph, start, end);
+  } catch (e) {
+    console.warn("Routing error:", e);
+    return null;
+  }
 }
 
 function overpassToGeoJSON(data) {
@@ -210,7 +220,6 @@ export default function ResortRoutePlanner() {
   const [routePoints, setRoutePoints] = useState([]);
   const [routePathCoords, setRoutePathCoords] = useState([]);
   const [routeMode, setRouteMode] = useState("fastest");
-  const [layers, setLayers] = useState({ slopes: true, lifts: true, liftStatus: true, terrain: true });
   const [stats, setStats] = useState({ distanceKm: "0.0", totalDescent: 0, totalAscent: 0, estimatedMinutes: 0 });
   const [savedRoutes, setSavedRoutes] = useState([]);
   const [leftOpen, setLeftOpen] = useState(false);
@@ -226,20 +235,6 @@ export default function ResortRoutePlanner() {
     try { const raw = localStorage.getItem(`routes:${id}`); if (raw) setSavedRoutes(JSON.parse(raw)); } catch {}
   }, [id]);
 
-  // Layer visibility
-  useEffect(() => {
-    const map = mapInstance.current;
-    if (!map) return;
-    const pisteIds = ["pistes-black","pistes-red","pistes-blue","pistes-green","piste-labels"];
-    const liftIds = ["lifts-line","lifts-label"];
-    pisteIds.forEach(lid => {
-      if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.slopes ? "visible" : "none");
-    });
-    liftIds.forEach(lid => {
-      if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", layers.lifts ? "visible" : "none");
-    });
-    try { map.setTerrain(layers.terrain ? { source: "terrain", exaggeration: 1.5 } : null); } catch {}
-  }, [layers]);
 
   // Re-route when mode changes
   useEffect(() => {
@@ -248,7 +243,7 @@ export default function ResortRoutePlanner() {
     (() => {
       let combined = [];
       for (let i = 0; i < pts.length - 1; i++) {
-        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current, routeMode);
+        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current);
         if (seg) combined = combined.concat(seg);
         else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
       }
@@ -360,7 +355,7 @@ export default function ResortRoutePlanner() {
           // Route from previous point to this one
           if (newPts.length >= 2) {
             const prev2 = newPts[newPts.length-2];
-            const seg = routeAlongPistes(prev2.lngLat, coord, gj, routeModeRef.current);
+            const seg = routeAlongPistes(prev2.lngLat, coord, gj);
             const existing = pathRef.current;
             const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
             setRoutePathCoords(combined);
@@ -452,7 +447,7 @@ export default function ResortRoutePlanner() {
 
         {/* Left panel */}
         <div className="w-60 flex-shrink-0 bg-peak-surface border-r border-white/5 overflow-y-auto hidden lg:block z-10">
-          <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers}
+          <LeftPanel routePoints={routePoints}
             onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange}
             onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder}
             savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute}
@@ -480,7 +475,7 @@ export default function ResortRoutePlanner() {
                 <span className="font-bold text-peak-text text-sm">Route & Layers</span>
                 <button onClick={() => setLeftOpen(false)} className="text-peak-text-secondary text-xl leading-none">×</button>
               </div>
-              <LeftPanel routePoints={routePoints} layers={layers} setLayers={setLayers} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
+              <LeftPanel routePoints={routePoints} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
             </div>
             <div className="flex-1" onClick={() => setLeftOpen(false)} />
           </div>
