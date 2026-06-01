@@ -798,9 +798,6 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
         </div>
       )}
 
-      {/* Legacy panel - kept for agent flow */}
-      {false && (
-        <LessonPanel
     </div>
   );
 }
