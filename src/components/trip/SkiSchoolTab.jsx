@@ -1,366 +1,328 @@
-import { useState, useEffect } from "react";
-import DateRangePicker, { fmtDate } from "../shared/DateRangePicker";
-import { User, Star, Users, Snowflake, Zap, HelpCircle, Plus, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check, Globe } from "lucide-react";
+import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useT } from "../../lib/i18n";
-import SavePlanButton from "./SavePlanButton";
-import BookingShell from "./shared/BookingShell";
-import ResultCard from "./shared/ResultCard";
-import CheckoutFlow from "./shared/CheckoutFlow";
 
-const STEPS_KEYS = ["who_step", "course_step", "schedule_step", "school_step", "checkout_step"];
+// ─── Static school data — photos to be added in Base44 ──────────────────────
+const SCHOOLS = [
+  {
+    id: "sc1", name: "Ecole du Ski Français", badge: "Top rated",
+    image: "", rating: 4.8, reviews: 412,
+    location: "Slope-side — meets at bottom of Gondola 1",
+    languages: ["English", "French", "German", "Italian"],
+    certifications: ["BASI", "ESF", "ISIA"],
+    instructors: 48,
+    sports: ["ski", "snowboard", "telemark"],
+    levels: ["beginner", "intermediate", "advanced", "expert"],
+    ageGroups: ["adults", "kids", "teens"],
+    lessonTypes: ["group", "private", "half_day", "full_day"],
+    priceHalfDay: 42, priceFullDay: 78, pricePrivate: 95,
+    availability: "available",
+    groupSize: "max 8",
+    highlights: ["Longest-running school in resort", "Dedicated kids area", "Video analysis available"],
+  },
+  {
+    id: "sc2", name: "Peak Ski Academy", badge: "Expert pick",
+    image: "", rating: 4.6, reviews: 213,
+    location: "200m from main lift",
+    languages: ["English", "Spanish"],
+    certifications: ["ISIA", "BASI"],
+    instructors: 22,
+    sports: ["ski", "snowboard"],
+    levels: ["beginner", "intermediate", "advanced"],
+    ageGroups: ["adults", "teens"],
+    lessonTypes: ["group", "private", "half_day", "full_day"],
+    priceHalfDay: 38, priceFullDay: 70, pricePrivate: 85,
+    availability: "available",
+    groupSize: "max 6",
+    highlights: ["Small groups", "Freestyle & freeride focus", "Video feedback"],
+  },
+  {
+    id: "sc3", name: "Alpine Kidz School", badge: "Best for kids",
+    image: "", rating: 4.9, reviews: 327,
+    location: "Dedicated beginner area — 100m from Gondola 2",
+    languages: ["English", "French", "German"],
+    certifications: ["BASI", "Kinderland certified"],
+    instructors: 31,
+    sports: ["ski", "snowboard"],
+    levels: ["beginner"],
+    ageGroups: ["kids"],
+    lessonTypes: ["group", "half_day", "full_day"],
+    priceHalfDay: 36, priceFullDay: 65, pricePrivate: 80,
+    availability: "available",
+    groupSize: "max 5 kids",
+    highlights: ["Ages 3–14", "Magic carpet & kid-friendly slopes", "Dedicated snowgarden"],
+  },
+  {
+    id: "sc4", name: "Freeride Mountain Guides", badge: "Off-piste specialists",
+    image: "", rating: 4.7, reviews: 118,
+    location: "Village centre",
+    languages: ["English", "French", "German"],
+    certifications: ["IFMGA", "UIAGM"],
+    instructors: 12,
+    sports: ["ski"],
+    levels: ["advanced", "expert"],
+    ageGroups: ["adults"],
+    lessonTypes: ["private", "full_day"],
+    priceHalfDay: null, priceFullDay: 140, pricePrivate: 140,
+    availability: "limited",
+    groupSize: "max 4",
+    highlights: ["Avalanche safety included", "Off-piste & backcountry", "Heli-skiing available"],
+  },
+  {
+    id: "sc5", name: "Snow & Board Academy", badge: "Local favourite",
+    image: "", rating: 4.5, reviews: 189,
+    location: "150m from main lift",
+    languages: ["English", "German", "Italian"],
+    certifications: ["BASI", "SIA"],
+    instructors: 26,
+    sports: ["ski", "snowboard"],
+    levels: ["beginner", "intermediate", "advanced"],
+    ageGroups: ["adults", "kids", "teens"],
+    lessonTypes: ["group", "private", "half_day", "full_day"],
+    priceHalfDay: 40, priceFullDay: 72, pricePrivate: 88,
+    availability: "available",
+    groupSize: "max 8",
+    highlights: ["Mixed adult & teen groups", "Park & freestyle lessons", "Equipment hire deals"],
+  },
+  {
+    id: "sc6", name: "Nordic & Touring Center", badge: "Cross-country",
+    image: "", rating: 4.4, reviews: 67,
+    location: "Nordic trail entrance",
+    languages: ["English", "French"],
+    certifications: ["Nordic certified"],
+    instructors: 8,
+    sports: ["nordic", "telemark"],
+    levels: ["beginner", "intermediate"],
+    ageGroups: ["adults"],
+    lessonTypes: ["group", "private", "half_day"],
+    priceHalfDay: 35, priceFullDay: 60, pricePrivate: 75,
+    availability: "available",
+    groupSize: "max 6",
+    highlights: ["Telemark lessons", "Ski touring intro", "Trail passes included"],
+  },
+];
 
-function Tooltip({ text }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <span className="relative inline-block ml-1.5 align-middle">
-      <button onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onClick={() => setOpen(v => !v)} type="button" className="text-peak-text-secondary hover:text-peak-blue transition-colors">
-        <HelpCircle className="h-4 w-4" />
-      </button>
-      {open && <div className="absolute z-50 left-6 top-0 w-64 bg-peak-surface border border-white/10 rounded-xl p-3 shadow-xl text-xs text-peak-text-secondary leading-relaxed">{text}</div>}
-    </span>
-  );
+const LEVELS = ["beginner", "intermediate", "advanced", "expert"];
+const LEVEL_LABELS = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced", expert: "Expert / Off-piste" };
+const AGE_GROUPS = ["adults", "kids", "teens"];
+const AGE_LABELS = { adults: "Adults", kids: "Kids (3–14)", teens: "Teens (14–17)" };
+const SPORTS = ["ski", "snowboard", "telemark", "nordic"];
+const SPORT_LABELS = { ski: "🎿 Ski", snowboard: "🏂 Snowboard", telemark: "🎿 Telemark", nordic: "⛷️ Nordic" };
+const LESSON_TYPES = [
+  { key: "group", label: "Group" },
+  { key: "private", label: "Private" },
+  { key: "half_day", label: "Half day" },
+  { key: "full_day", label: "Full day" },
+];
+
+function AvailBadge({ status }) {
+  const cfg = { available: "bg-peak-green/80 text-white", limited: "bg-amber-500/80 text-white", unavailable: "bg-peak-red/80 text-white" };
+  const labels = { available: "Available", limited: "Limited", unavailable: "Unavailable" };
+  return <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${cfg[status] || cfg.available}`}>{labels[status] || "Available"}</span>;
 }
 
-function PillSelect({ options, value, onChange, multi = false }) {
-  function toggle(opt) {
-    if (multi) {
-      const arr = value || [];
-      onChange(arr.includes(opt) ? arr.filter(v => v !== opt) : [...arr, opt]);
-    } else {
-      onChange(value === opt ? null : opt);
-    }
-  }
-  const isActive = (opt) => multi ? (value || []).includes(opt) : value === opt;
+function SchoolCard({ school, lessonType, days, onBook, t }) {
+  const [expanded, setExpanded] = useState(false);
+  const price = lessonType === "private" ? school.pricePrivate
+    : lessonType === "full_day" ? school.priceFullDay
+    : school.priceHalfDay;
+  const total = price != null ? price * days : null;
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {options.map(opt => (
-        <button key={opt.label || opt} onClick={() => toggle(opt.label || opt)}
-          className={`px-4 py-2 text-sm font-medium rounded-xl border transition-colors ${isActive(opt.label || opt) ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
-          {opt.label || opt}
-        </button>
-      ))}
+    <div className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden hover:border-white/12 transition-all group">
+      {/* Image */}
+      <div className="relative h-44 bg-peak-surface overflow-hidden">
+        {school.image
+          ? <img src={school.image} alt={school.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          : <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🎿</div>
+        }
+        <div className="absolute top-3 left-3">
+          <span className="bg-peak-blue/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">{school.badge}</span>
+        </div>
+        <div className="absolute top-3 right-3"><AvailBadge status={school.availability} /></div>
+      </div>
+      {/* Body */}
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h3 className="font-display font-bold text-peak-text text-base leading-tight">{school.name}</h3>
+          <div className="text-right flex-shrink-0">
+            {price != null ? (
+              <>
+                <p className="text-peak-text font-bold">€{price}<span className="text-peak-text-secondary text-xs font-normal"> / {lessonType === "full_day" ? "day" : lessonType === "private" ? "hr" : "half-day"}</span></p>
+                {days > 1 && total && <p className="text-peak-text-secondary text-xs">€{total} for {days} days</p>}
+              </>
+            ) : <p className="text-peak-text-secondary text-xs italic">Contact for price</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+          <span className="text-peak-text text-sm font-semibold">{school.rating}</span>
+          <span className="text-peak-text-secondary text-xs">({school.reviews})</span>
+        </div>
+        <div className="flex items-center gap-1 text-peak-text-secondary text-xs mb-1.5">
+          <MapPin className="h-3 w-3" />
+          <span className="truncate">{school.location}</span>
+        </div>
+        <div className="flex items-center gap-1 text-peak-text-secondary text-xs mb-2">
+          <Globe className="h-3 w-3" />
+          <span>{school.languages.join(" · ")}</span>
+        </div>
+        <div className="flex flex-wrap gap-1 mb-2">
+          {school.levels.map(l => <span key={l} className="text-xs bg-white/5 text-peak-text-secondary px-2 py-0.5 rounded-full capitalize">{LEVEL_LABELS[l]}</span>)}
+        </div>
+        <div className="flex flex-wrap gap-1 mb-3">
+          {school.certifications.map(c => <span key={c} className="text-xs border border-peak-blue/30 text-peak-blue px-2 py-0.5 rounded-full">{c}</span>)}
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => onBook?.(school)} disabled={school.availability === "unavailable"}
+            className="flex-1 py-2.5 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-colors">
+            {t ? t("add_to_trip") : "Add to trip"}
+          </button>
+          <button onClick={() => setExpanded(e => !e)}
+            className="px-3 py-2.5 rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text transition-colors">
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </div>
+        {expanded && (
+          <div className="mt-3 pt-3 border-t border-white/5 space-y-2 text-xs">
+            <p className="text-peak-text-secondary">{school.instructors} instructors · {school.groupSize}</p>
+            <div className="flex flex-wrap gap-1">
+              {school.ageGroups.map(a => <span key={a} className="bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{AGE_LABELS[a]}</span>)}
+            </div>
+            <div className="space-y-0.5">
+              {school.highlights.map(h => <p key={h} className="text-peak-text-secondary">✓ {h}</p>)}
+            </div>
+            {school.priceHalfDay && <p className="text-peak-text-secondary">Half-day €{school.priceHalfDay} · Full-day €{school.priceFullDay} · Private €{school.pricePrivate}/hr</p>}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-const SKILL_LEVELS = [
-  { label: "First timer", desc: "Never skied before" },
-  { label: "Beginner", desc: "Can do easy slopes" },
-  { label: "Intermediate", desc: "Parallel turns" },
-  { label: "Advanced", desc: "Black runs" },
-  { label: "Expert", desc: "Off-piste / racing" },
-];
-
-const SCHOOLS = [
-  { id: "ecole-du-ski", name: "Ecole du Ski Français", image: "https://picsum.photos/seed/school1/600/400", rating: 4.8, reviews: 412, meta: ["Slope-side — meets at bottom of Gondola 1", "English · French · German · Italian", "BASI certified · 48 instructors"], pricePerDay: 42, status: "Available", tier: "Top rated" },
-  { id: "peak-ski-school", name: "Peak Ski Academy", image: "https://picsum.photos/seed/school2/600/400", rating: 4.6, reviews: 213, meta: ["200m from main lift", "English · Spanish", "ISIA member · 22 instructors"], pricePerDay: 38, status: "Limited", tier: "Local favourite" },
-  { id: "little-snow-stars", name: "Little Snow Stars", image: "https://picsum.photos/seed/school3/600/400", rating: 4.9, reviews: 187, meta: ["Slope-side — Kids meeting point", "English · French · German", "Specialist kids school · 18 instructors"], pricePerDay: 45, status: "Available", tier: "Best for kids" },
-];
-
 export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
+  const { session } = useTripPlanner();
   const t = useT();
-  const [step, setStep] = useState(0);
-  const [participants, setParticipants] = useState([{ type: "adult", age: null, name: "Participant 1" }]);
-  const [courseType, setCourseType] = useState(null);
-  const [schedule, setSchedule] = useState({ sport: "Skiing", duration: "half-day", time: "morning", days: 3, date: null, endDate: null, level: "Beginner", language: "English", requests: "" });
-  const [selectedSchool, setSelectedSchool] = useState(null);
-  const [preFilled, setPreFilled] = useState(false);
+  const days = session?.dates?.nights ? session.dates.nights + 1 : (agentServiceDetails?.days || 3);
+  const destination = session?.destination?.label || agentServiceDetails?.destination || "";
 
-  useEffect(() => {
-    const sd = agentServiceDetails?.["ski-school"];
-    if (!sd) return;
-    if (sd.courseType) setCourseType(sd.courseType);
-    if (typeof sd.days === "number") setSchedule(s => ({ ...s, days: sd.days }));
-    if (sd.language) setSchedule(s => ({ ...s, language: sd.language }));
-    if (Array.isArray(sd.participants) && sd.participants.length) {
-      setParticipants(sd.participants.map((p, i) => ({
-        type: (p.age && p.age < 15) ? "kid" : "adult",
-        age: p.age || null,
-        name: `Participant ${i + 1}`,
-      })));
-    }
-    setPreFilled(true);
-  }, []);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("recommended");
+  const [filterLevels, setFilterLevels] = useState([]);
+  const [filterAgeGroups, setFilterAgeGroups] = useState([]);
+  const [filterSport, setFilterSport] = useState("ski");
+  const [filterLessonType, setFilterLessonType] = useState("half_day");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const hasKids = participants.some(p => p.type === "kid" && p.age <= 5);
-  const days = schedule.days || 1;
-
-  function addParticipant() {
-    setParticipants(prev => [...prev, { type: "adult", age: null, name: `Participant ${prev.length + 1}` }]);
-  }
-  function removeParticipant(i) {
-    setParticipants(prev => prev.filter((_, idx) => idx !== i));
-  }
-  function updateParticipant(i, field, val) {
-    setParticipants(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: val } : p));
+  function toggleArr(arr, setArr, val) {
+    setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
-  function goBack() {
-    if (step > 0) setStep(s => s - 1);
-  }
+  const filtered = useMemo(() => {
+    let res = SCHOOLS.filter(s => s.sports.includes(filterSport));
+    if (search) res = res.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.languages.some(l => l.toLowerCase().includes(search.toLowerCase())));
+    if (filterLevels.length) res = res.filter(s => filterLevels.some(l => s.levels.includes(l)));
+    if (filterAgeGroups.length) res = res.filter(s => filterAgeGroups.some(a => s.ageGroups.includes(a)));
+    if (filterLessonType) res = res.filter(s => s.lessonTypes.includes(filterLessonType));
+    if (sortBy === "rating") res.sort((a, b) => b.rating - a.rating);
+    if (sortBy === "price_asc") res.sort((a, b) => (a.priceHalfDay || 999) - (b.priceHalfDay || 999));
+    if (sortBy === "price_desc") res.sort((a, b) => (b.priceHalfDay || 0) - (a.priceHalfDay || 0));
+    return res;
+  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport, filterLessonType]);
 
-  const courseTypes = [
-    { key: "group", icon: Users, title: "Group lesson", desc: "Join a small group matched to your level. Max 8–10 participants. Best value.", from: "€35/half-day" },
-    { key: "private", icon: Star, title: "Private lesson", desc: "Your own certified instructor, 100% focused on you. Fastest progression.", from: "€90/hour" },
-    ...(hasKids ? [{ key: "childcare", icon: Snowflake, title: "Childcare (Bambini)", desc: "Supervised snow play and first ski steps for ages 3–5. Warm indoor space included.", from: "€45/half-day" }] : []),
-    { key: "freestyle", icon: Zap, title: "Freestyle / Specialty", desc: "Moguls, park tricks, off-piste technique, racing gates. For intermediate to expert.", from: "€50/half-day" },
-  ];
-
-  const TRUST = [
-    { icon: "ShieldCheck", label: "Certified instructors only" },
-    { icon: "RefreshCw", label: "Free rebooking up to 48h before" },
-    { icon: "Lock", label: "SSL secured" },
-  ];
+  const hasFilters = filterLevels.length > 0 || filterAgeGroups.length > 0;
 
   return (
-    <BookingShell steps={STEPS_KEYS.map(k => t(k))} current={step} onBack={goBack}>
-      {preFilled && (
-        <div className="flex items-center gap-2 bg-peak-blue/10 border border-peak-blue/20 rounded-xl px-4 py-2.5 mb-4">
-          <p className="text-peak-blue text-xs font-medium">Pre-filled from your agent conversation — review and adjust if needed</p>
-        </div>
-      )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+      <div className="mb-6">
+        <h2 className="font-display font-extrabold text-3xl text-peak-text mb-1">{t ? t("ski_school") : "Ski School"}</h2>
+        <p className="text-peak-text-secondary text-sm">
+          {destination ? `Schools near ${destination}` : "Browse ski & snowboard schools — select a resort to filter by location"}
+          {days > 1 ? ` · ${days} days` : ""}
+        </p>
+      </div>
 
-      {/* STEP 0 */}
-      {step === 0 && (
-        <div>
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('who_taking_lessons')}</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">{t('multiple_participants')}</p>
-          <div className="space-y-3 mb-6">
-            {participants.map((p, i) => (
-              <div key={i} className="bg-peak-card border border-white/5 rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex gap-2">
-                    {[{ v: "adult", labelKey: "adult_15_plus" }, { v: "kid", labelKey: "child_3_14" }].map(opt => (
-                      <button key={opt.v} onClick={() => updateParticipant(i, "type", opt.v)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${p.type === opt.v ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                         {t(opt.labelKey)}
-                      </button>
-                    ))}
-                  </div>
-                  {participants.length > 1 && (
-                    <button onClick={() => removeParticipant(i)} className="ml-auto text-peak-text-secondary hover:text-peak-red transition-colors">
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                {p.type === "kid" && (
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-peak-text-secondary">Child age:</span>
-                      <button onClick={() => updateParticipant(i, "age", Math.max(3, (p.age || 5) - 1))} className="w-8 h-8 rounded-lg border border-white/10 text-peak-text-secondary hover:text-peak-text text-lg flex items-center justify-center">−</button>
-                      <span className="text-peak-text font-bold w-6 text-center">{p.age || 5}</span>
-                      <button onClick={() => updateParticipant(i, "age", Math.min(14, (p.age || 5) + 1))} className="w-8 h-8 rounded-lg border border-white/10 text-peak-text-secondary hover:text-peak-text text-lg flex items-center justify-center">+</button>
-                    </div>
-                    {(p.age || 5) <= 4 && (
-                      <p className="mt-2 text-xs text-peak-blue bg-peak-blue/10 border border-peak-blue/20 rounded-lg px-3 py-2">
-                        For ages 3–4 we recommend our childcare programme with supervised snow play and first ski steps.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <button onClick={addParticipant} className="text-peak-blue text-sm hover:underline mb-6 flex items-center gap-1">
-            <Plus className="h-4 w-4" /> {t('add_another_person')}
-          </button>
-          <button onClick={() => setStep(1)} className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">
-            {t('continue')}
-          </button>
-        </div>
-      )}
-
-      {/* STEP 1 */}
-      {step === 1 && (
-        <div>
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('choose_course')}</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">Select the lesson format that works best for your group.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {courseTypes.map(ct => {
-              const Icon = ct.icon;
-              const active = courseType === ct.key;
-              return (
-                <button key={ct.key} onClick={() => setCourseType(ct.key)}
-                  className={`flex flex-col items-start gap-3 p-5 rounded-xl border text-left transition-all ${active ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10 bg-peak-card hover:border-white/25"}`}>
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${active ? "bg-peak-blue/20" : "bg-white/5"}`}>
-                    <Icon className={`h-5 w-5 ${active ? "text-peak-blue" : "text-peak-text-secondary"}`} />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-peak-text text-sm mb-1">{ct.title}</p>
-                    <p className="text-peak-text-secondary text-xs mb-2">{ct.desc}</p>
-                    <span className="text-peak-blue text-xs font-medium">From {ct.from}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <button onClick={() => setStep(2)} disabled={!courseType}
-            className="px-8 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-            {t('continue')}
-          </button>
-        </div>
-      )}
-
-      {/* STEP 2 */}
-      {step === 2 && (
-        <div className="max-w-2xl">
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">Schedule preferences</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">Tell us when and how you'd like to learn.</p>
-          <div className="space-y-6">
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Sport</p>
-              <PillSelect options={["Skiing", "Snowboard", "Cross-country", "Telemark"]} value={schedule.sport} onChange={v => setSchedule(s => ({ ...s, sport: v }))} />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-3">Duration</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[{ key: "half-day", label: "Half-day", sub: "Choose morning or afternoon" }, { key: "full-day", label: "Full day", sub: "9:00–16:00, lunch break included" }].map(d => (
-                  <button key={d.key} onClick={() => setSchedule(s => ({ ...s, duration: d.key }))}
-                    className={`p-4 rounded-xl border text-left transition-all ${schedule.duration === d.key ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10 bg-peak-card"}`}>
-                    <p className={`font-semibold text-sm ${schedule.duration === d.key ? "text-peak-text" : "text-peak-text-secondary"}`}>{d.label}</p>
-                    <p className="text-peak-text-secondary text-xs">{d.sub}</p>
-                  </button>
-                ))}
-              </div>
-              {schedule.duration === "half-day" && (
-                <div className="flex gap-2 mt-3">
-                  {[{ k: "morning", l: "Morning 9:00–12:00" }, { k: "afternoon", l: "Afternoon 13:00–16:00" }].map(t => (
-                    <button key={t.k} onClick={() => setSchedule(s => ({ ...s, time: t.k }))}
-                      className={`px-4 py-2 text-xs font-medium rounded-lg border transition-colors ${schedule.time === t.k ? "bg-peak-blue/20 border-peak-blue/50 text-peak-blue" : "border-white/10 text-peak-text-secondary"}`}>
-                      {t.l}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Number of days</p>
-              <div className="flex items-center gap-4">
-                <button onClick={() => setSchedule(s => ({ ...s, days: Math.max(1, s.days - 1) }))} className="w-10 h-10 rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text text-xl">−</button>
-                <span className="text-3xl font-display font-bold text-peak-text w-8 text-center">{schedule.days}</span>
-                <button onClick={() => setSchedule(s => ({ ...s, days: Math.min(14, s.days + 1) }))} className="w-10 h-10 rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text text-xl">+</button>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Lesson dates</p>
-              <DateRangePicker
-                startDate={schedule.date} endDate={schedule.endDate}
-                onStartChange={v => setSchedule(s => ({ ...s, date: v }))} onEndChange={v => setSchedule(s => ({ ...s, endDate: v }))}
-                mode="range" context="ski-school"
-                placeholder={{ start: "First lesson day", end: "Last lesson day" }}
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-1 flex items-center">
-                Skill level <Tooltip text="If you're unsure, choose one level lower than you think — it's easier to move up on day one than to struggle." />
-              </p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {SKILL_LEVELS.map(sl => (
-                  <button key={sl.label} onClick={() => setSchedule(s => ({ ...s, level: sl.label }))}
-                    className={`flex flex-col items-start px-4 py-2.5 rounded-xl border transition-colors text-left ${schedule.level === sl.label ? "bg-peak-blue/20 border-peak-blue/50" : "border-white/10"}`}>
-                    <span className={`text-sm font-medium ${schedule.level === sl.label ? "text-peak-blue" : "text-peak-text-secondary"}`}>{sl.label}</span>
-                    <span className="text-xs text-peak-text-secondary">{sl.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Language of instruction</p>
-              <select value={schedule.language} onChange={e => setSchedule(s => ({ ...s, language: e.target.value }))}
-                className="bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue">
-                {["English", "French", "German", "Italian", "Spanish", "Norwegian", "Dutch"].map(l => <option key={l}>{l}</option>)}
-              </select>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-peak-text uppercase tracking-widest mb-2">Special requests <span className="normal-case font-normal text-peak-text-secondary">(optional)</span></p>
-              <textarea value={schedule.requests} onChange={e => setSchedule(s => ({ ...s, requests: e.target.value }))} rows={2} placeholder="e.g. fear of heights, previous injury, want to focus on moguls..."
-                className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue resize-none" />
-            </div>
-          </div>
-          <button onClick={() => setStep(3)} className="mt-8 px-8 py-3 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">
-            {t('choose_school')}
-          </button>
-        </div>
-      )}
-
-      {/* STEP 3 */}
-      {step === 3 && (
-        <div>
-          <h2 className="font-display font-bold text-2xl text-peak-text mb-1">{t('choose_school')}</h2>
-          <p className="text-peak-text-secondary text-sm mb-6">{schedule.days} day{schedule.days !== 1 ? "s" : ""} · {schedule.sport} · {schedule.level}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-            {SCHOOLS.map(school => (
-              <ResultCard
-                key={school.id}
-                image={school.image}
-                title={school.name}
-                rating={school.rating}
-                reviewCount={school.reviews}
-                meta={school.meta}
-                badges={[{ label: school.tier, style: "text-peak-blue border-peak-blue/40" }]}
-                price={"€" + school.pricePerDay}
-                priceLabel="/ half-day"
-                priceSubline={"€" + (school.pricePerDay * days) + " for " + days + " day" + (days !== 1 ? "s" : "")}
-                status={school.status}
-                selected={selectedSchool?.id === school.id}
-                onSelect={() => setSelectedSchool(school)}
-                cta="Select school"
-                expandContent={
-                  <div className="space-y-2 text-xs text-peak-text-secondary">
-                    <p className="font-medium text-peak-text">Instructors</p>
-                    {["Alex R. — Level 3 BASI · Freestyle specialist", "Sophie M. — Level 4 BASI · Kids specialist", "Marco T. — ISIA · Off-piste & racing"].map(inst => (
-                      <p key={inst}>{inst}</p>
-                    ))}
-                    <p className="mt-2 font-medium text-peak-text">Meeting point</p>
-                    <p>Bottom of main gondola, blue flag stand. 15 min before lesson start.</p>
-                    <p className="mt-2 font-medium text-peak-text">Cancellation</p>
-                    <p>Full refund if cancelled 48h before. No refund within 48h.</p>
-                  </div>
-                }
-              />
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => setStep(4)} disabled={!selectedSchool}
-              className="flex-1 py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-display font-bold text-sm rounded-xl transition-colors">
-              {t('continue')}
+      {/* Sport + lesson type + search + sort */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex rounded-xl overflow-hidden border border-white/10">
+          {SPORTS.map(s => (
+            <button key={s} onClick={() => setFilterSport(s)}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${filterSport === s ? "bg-peak-blue text-white" : "text-peak-text-secondary hover:text-peak-text"}`}>
+              {SPORT_LABELS[s]}
             </button>
-            {selectedSchool && (
-              <SavePlanButton planData={{ serviceKey: "ski-school", name: `${selectedSchool.name} — ${schedule.sport} · ${schedule.days} days`, destination: { label: "Ski School", type: "general" }, dates: { start: schedule.date || null, end: schedule.endDate || null }, guests: { adults: participants.filter(p => p.type === "adult").length, children: participants.filter(p => p.type === "kid").length, seniors: 0 }, itemDetails: { school: selectedSchool.name, courseType, sport: schedule.sport, level: schedule.level, days: schedule.days }, estimatedPriceEUR: selectedSchool.pricePerDay * days }} />
-            )}
-          </div>
+          ))}
         </div>
-      )}
+        <div className="flex rounded-xl overflow-hidden border border-white/10">
+          {LESSON_TYPES.map(lt => (
+            <button key={lt.key} onClick={() => setFilterLessonType(lt.key)}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${filterLessonType === lt.key ? "bg-peak-red text-white" : "text-peak-text-secondary hover:text-peak-text"}`}>
+              {lt.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-peak-text-secondary" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search schools or languages..."
+            className="w-full bg-peak-surface border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
+        </div>
+        <button onClick={() => setSidebarOpen(o => !o)}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-colors ${sidebarOpen ? "bg-peak-blue/10 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters
+          {hasFilters && <span className="bg-peak-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{filterLevels.length + filterAgeGroups.length}</span>}
+        </button>
+      </div>
 
-      {/* STEP 4 */}
-      {step === 4 && (
-        <CheckoutFlow
-          totalPrice={selectedSchool ? selectedSchool.pricePerDay * days : 0}
-          planData={{ serviceKey: "ski-school", name: `${selectedSchool?.name} — ${schedule.sport} · ${schedule.days} days`, destination: { label: "Ski School", type: "general" }, dates: { start: schedule.date || null, end: schedule.endDate || null }, guests: { adults: participants.filter(p => p.type === "adult").length, children: participants.filter(p => p.type === "kid").length, seniors: 0 }, itemDetails: { school: selectedSchool?.name, courseType, sport: schedule.sport, level: schedule.level, days: schedule.days }, estimatedPriceEUR: selectedSchool ? selectedSchool.pricePerDay * days : 0 }}
-          summary={[
-            { label: "School", value: selectedSchool?.name },
-            { label: "Course", value: courseType },
-            { label: "Sport", value: schedule.sport },
-            { label: "Level", value: schedule.level },
-            { label: "Duration", value: schedule.duration + (schedule.duration === "half-day" ? ` (${schedule.time})` : "") },
-            { label: "Days", value: schedule.days },
-            { label: "Start date", value: fmtDate(schedule.date) || "TBD" },
-            { label: "Participants", value: participants.length },
-          ]}
-          guestFields={[
-            { key: "name", label: "Full name", placeholder: "Jane Smith" },
-            { key: "dob", label: "Date of birth", placeholder: "DD/MM/YYYY" },
-            { key: "level", label: "Skiing level", placeholder: "e.g. Intermediate" },
-            { key: "emergency", label: "Emergency contact (optional)", placeholder: "Name & phone number" },
-            { key: "medical", label: "Medical notes (optional, private)", placeholder: "Any relevant medical info..." },
-          ]}
-          trustBadges={TRUST}
-          onComplete={(guestData) => {
-            const price = selectedSchool ? selectedSchool.pricePerDay * days : 0;
-            onBook?.(`${selectedSchool?.name} — ${schedule.sport} · ${schedule.days} day${schedule.days !== 1 ? "s" : ""}`, price, { school: selectedSchool?.name, course: courseType, days: schedule.days, sport: schedule.sport, level: schedule.level, startDate: schedule.date });
-          }}
-        />
-      )}
-    </BookingShell>
+      <div className="flex gap-6">
+        {sidebarOpen && (
+          <div className="w-56 flex-shrink-0">
+            <div className="bg-peak-card border border-white/5 rounded-2xl p-5 sticky top-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-peak-text font-semibold text-sm">Filters</span>
+                {hasFilters && <button onClick={() => { setFilterLevels([]); setFilterAgeGroups([]); }} className="text-xs text-peak-blue hover:underline">Clear</button>}
+              </div>
+              <div className="mb-5">
+                <p className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider mb-3">Skill level</p>
+                {LEVELS.map(level => (
+                  <button key={level} onClick={() => toggleArr(filterLevels, setFilterLevels, level)}
+                    className={`flex items-center gap-2 w-full text-left text-xs px-3 py-2 rounded-lg mb-1 transition-colors ${filterLevels.includes(level) ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
+                    {filterLevels.includes(level) && <Check className="h-3 w-3 flex-shrink-0" />}
+                    {LEVEL_LABELS[level]}
+                  </button>
+                ))}
+              </div>
+              <div>
+                <p className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider mb-3">Age group</p>
+                {AGE_GROUPS.map(ag => (
+                  <button key={ag} onClick={() => toggleArr(filterAgeGroups, setFilterAgeGroups, ag)}
+                    className={`flex items-center gap-2 w-full text-left text-xs px-3 py-2 rounded-lg mb-1 transition-colors ${filterAgeGroups.includes(ag) ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
+                    {filterAgeGroups.includes(ag) && <Check className="h-3 w-3 flex-shrink-0" />}
+                    {AGE_LABELS[ag]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-peak-text-secondary text-sm mb-4">{filtered.length} schools found</p>
+          {filtered.length === 0 ? (
+            <div className="text-center py-16 text-peak-text-secondary">
+              <p className="text-lg mb-2">No schools match your filters</p>
+              <button onClick={() => { setFilterLevels([]); setFilterAgeGroups([]); }} className="text-peak-blue text-sm hover:underline">Clear filters</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filtered.map(school => (
+                <SchoolCard key={school.id} school={school} lessonType={filterLessonType} days={days}
+                  onBook={s => onBook?.(`${s.name} — ${filterLessonType.replace("_"," ")}`, (s.priceHalfDay || s.priceFullDay || 0) * days, { school: s.name, lessonType: filterLessonType, days, sport: filterSport })}
+                  t={t} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
