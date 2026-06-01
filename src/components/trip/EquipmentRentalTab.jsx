@@ -2,6 +2,11 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check, X } from "lucide-react";
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useProfile } from "../../context/ProfileContext";
+import Step0 from "./equipment/Step0";
+import Step1Expert from "./equipment/Step1Expert";
+import Step1Guided from "./equipment/Step1Guided";
+import Step2Shops from "./equipment/Step2Shops";
+import Step3Checkout from "./equipment/Step3Checkout";
 import { useT } from "../../lib/i18n";
 import { searchDestinations } from "../../lib/searchIndex";
 
@@ -421,13 +426,20 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
   const { session } = useTripPlanner();
   const { profile, updateProfile } = useProfile();
   const t = useT();
-  // Never auto-read days or destination from session — avoids home-search contamination
-  // Days come from explicit user input; destination from in-tab search only
   const sessionDays = session?.dates?.nights ? session.dates.nights + 1 : null;
   const [localDays, setLocalDays] = useState(sessionDays || null);
-  const days = localDays || sessionDays || null; // null = not set, don't show
+  const days = localDays || sessionDays || null;
   const [selectedDestination, setSelectedDestination] = useState(null);
   const destination = selectedDestination?.label || agentServiceDetails?.destination || "";
+
+  // Wizard state — null = browse mode, otherwise shows wizard overlay
+  const [wizardActive, setWizardActive] = useState(false);
+  const [wizardStep, setWizardStep] = useState(0);
+  const [wizardEquipment, setWizardEquipment] = useState([]);
+  const [wizardMode, setWizardMode] = useState(null);
+  const [wizardSpecs, setWizardSpecs] = useState({});
+  const [wizardShop, setWizardShop] = useState(null);
+  const [preselectedShop, setPreselectedShop] = useState(null);
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("recommended");
@@ -435,7 +447,6 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
   const [filterSport, setFilterSport] = useState("ski");
   const [filterLocation, setFilterLocation] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [panelShop, setPanelShop] = useState(null);
 
   function toggleArr(arr, setArr, val) {
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
@@ -589,7 +600,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                   shop={shop}
                   sportType={filterSport}
                   days={days}
-                  onOpenPanel={s => setPanelShop(s)}
+                  onOpenPanel={s => { setPreselectedShop(s); setWizardActive(true); setWizardStep(0); setWizardEquipment([]); setWizardMode(null); setWizardSpecs({}); setWizardShop(s); }}
                   t={t}
                 />
               ))}
@@ -599,19 +610,54 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
       </div>
 
       {/* Equipment profile panel */}
-      {panelShop && (
-        <EquipmentPanel
-          shop={panelShop}
-          sportType={filterSport}
-          days={days}
-          profile={profile}
-          updateProfile={updateProfile}
-          onClose={() => setPanelShop(null)}
-          onConfirm={booking => {
-            onBook?.(booking.label, booking.price, booking);
-            setPanelShop(null);
-          }}
-        />
+      {/* Wizard overlay */}
+      {wizardActive && (
+        <div className="fixed inset-0 z-50 bg-peak-bg overflow-y-auto" style={{ top: 64 }}>
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <button onClick={() => setWizardActive(false)} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              Back to browse
+            </button>
+            {wizardStep === 0 && (
+              <Step0
+                onNext={(equipment, mode) => { setWizardEquipment(equipment); setWizardMode(mode); setWizardStep(1); }}
+              />
+            )}
+            {wizardStep === 1 && wizardMode === "expert" && (
+              <Step1Expert
+                equipment={wizardEquipment}
+                onNext={(specs) => { setWizardSpecs(specs); setWizardStep(2); }}
+                onBack={() => setWizardStep(0)}
+              />
+            )}
+            {wizardStep === 1 && wizardMode === "guided" && (
+              <Step1Guided
+                equipment={wizardEquipment}
+                onNext={(specs) => { setWizardSpecs(specs); setWizardStep(2); }}
+                onBack={() => setWizardStep(0)}
+              />
+            )}
+            {wizardStep === 2 && (
+              <Step2Shops
+                equipment={wizardEquipment}
+                specs={wizardSpecs}
+                preselectedShop={preselectedShop}
+                onNext={(shop) => { setWizardShop(shop); setWizardStep(3); }}
+                onBack={() => setWizardStep(1)}
+              />
+            )}
+            {wizardStep === 3 && (
+              <Step3Checkout
+                equipment={wizardEquipment}
+                specs={wizardSpecs}
+                shop={wizardShop}
+                days={days}
+                onBook={(label, price, details) => { onBook?.(label, price, details); setWizardActive(false); }}
+                onBack={() => setWizardStep(2)}
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
