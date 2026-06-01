@@ -35,6 +35,49 @@ const SCHOOLS = [
     ],
   },
   {
+    id: "skischule-reith", name: "Skischule Reith bei Kitzbühel", badge: "Official Partner",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/f87372054_AS-PHOTO-231203-1199-web2048px72dpi.jpg",
+    rating: 4.9, reviews: 521,
+    location: "Kirchweg 7, 6370 Reith bei Kitzbühel — own Skiwiese & dedicated Kinderland",
+    languages: ["English", "German"],
+    certifications: ["ÖSV", "State-certified ski & mountain guides", "State-certified snowboard instructors"],
+    instructors: 150,
+    sports: ["ski", "snowboard", "nordic"],
+    levels: ["beginner", "intermediate", "advanced", "expert"],
+    ageGroups: ["adults", "kids", "teens"],
+    lessonTypes: ["group", "private", "half_day", "full_day"],
+    priceHalfDay: 60, priceFullDay: 90, pricePrivate: 230,
+    availability: "available",
+    groupSize: "5–8 per group",
+    resort: "kitzski",
+    resorts: ["kitzski", "skiwelt", "stjohann", "kitzbuhel"],
+    website: "https://www.skischule-reith.at",
+    phone: "+43 5356 654 96",
+    email: "office@skischule-reith.at",
+    highlights: [
+      "Up to 150 certified ski, snowboard & cross-country instructors",
+      "1,000m² dedicated Kinderland with 4 conveyor belts & free skilift",
+      "Bambini Club from age 2 (€50/half-day) — HUBSI childcare",
+      "Children group courses from €90/day (groups of 5–8)",
+      "Private ski/snowboard/cross-country from €230 (2h) — peak season",
+      "Freeride private from €450/day",
+      "Race school (Rennschule) for competitive training",
+      "Free parking, 100m bobsled run, ski bus connection",
+      "Modern snowmaking — guaranteed skiing all season",
+      "Special deals: early season & school holidays (up to –40%)",
+      "Operates in Kitzbühel region — Kitz Ski, SkiWelt & St. Johann",
+    ],
+    images: [
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/f87372054_AS-PHOTO-231203-1199-web2048px72dpi.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cfc14b06c_AS-PHOTO-231203-1511-web2048px72dpi.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/fffdc630a_AY5I5493.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/4e22237b1_DJI_0133.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/bb7cfb802_GruppenfotoLogoneu.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/28e31ff53_Skischule_Winter.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7b09e0d33_AY5I5181.jpg",
+    ],
+  },
+  {
     id: "sc1", name: "Ecole du Ski Français", badge: "Top rated",
     image: "", rating: 4.8, reviews: 412,
     location: "Slope-side — meets at bottom of Gondola 1",
@@ -153,6 +196,8 @@ function AvailBadge({ status }) {
 
 function SchoolCard({ school, lessonType, days, onBook, t }) {
   const [expanded, setExpanded] = useState(false);
+  const [imgIdx, setImgIdx] = useState(0);
+  const photos = school.images?.length ? school.images : (school.image ? [school.image] : []);
   const price = lessonType === "private" ? school.pricePrivate
     : lessonType === "full_day" ? school.priceFullDay
     : school.priceHalfDay;
@@ -162,10 +207,18 @@ function SchoolCard({ school, lessonType, days, onBook, t }) {
     <div className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden hover:border-white/12 transition-all group">
       {/* Image */}
       <div className="relative h-44 bg-peak-surface overflow-hidden">
-        {school.image
-          ? <img src={school.image} alt={school.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        {photos.length > 0
+          ? <img src={photos[imgIdx]} alt={school.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           : <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🎿</div>
         }
+        {photos.length > 1 && (
+          <div className="absolute bottom-2 right-2 flex gap-1">
+            {photos.map((_, i) => (
+              <button key={i} onClick={e => { e.stopPropagation(); setImgIdx(i); }}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${i === imgIdx ? "bg-white" : "bg-white/40"}`} />
+            ))}
+          </div>
+        )}
         <div className="absolute top-3 left-3">
           <span className={`backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full ${school.badge === "Official Partner" ? "bg-peak-red" : "bg-peak-blue/90"}`}>
             {school.badge === "Official Partner" ? "⭐ Official Partner" : school.badge}
@@ -252,11 +305,19 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
-  const isHochkonig = destination.toLowerCase().includes("hochkönig") || destination.toLowerCase().includes("hochkonig") || destination.toLowerCase().includes("maria alm");
+  const dest = destination.toLowerCase();
+  const isHochkonig = dest.includes("hochkönig") || dest.includes("hochkonig") || dest.includes("maria alm");
+  const isKitzArea = dest.includes("kitzbühel") || dest.includes("kitzbuehel") || dest.includes("kitzbuhel") || dest.includes("kitz ski") || dest.includes("skiwelt") || dest.includes("ski welt") || dest.includes("st. johann") || dest.includes("st.johann") || dest.includes("reith");
 
   const filtered = useMemo(() => {
     let res = SCHOOLS.filter(s => s.sports.includes(filterSport));
-    if (!isHochkonig) res = res.filter(s => !s.resort);
+    // Hide resort-specific schools unless the matching resort is selected
+    res = res.filter(s => {
+      if (!s.resort) return true;
+      if (s.id === "skischule-mariaalm") return isHochkonig;
+      if (s.id === "skischule-reith") return isKitzArea;
+      return true;
+    });
     if (search) res = res.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.languages.some(l => l.toLowerCase().includes(search.toLowerCase())));
     if (filterLevels.length) res = res.filter(s => filterLevels.some(l => s.levels.includes(l)));
     if (filterAgeGroups.length) res = res.filter(s => filterAgeGroups.some(a => s.ageGroups.includes(a)));
@@ -266,7 +327,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     else if (sortBy === "price_desc") res.sort((a, b) => (b.priceHalfDay || 0) - (a.priceHalfDay || 0));
     else res.sort((a, b) => (a.resort ? -1 : 0) - (b.resort ? -1 : 0));
     return res;
-  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport, filterLessonType, isHochkonig]);
+  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport, filterLessonType, isHochkonig, isKitzArea]);
 
   const hasFilters = filterLevels.length > 0 || filterAgeGroups.length > 0;
 
