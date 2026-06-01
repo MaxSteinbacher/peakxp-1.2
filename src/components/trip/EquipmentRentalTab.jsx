@@ -655,10 +655,10 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
             )}
             {wizardStep === 3 && (
               <Step3Checkout
-                equipment={wizardEquipment}
+                selectedEquipment={wizardEquipment}
                 specs={wizardSpecs}
                 shop={wizardShop}
-                days={days}
+                answers={wizardAnswers}
                 onBook={(label, price, details) => { onBook?.(label, price, details); setWizardActive(false); }}
                 onBack={() => setWizardStep(2)}
               />
