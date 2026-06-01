@@ -281,7 +281,9 @@ function ShopCard({ shop, sportType, days, onOpenPanel, t }) {
       {/* Image */}
       <div className="relative h-44 bg-peak-surface overflow-hidden">
         {shop.image
-          ? <img src={shop.image} alt={shop.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          ? (shop.id === "intersport-mariaalm"
+            ? <div className="w-full h-full flex items-center justify-center bg-white p-6"><img src="https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ba78f96f8_IS-Maria_Alm_Logo.jpg" alt={shop.name} className="max-w-full max-h-full object-contain" /></div>
+            : <img src={shop.image} alt={shop.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />)
           : <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🎿</div>
         }
         <div className="absolute top-3 left-3">
