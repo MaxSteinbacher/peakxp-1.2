@@ -438,6 +438,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
   const [wizardEquipment, setWizardEquipment] = useState([]);
   const [wizardMode, setWizardMode] = useState(null);
   const [wizardSpecs, setWizardSpecs] = useState({});
+  const [wizardAnswers, setWizardAnswers] = useState({});
   const [wizardShop, setWizardShop] = useState(null);
   const [preselectedShop, setPreselectedShop] = useState(null);
 
@@ -600,7 +601,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                   shop={shop}
                   sportType={filterSport}
                   days={days}
-                  onOpenPanel={s => { setPreselectedShop(s); setWizardActive(true); setWizardStep(0); setWizardEquipment([]); setWizardMode(null); setWizardSpecs({}); setWizardShop(s); }}
+                  onOpenPanel={s => { setPreselectedShop(s); setWizardActive(true); setWizardStep(0); setWizardEquipment([]); setWizardMode(null); setWizardSpecs({}); setWizardAnswers({}); setWizardShop(s); }}
                   t={t}
                 />
               ))}
@@ -636,9 +637,10 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
             )}
             {wizardStep === 1 && wizardMode === "guided" && (
               <Step1Guided
-                equipment={wizardEquipment}
-                onNext={(specs) => { setWizardSpecs(specs); setWizardStep(2); }}
-                onBack={() => setWizardStep(0)}
+                selectedEquipment={wizardEquipment}
+                answers={wizardAnswers}
+                setAnswers={setWizardAnswers}
+                onContinue={() => { setWizardSpecs(wizardAnswers); setWizardStep(2); }}
               />
             )}
             {wizardStep === 2 && (
