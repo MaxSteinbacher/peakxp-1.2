@@ -630,9 +630,10 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
             )}
             {wizardStep === 1 && wizardMode === "expert" && (
               <Step1Expert
-                equipment={wizardEquipment}
-                onNext={(specs) => { setWizardSpecs(specs); setWizardStep(2); }}
-                onBack={() => setWizardStep(0)}
+                selectedEquipment={wizardEquipment}
+                specs={wizardSpecs}
+                setSpecs={setWizardSpecs}
+                onContinue={() => setWizardStep(2)}
               />
             )}
             {wizardStep === 1 && wizardMode === "guided" && (
