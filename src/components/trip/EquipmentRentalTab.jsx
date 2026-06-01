@@ -634,7 +634,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                 selectedEquipment={wizardEquipment}
                 specs={wizardSpecs}
                 setSpecs={setWizardSpecs}
-                onContinue={() => setWizardStep(2)}
+                onContinue={() => { if (preselectedShop) { setWizardShop(preselectedShop); setWizardStep(3); } else setWizardStep(2); }}
               />
             )}
             {wizardStep === 1 && wizardMode === "guided" && (
