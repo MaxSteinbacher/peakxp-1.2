@@ -1,8 +1,7 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check, Globe, Mountain, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check, Globe } from "lucide-react";
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useT } from "../../lib/i18n";
-import { searchDestinations } from "../../lib/searchIndex";
 
 // ─── Static school data ──────────────────────────────────────────────────────
 const SCHOOLS = [
@@ -216,7 +215,7 @@ const AVAIL_COLORS = {
   unavailable: "bg-peak-red/80 text-white",
 };
 
-function SchoolCard({ school, lessonType, days, onBook, t }) {
+function SchoolCard({ school, lessonType, days, onOpenPanel, t }) {
   const [expanded, setExpanded] = useState(false);
   const [imgIdx, setImgIdx] = useState(0);
   const photos = school.images?.length ? school.images : (school.image ? [school.image] : []);
@@ -306,11 +305,12 @@ function SchoolCard({ school, lessonType, days, onBook, t }) {
 
         <div className="flex gap-2">
           <button
-            onClick={() => onBook?.(school)}
+            onClick={() => onOpenPanel?.(school)}
             disabled={school.availability === "unavailable"}
-            className="flex-1 py-2.5 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-colors"
+            className="flex-1 py-2.5 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
           >
-            {t("add_to_basket")}
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            Book lesson
           </button>
           <button
             onClick={() => setExpanded(e => !e)}
@@ -347,96 +347,11 @@ function SchoolCard({ school, lessonType, days, onBook, t }) {
   );
 }
 
-
-// ─── Destination search (shared pattern with EquipmentRentalTab) ────────────
-const ALPINE_REGIONS_SKI = [
-  { id: "at-tyrol", label: "Tyrol, Austria", sublabel: "Austria", flag: "🇦🇹" },
-  { id: "at-salzburg", label: "Salzburg, Austria", sublabel: "Austria", flag: "🇦🇹" },
-  { id: "ch-valais", label: "Valais, Switzerland", sublabel: "Switzerland", flag: "🇨🇭" },
-  { id: "fr-savoie", label: "Savoie, France", sublabel: "France", flag: "🇫🇷" },
-  { id: "it-alto-adige", label: "South Tyrol, Italy", sublabel: "Italy", flag: "🇮🇹" },
-];
-
-function DestinationSearchSki({ value, onSelect, placeholder = "Filter by resort or region…" }) {
-  const [query, setQuery] = useState(value?.label || "");
-  const [results, setResults] = useState([]);
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (value?.label && query !== value.label) setQuery(value.label);
-  }, [value]);
-
-  useEffect(() => {
-    if (!query || query.length < 2) { setResults([]); return; }
-    const hits = searchDestinations(query);
-    setResults(hits.slice(0, 8));
-    setOpen(true);
-  }, [query]);
-
-  useEffect(() => {
-    function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  function handleSelect(item) { setQuery(item.label); setResults([]); setOpen(false); onSelect(item); }
-  function handleClear() { setQuery(""); setResults([]); setOpen(false); onSelect(null); }
-
-  return (
-    <div ref={ref} className="relative flex-1 min-w-[220px] max-w-sm">
-      <div className="relative">
-        <Mountain className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-peak-text-secondary" />
-        <input value={query}
-          onChange={e => { setQuery(e.target.value); if (!e.target.value) onSelect(null); }}
-          onFocus={() => { if (!query) setOpen(true); else if (results.length) setOpen(true); }}
-          placeholder={placeholder}
-          className="w-full bg-peak-surface border border-white/10 rounded-xl pl-10 pr-8 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-        {query && <button onClick={handleClear} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-peak-text-secondary hover:text-peak-text"><X className="h-3.5 w-3.5" /></button>}
-      </div>
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-peak-surface border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
-          {!query && (
-            <div className="p-3 border-b border-white/5">
-              <p className="text-peak-text-secondary text-xs mb-2 px-1">Quick regions</p>
-              <div className="flex flex-wrap gap-1.5">
-                {ALPINE_REGIONS_SKI.map(r => (
-                  <button key={r.id} onClick={() => handleSelect({ ...r, type: "region" })}
-                    className="text-xs bg-white/5 hover:bg-white/10 text-peak-text-secondary hover:text-peak-text px-2.5 py-1 rounded-lg transition-colors">
-                    {r.flag} {r.label.split(",")[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {results.length > 0 && (
-            <div className="max-h-64 overflow-y-auto">
-              {results.map((item, i) => (
-                <button key={i} onClick={() => handleSelect(item)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-white/5 transition-colors flex items-center gap-3">
-                  <span className="text-base flex-shrink-0">{item.flag || "⛷️"}</span>
-                  <div className="min-w-0">
-                    <p className="text-peak-text text-sm font-medium truncate">{item.label}</p>
-                    <p className="text-peak-text-secondary text-xs truncate">{item.sublabel}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-          {query && results.length === 0 && <div className="px-4 py-3 text-peak-text-secondary text-sm">No results for "{query}"</div>}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
   const { session } = useTripPlanner();
   const t = useT();
   const days = session?.dates?.nights ? session.dates.nights + 1 : (agentServiceDetails?.days || 3);
-  // Local destination — never auto-filled from session context
-  const [selectedDestination, setSelectedDestination] = useState(null);
-  const destinationLabel = selectedDestination?.label || agentServiceDetails?.destination || "";
+  const destination = session?.destination?.label || agentServiceDetails?.destination || "";
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("recommended");
@@ -450,7 +365,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
-  const dest = destinationLabel.toLowerCase();
+  const dest = destination.toLowerCase();
   const isHochkonig = dest.includes("hochkönig") || dest.includes("hochkonig") || dest.includes("maria alm");
   const isKitzArea = dest.includes("kitzbühel") || dest.includes("kitzbuehel") || dest.includes("kitzbuhel")
     || dest.includes("kitz ski") || dest.includes("skiwelt") || dest.includes("ski welt")
@@ -491,7 +406,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       <div className="mb-6">
         <h2 className="font-display font-extrabold text-3xl text-peak-text mb-1">{t("ski_school_tab")}</h2>
         <p className="text-peak-text-secondary text-sm">
-          {destinationLabel ? `${t("schools_near") || "Schools near"} ${destinationLabel}` : t("choose_school")}
+          {destination ? `${t("schools_near") || "Schools near"} ${destination}` : t("choose_school")}
           {days > 1 ? ` · ${days} ${t("nights")}` : ""}
         </p>
       </div>
@@ -499,7 +414,6 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       {/* Controls row */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Sport selector */}
-        <DestinationSearchSki value={selectedDestination} onSelect={setSelectedDestination} />
         <div className="flex rounded-xl overflow-hidden border border-white/10">
           {SPORTS.map(s => (
             <button key={s} onClick={() => setFilterSport(s)}
@@ -617,6 +531,21 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
           )}
         </div>
       </div>
+
+      {panelSchool && (
+        <LessonPanel
+          school={panelSchool}
+          lessonType={filterLessonType}
+          days={days}
+          profile={profile}
+          updateProfile={updateProfile}
+          onClose={() => setPanelSchool(null)}
+          onConfirm={booking => {
+            onBook?.(booking.label, booking.price, booking);
+            setPanelSchool(null);
+          }}
+        />
+      )}
     </div>
   );
 }
