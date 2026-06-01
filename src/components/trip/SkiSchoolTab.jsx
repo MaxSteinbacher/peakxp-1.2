@@ -411,23 +411,10 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
-  const dest = destination.toLowerCase();
-  const isHochkonig = dest.includes("hochkönig") || dest.includes("hochkonig") || dest.includes("maria alm");
-  const isKitzArea = dest.includes("kitzbühel") || dest.includes("kitzbuehel") || dest.includes("kitzbuhel")
-    || dest.includes("kitz ski") || dest.includes("skiwelt") || dest.includes("ski welt")
-    || dest.includes("st. johann") || dest.includes("st.johann") || dest.includes("reith");
-
   const filtered = useMemo(() => {
     let res = SCHOOLS.filter(s => s.sports.includes(filterSport));
 
-    // Show resort-specific schools only when their resort is selected
-    res = res.filter(s => {
-      if (!s.resort) return true;
-      if (s.id === "skischule-mariaalm") return isHochkonig;
-      if (s.id === "skischule-reith") return isKitzArea;
-      return true;
-    });
-
+    // All schools show by default; destination search used for context/info only
     if (search) {
       const q = search.toLowerCase();
       res = res.filter(s => s.name.toLowerCase().includes(q) || s.languages.some(l => l.toLowerCase().includes(q)));
@@ -442,7 +429,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     else res.sort((a, b) => (b.badge === "official_partner" ? 1 : 0) - (a.badge === "official_partner" ? 1 : 0));
 
     return res;
-  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport, isHochkonig, isKitzArea]);
+  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport]);
 
   const hasFilters = filterLevels.length > 0 || filterAgeGroups.length > 0;
 
