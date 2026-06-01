@@ -234,7 +234,7 @@ function SchoolCard({ school, lessonType, days, onOpenPanel, t }) {
     : `/${t("half_day")}`;
 
   return (
-    <div className={`bg-peak-card border rounded-2xl overflow-hidden transition-all group ${isOfficial ? "border-peak-red/30 hover:border-peak-red/50" : "border-white/5 hover:border-white/12"}`}>
+    <div className={`bg-peak-card border rounded-2xl overflow-hidden transition-all group flex flex-col ${isOfficial ? "border-peak-red/30 hover:border-peak-red/50" : "border-white/5 hover:border-white/12"}`}>
       {/* Image */}
       <div className="relative h-44 bg-peak-surface overflow-hidden">
         {photos.length > 0
@@ -262,7 +262,7 @@ function SchoolCard({ school, lessonType, days, onOpenPanel, t }) {
       </div>
 
       {/* Body */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2 mb-1">
           <h3 className="font-display font-bold text-peak-text text-base leading-tight">{school.name}</h3>
           <div className="text-right flex-shrink-0">
@@ -305,7 +305,7 @@ function SchoolCard({ school, lessonType, days, onOpenPanel, t }) {
           ))}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto pt-1">
           <button
             onClick={() => onOpenPanel?.(school)}
             disabled={school.availability === "unavailable"}
@@ -755,11 +755,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
                   school={school}
                   lessonType={filterLessonType}
                   days={days}
-                  onOpenPanel={s => onBook?.(
-                    `${s.name} — ${t(LESSON_TYPES.find(l => l.key === filterLessonType)?.labelKey || filterLessonType)}`,
-                    (filterLessonType === "private" ? s.pricePrivate : filterLessonType === "full_day" ? s.priceFullDay : s.priceHalfDay || 0) * days,
-                    { school: s.name, lessonType: filterLessonType, days, sport: filterSport }
-                  )}
+                  onOpenPanel={() => { setWizardActive(true); setWizardStep(1); setWizardParticipants([]); setWizardCourse(null); setWizardSchedule(null); setWizardSchool(null); }}
                   t={t}
                 />
               ))}
