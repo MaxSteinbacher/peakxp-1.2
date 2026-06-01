@@ -1114,10 +1114,6 @@ export const austrianResorts = [
     image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cc5a83df1_Nordkette_Winter_Gnther_Egger.jpg",
     images: [
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cc5a83df1_Nordkette_Winter_Gnther_Egger.jpg", credits: "© Günther Egger / Nordkette" },
-      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/881974eec_nordekette_20130316_0182_1-2-90f9c209.jpg", credits: "© Innsbrucker Nordkettenbahnen" },
-      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/04b7880c9_nordekette_20130316_0851-4922b3ab.jpg", credits: "© Innsbrucker Nordkettenbahnen" },
-      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/29cf2af55_GOTiT_Sane-Spring_Nordkette_FullRes_17_MG_9794-d77b472f.jpg", credits: "© GOT iT! Shootings" },
-      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/245c5f4f3_IMG_7814-32wwwgotitat-2--e3c39d59.jpg", credits: "© GOT iT! Shootings" },
     ],
     videos: [
       {
