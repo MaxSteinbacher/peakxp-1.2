@@ -151,24 +151,28 @@ function EquipmentPanel({ shop, sportType, days, profile, updateProfile, onConfi
     });
   }
 
-  const missing = !form.height || !form.shoeSize;
+  const missing = form.height === "" || form.shoeSize === "";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }} onClick={onClose}>
-      <div className="w-full max-w-lg bg-peak-card border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }} onClick={onClose}>
+      <div className="w-full max-w-lg bg-peak-card border border-white/12 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-white/5">
-          <div>
-            <h3 className="font-display font-bold text-peak-text text-lg">{shop.name}</h3>
-            <p className="text-peak-text-secondary text-sm mt-0.5 capitalize">{sportType} rental · {days} days · €{totalPerDay}/day</p>
+        <div className="flex items-start justify-between p-5 pb-4 border-b border-white/8">
+          <div className="min-w-0">
+            <h3 className="font-display font-bold text-peak-text text-xl leading-tight">{shop.name}</h3>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className="text-xs bg-peak-blue/15 text-peak-blue px-2.5 py-0.5 rounded-full capitalize">{sportType}</span>
+              {days && <span className="text-xs bg-white/8 text-peak-text-secondary px-2.5 py-0.5 rounded-full">{days} days</span>}
+              <span className="text-xs bg-white/8 text-peak-text-secondary px-2.5 py-0.5 rounded-full">€{totalPerDay}/day</span>
+            </div>
           </div>
-          <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text ml-3 flex-shrink-0"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text ml-3 flex-shrink-0 mt-1 p-1 rounded-lg hover:bg-white/8 transition-colors"><X className="h-5 w-5" /></button>
         </div>
 
         <div className="p-5 space-y-5">
           {/* Name */}
           <div>
-            <p className="text-peak-text text-sm font-semibold mb-3">Renter details</p>
+            <p className="text-peak-text font-semibold mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-peak-blue/20 text-peak-blue text-xs flex items-center justify-center font-bold">1</span>Renter details</p>
             <div className="grid grid-cols-2 gap-3">
               {[{ key: "firstName", label: "First name", ph: "Anna" }, { key: "lastName", label: "Last name", ph: "Smith" }].map(f => (
                 <div key={f.key}>
@@ -202,12 +206,12 @@ function EquipmentPanel({ shop, sportType, days, profile, updateProfile, onConfi
                 </div>
               ))}
             </div>
-            {missing && <p className="text-amber-400 text-xs mt-2">⚠ Height and shoe size are needed for proper fitting.</p>}
+            {missing && <p className="text-amber-400/80 text-xs mt-2 bg-amber-400/8 px-3 py-1.5 rounded-lg">Enter height and shoe size so the shop prepares the right gear for you.</p>}
           </div>
 
           {/* Skill level */}
           <div>
-            <p className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Skill level</p>
+            <p className="text-peak-text font-semibold mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-peak-blue/20 text-peak-blue text-xs flex items-center justify-center font-bold">3</span>Skill level</p>
             <div className="flex gap-2 flex-wrap">
               {SKILL_LEVELS.map(l => (
                 <button key={l} onClick={() => setField("skillLevel", l)}
@@ -220,7 +224,7 @@ function EquipmentPanel({ shop, sportType, days, profile, updateProfile, onConfi
 
           {/* Equipment selection */}
           <div>
-            <p className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Select items</p>
+            <p className="text-peak-text font-semibold mb-3 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-peak-blue/20 text-peak-blue text-xs flex items-center justify-center font-bold">4</span>Select items</p>
             <div className="space-y-2">
               {ITEMS.map(item => (
                 <label key={item.key} className="flex items-center justify-between cursor-pointer py-2 px-3 rounded-xl hover:bg-white/4 transition-colors">
@@ -248,9 +252,12 @@ function EquipmentPanel({ shop, sportType, days, profile, updateProfile, onConfi
 
           {/* Total + CTA */}
           <div className="pt-3 border-t border-white/5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-peak-text-secondary text-sm">Total for {days} days</span>
-              <span className="text-peak-text font-bold text-lg">€{totalForTrip}</span>
+            <div className="flex items-center justify-between mb-3 bg-peak-surface rounded-xl px-4 py-3">
+              <div>
+                <p className="text-peak-text-secondary text-xs">Total for {days || "?"} days</p>
+                <p className="text-peak-text-secondary text-xs mt-0.5">{ITEMS.filter(i => form.items[i.key]).map(i => i.label).join(" + ")}</p>
+              </div>
+              <span className="text-peak-text font-bold text-xl">€{totalForTrip}</span>
             </div>
             <button onClick={handleConfirm}
               className="w-full py-3 bg-peak-red hover:bg-peak-red-hover text-white font-semibold rounded-xl transition-colors">
