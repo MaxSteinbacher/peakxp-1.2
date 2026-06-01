@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
-import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check, X } from "lucide-react";
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useProfile } from "../../context/ProfileContext";
 import { useT } from "../../lib/i18n";
+import { searchDestinations } from "../../lib/searchIndex";
 
 // ─── Static shop data ─────────────────────────────────────────────────────────
 const SHOPS = [
@@ -364,21 +365,19 @@ function ShopCard({ shop, sportType, days, onOpenPanel, t }) {
 
 
 // ─── Destination search ──────────────────────────────────────────────────────
-import { searchDestinations } from "../../lib/searchIndex";
-
 function DestinationSearch({ value, onSelect }) {
   const [query, setQuery] = useState(value?.label || "");
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
-  const ref = React.useRef(null);
+  const ref = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     function h(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!query || query.length < 2) { setResults([]); return; }
     setResults(searchDestinations(query).slice(0, 8));
     setOpen(true);
@@ -581,11 +580,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                   shop={shop}
                   sportType={filterSport}
                   days={days}
-                  onOpenPanel={s => setPanelShop(s)} //_legacy={s => onBook?.(
-                    `${s.name} — ${filterSport} rental`,
-                    (s.pricePerDay[filterSport] ?? s.pricePerDay.ski) * days,
-                    { shop: s.name, tier: s.tier, days, sportType: filterSport }
-                  )}
+                  onOpenPanel={s => setPanelShop(s)}
                   t={t}
                 />
               ))}

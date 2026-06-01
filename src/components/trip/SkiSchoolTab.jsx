@@ -1,7 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check, Globe } from "lucide-react";
 import { useTripPlanner } from "../../context/TripPlannerContext";
+import { useProfile } from "../../context/ProfileContext";
 import { useT } from "../../lib/i18n";
+import { searchDestinations } from "../../lib/searchIndex";
 
 // ─── Static school data ──────────────────────────────────────────────────────
 const SCHOOLS = [
@@ -353,12 +355,12 @@ function DestinationSearchSki({ value, onSelect }) {
   const [query, setQuery] = useState(value?.label || "");
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
-  const ref = React.useRef(null);
-  React.useEffect(() => {
+  const ref = useRef(null);
+  useEffect(() => {
     function h(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
     document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
   }, []);
-  React.useEffect(() => {
+  useEffect(() => {
     if (!query || query.length < 2) { setResults([]); return; }
     setResults(searchDestinations(query).slice(0, 8)); setOpen(true);
   }, [query]);
