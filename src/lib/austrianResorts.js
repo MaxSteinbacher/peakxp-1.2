@@ -1087,6 +1087,135 @@ export const austrianResorts = [
     ]
   },
   {
+    id: "nordkette-innsbruck",
+    name: "Nordkette Innsbruck",
+    countries: ["Austria"],
+    countryCode: "AT",
+    region: "Tyrol, Austria",
+    country: "Austria",
+    flag: "🇦🇹",
+    lat: 47.32, lng: 11.38,
+    minAltitude: 574, maxAltitude: 2334,
+    verticalDrop: 1760,
+    pisteKm: 9, runs: 6, lifts: 4,
+    gondolas: 2, chairlifts: 1, dragLifts: 1,
+    longestRun: 5,
+    difficultyBlue: 20, difficultyRed: 40, difficultyBlack: 40,
+    snowCannons: 0, snowCannonKm: 0,
+    seasonStart: "2024-12-07", seasonEnd: "2025-04-13",
+    openStatus: "Open", roadStatus: "clear",
+    rating: 9.0, ratingLabel: "Exceptional", priceFrom: 38,
+    seasonDates: "Dec 2024 – Apr 2025",
+    seasonPasses: [],
+    resortTypes: ["Alpine", "Freeride", "Urban"],
+    description: "1,700m above the city and a breathtaking 360° panorama over Innsbruck, the Inn Valley and the Karwendel Nature Park — the largest in Austria. In just minutes, the Innsbrucker Nordkettenbahnen take you directly from Innsbruck's Old Town to the world of high-alpine terrain. The Hungerburgbahn departs from the city centre, stopping at the popular Alpenzoo, reaching Hungerburg in only 8 minutes. From there the cable car ascends to Seegrube and the 2,334m summit of Hafelekar — a playground for freeriders, hikers and nature lovers alike.",
+    logo: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/77d855425_Nordkette_Logo_standard_CMYK_2024.jpg",
+    logoBackground: "white",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cc5a83df1_Nordkette_Winter_Gnther_Egger.jpg",
+    images: [
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/cc5a83df1_Nordkette_Winter_Gnther_Egger.jpg", credits: "© Günther Egger / Nordkette" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/881974eec_nordekette_20130316_0182_1-2-90f9c209.jpg", credits: "© Innsbrucker Nordkettenbahnen" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/04b7880c9_nordekette_20130316_0851-4922b3ab.jpg", credits: "© Innsbrucker Nordkettenbahnen" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/29cf2af55_GOTiT_Sane-Spring_Nordkette_FullRes_17_MG_9794-d77b472f.jpg", credits: "© GOT iT! Shootings" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/245c5f4f3_IMG_7814-32wwwgotitat-2--e3c39d59.jpg", credits: "© GOT iT! Shootings" },
+    ],
+    videos: [
+      {
+        url: "https://media.base44.com/videos/public/6a19694d2b38b5e31a976be8/8464bd80e_INKB_2024_best_of_16x9_10sec.mp4",
+        type: "promotional",
+        label: "Nordkette — Top of Innsbruck 2024",
+        credits: "© Innsbrucker Nordkettenbahnen",
+        autoplay: true,
+        loop: true,
+      }
+    ],
+    weather: { temp: -6, snowDepth: 140, condition: "Sunny", forecast: [
+      { day: "Today", high: -4, low: -10, condition: "clear" },
+      { day: "Tomorrow", high: -5, low: -11, condition: "clear" },
+      { day: "Thu", high: -7, low: -13, condition: "snow" }
+    ]},
+    snowDepthBase: 40, snowDepthMid: 90, snowDepthTop: 150, snowType: "Packed powder",
+    liftsOpen: 4, liftsTotal: 4, pistesOpen: 6, pistesTotal: 6,
+    ecoRating: 4, ecoRenewable: 80, ecoCertifications: [],
+    ecoInitiatives: ["Direct city connection — no car needed", "Hungerburgbahn from Innsbruck Altstadt", "Access to Karwendel Nature Park"],
+    ecoOffsetProgram: false,
+    airports: [
+      { airport: "Innsbruck", iata: "INN", driveTime: "15min" },
+      { airport: "Munich", iata: "MUC", driveTime: "2h" },
+    ],
+    trainStation: "Innsbruck Hauptbahnhof — city tram + Hungerburgbahn (door-to-door ~20min)",
+    shuttle: true, shuttleDesc: "Hungerburgbahn from Innsbruck Altstadt/Löwenhaus. City tram line 1 to Congress station.",
+    parking: { capacity: 500, pricePerDay: 10, includedInPass: false },
+    facilities: {
+      restaurants: [
+        { name: "Seegrube Restaurant", zone: "Seegrube 1905m", cuisine: "Alpine", price: "€€" },
+        { name: "Hafelekar Terrace", zone: "Hafelekar 2334m", cuisine: "Alpine", price: "€€" },
+        { name: "Hungerburg Restaurant", zone: "Hungerburg 860m", cuisine: "Austrian", price: "€€" },
+      ],
+      skiSchools: 2, groupLessonFrom: 55, privateLessonFrom: 140,
+      languages: ["🇦🇹", "🇬🇧", "🇩🇪"],
+      creche: false, crecheAgeMin: null, crecheAgeMax: null, crecheFrom: null,
+      kidsGarden: false, kidsGardenAge: null, babysitting: false,
+      lockerCount: 100, lockerSizes: ["S", "M", "L"],
+      skiStorage: true, skiStorageFrom: 8, bootDryers: false,
+      rentalShops: 2, rentalBrands: ["Atomic", "Rossignol"],
+      skiTuning: true, clothingShop: false, supermarket: false,
+      medicalCentre: true, medicalLocation: "Innsbruck city (minutes away)",
+      pharmacy: false, atm: false, atmCount: 0
+    },
+    surroundings: {
+      description: "The Nordkette rises directly above Innsbruck, offering an unmatched combination of city accessibility and high-alpine nature. The adjacent Karwendel Nature Park — Austria's largest — hosts over 3,000 animal species and 1,305 plant varieties. The Nordkette Perspektivenweg viewing platforms at Seegrube offer stunning 360° views over the Inn Valley.",
+      nearbyTowns: [
+        { name: "Innsbruck Altstadt", distance: "0km (cable car)", desc: "Historic city centre with Habsburg architecture, shopping and dining" },
+        { name: "Hungerburg", distance: "8 min cable car", desc: "Quiet residential area with Alpenzoo" },
+        { name: "Seegrube", distance: "22 min total", desc: "Mid-station with freeride terrain and viewpoints" },
+      ],
+      activities: ["Freeride skiing", "Ski touring", "Snowshoeing", "Winter hiking", "Alpenzoo visit", "Panoramic walks", "Photography", "Rock climbing (summer)"],
+      touristBoard: "Innsbrucker Nordkettenbahnen",
+      touristBoardUrl: "https://www.nordkette.com",
+      emergency: "112",
+      hospital: "Universitätsklinikum Innsbruck (city centre)"
+    },
+    webcams: [
+      { name: "Hafelekar 2334m", seed: "nordkette-cam1" },
+      { name: "Seegrube 1905m", seed: "nordkette-cam2" },
+      { name: "Hungerburg 860m", seed: "nordkette-cam3" },
+    ],
+    events: [
+      { date: "Jun–Sep", name: "Happy Hour Extended Operations", type: "Promotion", desc: "Cable cars run 1 hour later in summer evenings. Happy Hour 20% discount before 9:30 and from 15:00." },
+      { date: "Winter season", name: "Freeride Season Nordkette", type: "Sport", desc: "Seegrube open for freeriders — steep faces and open terrain above 1,905m." },
+    ],
+    promotions: [
+      {
+        title: "Happy Hour — 20% off",
+        description: "June to September: 20% discount on the round trip to TOP OF INNSBRUCK before 9:30 and from 15:00. Avoid peak times and save.",
+        url: "www.nordkette.com",
+      }
+    ],
+    liftPasses: [
+      { type: "1-day (Seegrube)", adult: 38, child: 19, senior: 34, badge: null },
+      { type: "1-day (Hafelekar)", adult: 48, child: 24, senior: 43, badge: null },
+      { type: "Hungerburg return", adult: 16, child: 8, senior: 14, badge: null },
+    ],
+    contact: {
+      website: "www.nordkette.com",
+    },
+    instructors: [],
+    reviews: {
+      overall: 9.0,
+      breakdown: { pistes: 8.5, lifts: 9.2, apresSki: 8.0, value: 8.8, beginners: 7.5 },
+      items: []
+    },
+    seasonCalendar: [
+      { month: "Nov", status: "closed" }, { month: "Dec", status: "open" },
+      { month: "Jan", status: "open" }, { month: "Feb", status: "open" },
+      { month: "Mar", status: "open" }, { month: "Apr", status: "partial" },
+      { month: "May", status: "closed" }, { month: "Jun", status: "partial" },
+      { month: "Jul", status: "open" }, { month: "Aug", status: "open" },
+      { month: "Sep", status: "partial" }, { month: "Oct", status: "closed" }
+    ]
+  },
+  {
     id: "serfaus-fiss-ladis",
     name: "Serfaus-Fiss-Ladis",
     countries: ["Austria"],

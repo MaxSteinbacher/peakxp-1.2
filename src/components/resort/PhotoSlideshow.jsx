@@ -6,8 +6,8 @@ export default function PhotoSlideshow({ images, videos }) {
 
   // Build unified slides: video first, then photos
   const slides = [
-    ...(videos || []).map(v => ({ type: "video", src: v.url })),
-    ...(images || []).map(src => ({ type: "image", src })),
+    ...(videos || []).map(v => ({ type: "video", src: v.url, credits: v.credits })),
+    ...(images || []).map(i => typeof i === "string" ? { type: "image", src: i } : { type: "image", src: i.src, credits: i.credits }),
   ];
 
   if (slides.length === 0) return null;
@@ -70,6 +70,13 @@ export default function PhotoSlideshow({ images, videos }) {
           />
         ))}
       </div>
+
+      {/* Credits bottom-left */}
+      {current.credits && (
+        <div className="absolute bottom-4 left-4 text-white/60 text-xs backdrop-blur-sm bg-peak-bg/30 px-2 py-1 rounded-md">
+          {current.credits}
+        </div>
+      )}
 
       {/* Counter + video badge */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
