@@ -3,8 +3,23 @@ import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check,
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useT } from "../../lib/i18n";
 
-// ─── Static shop data — photos to be added in Base44 ────────────────────────
+// ─── Static shop data ────────────────────────────────────────────────────────
 const SHOPS = [
+  {
+    id: "intersport-mariaalm", name: "Intersport Maria Alm", tier: "performance", badge: "Official Partner",
+    image: "https://www.intersport-mariaalm.at/wordpress/wp-content/uploads/medium-Hochkoenigman-1.jpg",
+    rating: 4.9, reviews: 487, distLift: "Multiple locations — valley stations Hintermoos & Aberg",
+    location: "slope_side", locationLabel: "Slope-side",
+    brands: ["Atomic", "Salomon", "Head", "Fischer", "Rossignol", "Nordica", "Blizzard"],
+    pricePerDay: { ski: 35, snowboard: 32, boots: 12, poles: 6, helmet: 8 },
+    availability: "available",
+    services: ["Free ski depot at Hintermoos & Aberg", "Children under 10 free (parents renting)", "7-for-6 deal", "Online early booking discount up to 15%", "Boot fitting service", "Ski service & tuning", "Helmet fitting"],
+    openingHours: "08:00 – 17:00",
+    resort: "hochkonig",
+    website: "https://www.intersport-mariaalm.at",
+    address: "Maria Alm, Salzburgerland — 7 locations",
+    highlight: "Hochkönig's official equipment partner — 7 shops in the region",
+  },
   {
     id: "s1", name: "Schneider Sport", tier: "performance", badge: "Top rated",
     image: "", rating: 4.8, reviews: 312, distLift: "50m from main lift",
@@ -78,7 +93,8 @@ const SORT_OPTS = [
   { key: "distance", label: "Closest to lifts" },
 ];
 
-function TierBadge({ tier }) {
+function TierBadge({ tier, badge }) {
+  if (badge === "Official Partner") return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-peak-red text-white">⭐ Official Partner</span>;
   const colors = { budget: "bg-white/10 text-white/60", standard: "bg-blue-500/20 text-blue-300", performance: "bg-amber-500/20 text-amber-300", premium: "bg-purple-500/20 text-purple-300" };
   return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${colors[tier] || "bg-white/10 text-white/60"}`}>{TIER_LABELS[tier] || tier}</span>;
 }
@@ -102,7 +118,7 @@ function ShopCard({ shop, sportType, days, onBook, t }) {
           ? <img src={shop.image} alt={shop.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           : <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🎿</div>
         }
-        <div className="absolute top-3 left-3"><TierBadge tier={shop.tier} /></div>
+        <div className="absolute top-3 left-3"><TierBadge tier={shop.tier} badge={shop.badge} /></div>
         <div className="absolute top-3 right-3"><AvailBadge status={shop.availability} /></div>
       </div>
       {/* Body */}
@@ -139,6 +155,8 @@ function ShopCard({ shop, sportType, days, onBook, t }) {
         </div>
         {expanded && (
           <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+            {shop.highlight && <p className="text-xs text-peak-blue font-medium">{shop.highlight}</p>}
+            {shop.address && <p className="text-xs text-peak-text-secondary">📍 {shop.address}</p>}
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
               {Object.entries(shop.pricePerDay).map(([item, p]) => (
                 <div key={item} className="flex justify-between"><span className="text-peak-text-secondary capitalize">{item}</span><span className="text-peak-text">€{p}/day</span></div>
@@ -148,6 +166,7 @@ function ShopCard({ shop, sportType, days, onBook, t }) {
               {shop.services.map(s => <span key={s} className="text-xs bg-peak-green/10 text-peak-green px-2 py-0.5 rounded-full">✓ {s}</span>)}
             </div>
             <p className="text-xs text-peak-text-secondary">Opens: {shop.openingHours}</p>
+            {shop.website && <a href={shop.website} target="_blank" rel="noopener noreferrer" className="text-xs text-peak-blue hover:underline">{shop.website}</a>}
           </div>
         )}
       </div>
@@ -172,16 +191,21 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
+  const isHochkonig = destination.toLowerCase().includes("hochkönig") || destination.toLowerCase().includes("hochkonig") || destination.toLowerCase().includes("maria alm");
+
   const filtered = useMemo(() => {
     let res = [...SHOPS];
+    // If Hochkönig resort, only show local partner + generic shops; otherwise hide resort-specific ones
+    if (!isHochkonig) res = res.filter(s => !s.resort);
     if (search) res = res.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.brands.some(b => b.toLowerCase().includes(search.toLowerCase())));
     if (filterTiers.length) res = res.filter(s => filterTiers.includes(s.tier));
     if (filterLocation) res = res.filter(s => s.location === filterLocation);
     if (sortBy === "rating") res.sort((a, b) => b.rating - a.rating);
-    if (sortBy === "price_asc") res.sort((a, b) => (a.pricePerDay[filterSport] ?? 0) - (b.pricePerDay[filterSport] ?? 0));
-    if (sortBy === "price_desc") res.sort((a, b) => (b.pricePerDay[filterSport] ?? 0) - (a.pricePerDay[filterSport] ?? 0));
+    else if (sortBy === "price_asc") res.sort((a, b) => (a.pricePerDay[filterSport] ?? 0) - (b.pricePerDay[filterSport] ?? 0));
+    else if (sortBy === "price_desc") res.sort((a, b) => (b.pricePerDay[filterSport] ?? 0) - (a.pricePerDay[filterSport] ?? 0));
+    else res.sort((a, b) => (a.resort ? -1 : 0) - (b.resort ? -1 : 0)); // resort partners first by default
     return res;
-  }, [search, sortBy, filterTiers, filterLocation, filterSport]);
+  }, [search, sortBy, filterTiers, filterLocation, filterSport, isHochkonig]);
 
   const hasFilters = filterTiers.length > 0 || !!filterLocation;
 

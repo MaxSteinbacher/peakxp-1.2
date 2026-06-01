@@ -3,8 +3,37 @@ import { Search, SlidersHorizontal, Star, MapPin, ChevronDown, ChevronUp, Check,
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useT } from "../../lib/i18n";
 
-// ─── Static school data — photos to be added in Base44 ──────────────────────
+// ─── Static school data ──────────────────────────────────────────────────────
 const SCHOOLS = [
+  {
+    id: "skischule-mariaalm", name: "Skischule Maria Alm", badge: "Official Partner",
+    image: "https://www.skischule-mariaalm.at/fileadmin/_processed_/e/6/csm_Mannschaft_2026_b441d92673.jpg",
+    rating: 4.9, reviews: 634,
+    location: "Dorfstraße 8, Maria Alm — multiple meeting points at Hochkönig",
+    languages: ["English", "German", "Dutch", "Danish"],
+    certifications: ["ISIA", "ÖSV", "Headquarters Snowboard School"],
+    instructors: 60,
+    sports: ["ski", "snowboard"],
+    levels: ["beginner", "intermediate", "advanced", "expert"],
+    ageGroups: ["adults", "kids", "teens"],
+    lessonTypes: ["group", "private", "half_day", "full_day"],
+    priceHalfDay: 96, priceFullDay: 131, pricePrivate: 203,
+    availability: "available",
+    groupSize: "max 8",
+    resort: "hochkonig",
+    website: "https://www.skischule-mariaalm.at",
+    phone: "+43 6584 94100",
+    highlights: [
+      "Bambini club from age 3 (from €74)",
+      "Children full-day from €131 — personal Level Pass",
+      "Adults beginner & advanced from €161",
+      "Private lessons from €203",
+      "Snowboard full-day €355 — Headquarters Snowboard School",
+      "Language guarantees: Dutch & Danish groups",
+      "Online early booking discount up to 5%",
+      "Free cancellation with insurance up to 24h before",
+    ],
+  },
   {
     id: "sc1", name: "Ecole du Ski Français", badge: "Top rated",
     image: "", rating: 4.8, reviews: 412,
@@ -138,7 +167,9 @@ function SchoolCard({ school, lessonType, days, onBook, t }) {
           : <div className="w-full h-full flex items-center justify-center text-5xl opacity-20">🎿</div>
         }
         <div className="absolute top-3 left-3">
-          <span className="bg-peak-blue/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">{school.badge}</span>
+          <span className={`backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full ${school.badge === "Official Partner" ? "bg-peak-red" : "bg-peak-blue/90"}`}>
+            {school.badge === "Official Partner" ? "⭐ Official Partner" : school.badge}
+          </span>
         </div>
         <div className="absolute top-3 right-3"><AvailBadge status={school.availability} /></div>
       </div>
@@ -187,13 +218,15 @@ function SchoolCard({ school, lessonType, days, onBook, t }) {
         {expanded && (
           <div className="mt-3 pt-3 border-t border-white/5 space-y-2 text-xs">
             <p className="text-peak-text-secondary">{school.instructors} instructors · {school.groupSize}</p>
+            {school.phone && <p className="text-peak-text-secondary">📞 {school.phone}</p>}
             <div className="flex flex-wrap gap-1">
               {school.ageGroups.map(a => <span key={a} className="bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{AGE_LABELS[a]}</span>)}
             </div>
             <div className="space-y-0.5">
               {school.highlights.map(h => <p key={h} className="text-peak-text-secondary">✓ {h}</p>)}
             </div>
-            {school.priceHalfDay && <p className="text-peak-text-secondary">Half-day €{school.priceHalfDay} · Full-day €{school.priceFullDay} · Private €{school.pricePrivate}/hr</p>}
+            {school.priceHalfDay && <p className="text-peak-text-secondary">Half-day €{school.priceHalfDay} · Full-day €{school.priceFullDay} · Private from €{school.pricePrivate}</p>}
+            {school.website && <a href={school.website} target="_blank" rel="noopener noreferrer" className="text-peak-blue hover:underline">{school.website}</a>}
           </div>
         )}
       </div>
@@ -219,17 +252,21 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
+  const isHochkonig = destination.toLowerCase().includes("hochkönig") || destination.toLowerCase().includes("hochkonig") || destination.toLowerCase().includes("maria alm");
+
   const filtered = useMemo(() => {
     let res = SCHOOLS.filter(s => s.sports.includes(filterSport));
+    if (!isHochkonig) res = res.filter(s => !s.resort);
     if (search) res = res.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.languages.some(l => l.toLowerCase().includes(search.toLowerCase())));
     if (filterLevels.length) res = res.filter(s => filterLevels.some(l => s.levels.includes(l)));
     if (filterAgeGroups.length) res = res.filter(s => filterAgeGroups.some(a => s.ageGroups.includes(a)));
     if (filterLessonType) res = res.filter(s => s.lessonTypes.includes(filterLessonType));
     if (sortBy === "rating") res.sort((a, b) => b.rating - a.rating);
-    if (sortBy === "price_asc") res.sort((a, b) => (a.priceHalfDay || 999) - (b.priceHalfDay || 999));
-    if (sortBy === "price_desc") res.sort((a, b) => (b.priceHalfDay || 0) - (a.priceHalfDay || 0));
+    else if (sortBy === "price_asc") res.sort((a, b) => (a.priceHalfDay || 999) - (b.priceHalfDay || 999));
+    else if (sortBy === "price_desc") res.sort((a, b) => (b.priceHalfDay || 0) - (a.priceHalfDay || 0));
+    else res.sort((a, b) => (a.resort ? -1 : 0) - (b.resort ? -1 : 0));
     return res;
-  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport, filterLessonType]);
+  }, [search, sortBy, filterLevels, filterAgeGroups, filterSport, filterLessonType, isHochkonig]);
 
   const hasFilters = filterLevels.length > 0 || filterAgeGroups.length > 0;
 
