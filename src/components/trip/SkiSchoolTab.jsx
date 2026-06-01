@@ -347,12 +347,56 @@ function SchoolCard({ school, lessonType, days, onOpenPanel, t }) {
   );
 }
 
+
+// ─── Destination search for Ski School ──────────────────────────────────────
+function DestinationSearchSki({ value, onSelect }) {
+  const [query, setQuery] = useState(value?.label || "");
+  const [results, setResults] = useState([]);
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    function h(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
+  }, []);
+  React.useEffect(() => {
+    if (!query || query.length < 2) { setResults([]); return; }
+    setResults(searchDestinations(query).slice(0, 8)); setOpen(true);
+  }, [query]);
+  return (
+    <div ref={ref} className="relative flex-1 min-w-[220px] max-w-xs">
+      <div className="relative">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-peak-text-secondary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        <input value={query} onChange={e => { setQuery(e.target.value); if (!e.target.value) onSelect(null); }}
+          onFocus={() => setOpen(true)} placeholder="Search resort or region…"
+          className="w-full bg-peak-surface border border-white/10 rounded-xl pl-10 pr-8 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
+        {query && <button onClick={() => { setQuery(""); onSelect(null); setOpen(false); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-peak-text-secondary hover:text-peak-text"><svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>}
+      </div>
+      {open && results.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-peak-surface border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+          {results.map((item, i) => (
+            <button key={i} onClick={() => { setQuery(item.label); onSelect(item); setOpen(false); }}
+              className="w-full text-left px-4 py-2.5 hover:bg-white/5 flex items-center gap-3 transition-colors">
+              <span className="text-base">{item.flag || "⛷️"}</span>
+              <div className="min-w-0"><p className="text-peak-text text-sm font-medium truncate">{item.label}</p><p className="text-peak-text-secondary text-xs truncate">{item.sublabel}</p></div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
   const { session } = useTripPlanner();
+  const { profile, updateProfile } = useProfile();
   const t = useT();
-  const days = session?.dates?.nights ? session.dates.nights + 1 : (agentServiceDetails?.days || 3);
-  const destination = session?.destination?.label || agentServiceDetails?.destination || "";
+  // Never auto-read destination or days from session — prevents home-search contamination
+  const [localDays, setLocalDays] = useState(null);
+  const days = localDays || (session?.dates?.nights ? session.dates.nights + 1 : null);
+  const [selectedDestination, setSelectedDestination] = useState(null);
+  const destination = selectedDestination?.label || agentServiceDetails?.destination || "";
 
+  const [panelSchool, setPanelSchool] = useState(null);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("recommended");
   const [filterLevels, setFilterLevels] = useState([]);
@@ -406,8 +450,8 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       <div className="mb-6">
         <h2 className="font-display font-extrabold text-3xl text-peak-text mb-1">{t("ski_school_tab")}</h2>
         <p className="text-peak-text-secondary text-sm">
-          {destination ? `${t("schools_near") || "Schools near"} ${destination}` : t("choose_school")}
-          {days > 1 ? ` · ${days} ${t("nights")}` : ""}
+          {destination ? `Schools near ${destination}` : "Browse ski schools — search for a resort above"}
+          {days ? ` · ${days} ${days === 1 ? "day" : "days"}` : ""}
         </p>
       </div>
 
