@@ -755,7 +755,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
                   school={school}
                   lessonType={filterLessonType}
                   days={days}
-                  onOpenPanel={() => { setWizardActive(true); setWizardStep(1); setWizardParticipants([]); setWizardCourse(null); setWizardSchedule(null); setWizardSchool(null); }}
+                  onOpenPanel={s => { setWizardSchool(s); setWizardActive(true); setWizardStep(1); setWizardParticipants([]); setWizardCourse(null); setWizardSchedule(null); }}
                   t={t}
                 />
               ))}
@@ -771,13 +771,21 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
           <div className="max-w-3xl mx-auto px-4 py-8">
             {/* Progress */}
             <div className="flex items-center gap-2 mb-8">
-              {["Who","Course","Schedule","School","Checkout"].map((label, i) => (
+              {["Who","Course","Schedule","Checkout"].map((label, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${wizardStep > i+1 ? "bg-peak-red border-peak-red text-white" : wizardStep === i+1 ? "border-peak-red text-peak-red bg-transparent" : "border-white/20 text-peak-text-secondary"}`}>
-                    {wizardStep > i+1 ? "✓" : i+1}
-                  </div>
-                  <span className={`text-xs hidden sm:block ${wizardStep === i+1 ? "text-peak-text font-semibold" : "text-peak-text-secondary"}`}>{label}</span>
-                  {i < 4 && <div className={`h-px w-8 sm:w-16 ${wizardStep > i+1 ? "bg-peak-red" : "bg-white/10"}`} />}
+                  {(() => {
+                    const stepMap = [1, 2, 3, 5];
+                    const actual = stepMap[i];
+                    const done = wizardStep > actual || (wizardStep === 5 && actual < 5);
+                    const active = wizardStep === actual;
+                    return <>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${done ? "bg-peak-red border-peak-red text-white" : active ? "border-peak-red text-peak-red bg-transparent" : "border-white/20 text-peak-text-secondary"}`}>
+                        {done ? "✓" : i+1}
+                      </div>
+                      <span className={`text-xs hidden sm:block ${active ? "text-peak-text font-semibold" : "text-peak-text-secondary"}`}>{label}</span>
+                      {i < 3 && <div className={`h-px w-8 sm:w-16 ${done ? "bg-peak-red" : "bg-white/10"}`} />}
+                    </>;
+                  })()}
                 </div>
               ))}
             </div>
@@ -787,9 +795,8 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
             </button>
             {wizardStep === 1 && <WizardStep1Who onNext={p => { setWizardParticipants(p); setWizardStep(2); }} />}
             {wizardStep === 2 && <WizardStep2Course onNext={c => { setWizardCourse(c); setWizardStep(3); }} onBack={() => setWizardStep(1)} />}
-            {wizardStep === 3 && <WizardStep3Schedule participants={wizardParticipants} onNext={s => { setWizardSchedule(s); setWizardStep(4); }} onBack={() => setWizardStep(2)} />}
-            {wizardStep === 4 && <WizardStep4School schools={SCHOOLS} schedule={wizardSchedule || {}} onNext={s => { setWizardSchool(s); setWizardStep(5); }} onBack={() => setWizardStep(3)} />}
-            {wizardStep === 5 && <WizardStep5Checkout participants={wizardParticipants} course={wizardCourse} schedule={wizardSchedule} school={wizardSchool} onConfirm={booking => { onBook?.(`${booking.school.name} — ski lesson`, booking.total, booking); setWizardActive(false); }} onBack={() => setWizardStep(4)} />}
+                        {wizardStep === 3 && <WizardStep3Schedule participants={wizardParticipants} onNext={s => { setWizardSchedule(s); setWizardStep(5); }} onBack={() => setWizardStep(2)} />}
+            {wizardStep === 5 && <WizardStep5Checkout participants={wizardParticipants} course={wizardCourse} schedule={wizardSchedule} school={wizardSchool} onConfirm={booking => { onBook?.(`${booking.school.name} — ski lesson`, booking.total, booking); setWizardActive(false); }} onBack={() => setWizardStep(3)} />}
           </div>
         </div>
       )}
