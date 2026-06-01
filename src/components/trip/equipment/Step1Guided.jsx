@@ -261,7 +261,7 @@ export default function Step1Guided({ selectedEquipment, answers, setAnswers, on
         </div>
         <div className="flex gap-3">
           <button onClick={prev} className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm rounded-xl transition-colors">Back</button>
-          <button onClick={onContinue} className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">Find rental shops</button>
+          <button onClick={onContinue} className="px-8 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white font-display font-bold text-sm rounded-xl transition-colors">Confirm reservation</button>
         </div>
       </div>
     );
