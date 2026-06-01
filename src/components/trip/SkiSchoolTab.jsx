@@ -450,7 +450,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
-  const dest = destination.toLowerCase();
+  const dest = destinationLabel.toLowerCase();
   const isHochkonig = dest.includes("hochkönig") || dest.includes("hochkonig") || dest.includes("maria alm");
   const isKitzArea = dest.includes("kitzbühel") || dest.includes("kitzbuehel") || dest.includes("kitzbuhel")
     || dest.includes("kitz ski") || dest.includes("skiwelt") || dest.includes("ski welt")
@@ -491,7 +491,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
       <div className="mb-6">
         <h2 className="font-display font-extrabold text-3xl text-peak-text mb-1">{t("ski_school_tab")}</h2>
         <p className="text-peak-text-secondary text-sm">
-          {destination ? `${t("schools_near") || "Schools near"} ${destination}` : t("choose_school")}
+          {destinationLabel ? `${t("schools_near") || "Schools near"} ${destinationLabel}` : t("choose_school")}
           {days > 1 ? ` · ${days} ${t("nights")}` : ""}
         </p>
       </div>

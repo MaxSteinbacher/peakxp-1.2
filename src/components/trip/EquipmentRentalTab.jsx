@@ -301,7 +301,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
     setArr(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   }
 
-  const isHochkonig = destination.toLowerCase().includes("hochkönig") || destination.toLowerCase().includes("hochkonig") || destination.toLowerCase().includes("maria alm");
+  const isHochkonig = destinationLabel.toLowerCase().includes("hochkönig") || destinationLabel.toLowerCase().includes("hochkonig") || destinationLabel.toLowerCase().includes("maria alm");
 
   const filtered = useMemo(() => {
     let res = [...SHOPS];
