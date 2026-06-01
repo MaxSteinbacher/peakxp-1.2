@@ -519,7 +519,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
                   school={school}
                   lessonType={filterLessonType}
                   days={days}
-                  onBook={s => onBook?.(
+                  onOpenPanel={s => onBook?.(
                     `${s.name} — ${t(LESSON_TYPES.find(l => l.key === filterLessonType)?.labelKey || filterLessonType)}`,
                     (filterLessonType === "private" ? s.pricePrivate : filterLessonType === "full_day" ? s.priceFullDay : s.priceHalfDay || 0) * days,
                     { school: s.name, lessonType: filterLessonType, days, sport: filterSport }
@@ -532,20 +532,7 @@ export default function SkiSchoolTab({ agentServiceDetails = {}, onBook }) {
         </div>
       </div>
 
-      {panelSchool && (
-        <LessonPanel
-          school={panelSchool}
-          lessonType={filterLessonType}
-          days={days}
-          profile={profile}
-          updateProfile={updateProfile}
-          onClose={() => setPanelSchool(null)}
-          onConfirm={booking => {
-            onBook?.(booking.label, booking.price, booking);
-            setPanelSchool(null);
-          }}
-        />
-      )}
+
     </div>
   );
 }
