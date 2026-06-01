@@ -602,7 +602,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                   shop={shop}
                   sportType={filterSport}
                   days={days}
-                  onOpenPanel={s => { setPreselectedShop(s); setWizardActive(true); setWizardStep(0); setWizardEquipment([]); setWizardMode(null); setWizardSpecs({}); setWizardAnswers({}); setWizardSelectedShop(null); setWizardShop(null); }}
+                  onOpenPanel={s => { setPreselectedShop(s); setWizardShop(s); setWizardActive(true); setWizardStep(0); setWizardEquipment([]); setWizardMode(null); setWizardSpecs({}); setWizardAnswers({}); setWizardSelectedShop(s); }}
                   t={t}
                 />
               ))}
@@ -642,7 +642,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                 selectedEquipment={wizardEquipment}
                 answers={wizardAnswers}
                 setAnswers={setWizardAnswers}
-                onContinue={() => { setWizardSpecs(wizardAnswers); setWizardStep(2); }}
+                onContinue={() => { setWizardSpecs(wizardAnswers); if (preselectedShop) { setWizardShop(preselectedShop); setWizardStep(3); } else setWizardStep(2); }}
               />
             )}
             {wizardStep === 2 && (
@@ -660,7 +660,7 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                 shop={wizardShop}
                 answers={wizardAnswers}
                 onBook={(label, price, details) => { onBook?.(label, price, details); setWizardActive(false); }}
-                onBack={() => setWizardStep(2)}
+                onBack={() => preselectedShop ? setWizardStep(1) : setWizardStep(2)}
               />
             )}
           </div>
