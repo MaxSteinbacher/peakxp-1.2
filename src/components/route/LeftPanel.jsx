@@ -15,7 +15,7 @@ function Toggle({ checked, onChange }) {
 
 const TYPE_COLORS = { start: "#2d6a4f", waypoint: "#FB343D", end: "#1a1a2e" };
 
-export default function LeftPanel({ routePoints, onDelete, onRename, onTypeChange, onClear, onReverse, onReorder, savedRoutes, onLoadRoute, routeMode, setRouteMode, routeModes = [] }) {
+export default function LeftPanel({ routePoints, onDelete, onRename, onTypeChange, onClear, onReverse, onReorder, savedRoutes, onLoadRoute, routeMode, setRouteMode, routeModes = [], onUndo, canUndo }) {
   function handleDragStart(e, idx) { e.dataTransfer.setData("dragIdx", idx); }
   function handleDrop(e, idx) {
     const from = parseInt(e.dataTransfer.getData("dragIdx"));
@@ -46,7 +46,10 @@ export default function LeftPanel({ routePoints, onDelete, onRename, onTypeChang
                 className="flex items-center gap-2 py-2 border-b border-white/5 cursor-grab group"
               >
                 <GripVertical className="h-3.5 w-3.5 text-peak-text-secondary/40 flex-shrink-0" />
-                <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: TYPE_COLORS[pt.type] || "#FB343D", border: "1.5px solid rgba(255,255,255,0.3)" }} />
+                <span className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold"
+                  style={{ background: TYPE_COLORS[pt.type] || "#FB343D", fontSize: 9, border: "1.5px solid rgba(255,255,255,0.3)" }}>
+                  {pt.type === "start" ? "S" : pt.type === "end" ? "E" : idx + 1}
+                </span>
                 <input
                   className="flex-1 bg-transparent text-peak-text text-xs outline-none min-w-0"
                   value={pt.name}
