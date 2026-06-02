@@ -21,6 +21,7 @@ import TripPlanning from './pages/TripPlanning';
 import ExpertAgents from './pages/ExpertAgents';
 import Community from './pages/Community';
 import ResortRoutePlanner from './pages/ResortRoutePlanner';
+import GlobalHeatmap from './pages/GlobalHeatmap';
 import HotelDetail from './pages/HotelDetail';
 import TripPlannerFlow from './pages/TripPlannerFlow';
 import TripSummary from './pages/TripSummary';
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/search" element={<Search />} />
         <Route path="/resort/:id" element={<ResortDetail />} />
         <Route path="/resort/:id/map" element={<ResortRoutePlanner />} />
+        <Route path="/activity-map" element={<GlobalHeatmap />} />
         <Route path="/hotel/:id" element={<HotelDetail />} />
         <Route path="/plan" element={<TripPlannerFlow />} />
         <Route path="/plan/summary" element={<TripSummary />} />
