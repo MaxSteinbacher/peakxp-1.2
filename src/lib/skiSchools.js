@@ -115,7 +115,7 @@ export const SKI_SCHOOLS = [
     rating: 4.9,
     reviews: 210,
     verified: true,
-    partner: true,
+    partner: false,
     heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7d11e749c_Familie_Skifahren_Winter_24_25MirjaGeh_03.jpg",
     images: [
       "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7d11e749c_Familie_Skifahren_Winter_24_25MirjaGeh_03.jpg",
@@ -232,7 +232,7 @@ export const SKI_SCHOOLS = [
     rating: 4.9,
     reviews: 78,
     verified: true,
-    partner: true,
+    partner: false,
     heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/d6ee6393f_Skifahren_Winter_24_25MirjaGeh_15.jpg",
     images: [
       "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/d6ee6393f_Skifahren_Winter_24_25MirjaGeh_15.jpg",

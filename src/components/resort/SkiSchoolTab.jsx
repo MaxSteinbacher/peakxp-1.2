@@ -17,10 +17,12 @@ function PartnerSchoolCard({ school }) {
           className="w-full h-full object-cover"
         />
         {/* Partner badge */}
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-peak-blue text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-          <Award className="w-3 h-3" />
-          PeakXP Partner
-        </div>
+        {school.partner && (
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-peak-blue text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+            <Award className="w-3 h-3" />
+            PeakXP Partner
+          </div>
+        )}
         {/* Thumbnail strip */}
         <div className="absolute bottom-3 right-3 flex gap-1.5">
           {school.images.slice(0, 5).map((img, i) => (
@@ -175,9 +177,9 @@ export default function SkiSchoolTab({ resort }) {
       {partnerSchools.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <h3 className="font-display font-bold text-peak-text text-xl">Featured Ski Schools</h3>
+            <h3 className="font-display font-bold text-peak-text text-xl">Ski Schools at This Resort</h3>
             <span className="bg-peak-blue/10 text-peak-blue text-xs font-semibold px-2.5 py-0.5 rounded-full">
-              PeakXP Partner
+              {partnerSchools.length} schools
             </span>
           </div>
           <div className="space-y-4">
