@@ -116,9 +116,9 @@ export const SKI_SCHOOLS = [
     reviews: 210,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Ski- & Snowboardschule Silvia Grillitsch & Partner is one of Obertauern's most established schools, offering ski and snowboard lessons for all levels from absolute beginners to advanced freeriders. Also offers Airboarding — Obertauern's unique high-speed air-cushion body boarding experience.",
     highlights: [
@@ -144,9 +144,9 @@ export const SKI_SCHOOLS = [
     reviews: 156,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Ski- & Snowboardschule Frau Holle offers quality ski and snowboard instruction in Obertauern for all ages and abilities, with a warm and personal approach.",
     highlights: ["Group & private ski lessons", "Snowboard instruction", "Kids programmes"],
@@ -166,9 +166,9 @@ export const SKI_SCHOOLS = [
     reviews: 98,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Skischule Koch is Obertauern's go-to school for snowbike rental and instruction — a unique Obertauern speciality. Also offers ski lessons and ski touring.",
     highlights: ["Snowbike school & rental", "Ski lessons all levels", "Ski touring on request"],
@@ -188,9 +188,9 @@ export const SKI_SCHOOLS = [
     reviews: 122,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Ski- & Snowboardschule Krallinger offers expert ski and snowboard tuition for all levels. Known for attentive instruction and small group sizes.",
     highlights: ["Ski & snowboard all levels", "Small groups", "Kids & adult courses"],
@@ -210,9 +210,9 @@ export const SKI_SCHOOLS = [
     reviews: 89,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Ski- & Snowboardschule Top delivers professional ski and snowboard courses in Obertauern, focusing on technical progression and fun for all ages.",
     highlights: ["Ski & snowboard lessons", "Technique focused", "All ages & levels"],
@@ -232,9 +232,9 @@ export const SKI_SCHOOLS = [
     reviews: 78,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Local Guides am Tauern is Obertauern's premier freeride centre and ski school. Their expert local guides know every powder stash and off-piste line — from the Tiefschnee-Runs off Hochalmbahn and Kringsalmbahn to ski touring in the surrounding Radstädter Tauern. Freeride courses include LVS beacon training, avalanche safety, snow science, and terrain assessment.",
     highlights: [
@@ -262,9 +262,9 @@ export const SKI_SCHOOLS = [
     reviews: 134,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Snowboardschule Blue Tomato is Obertauern's specialist snowboard school — the only dedicated snowboard school in the resort. Beginners to advanced, freestyle, freeriding and off-piste carving.",
     highlights: ["Dedicated snowboard school", "Beginners to advanced", "Freestyle & freeride", "All ages"],
@@ -284,9 +284,9 @@ export const SKI_SCHOOLS = [
     reviews: 62,
     verified: true,
     partner: false,
-    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    heroImage: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     ],
     description: "Langlaufschule Gnadenalm runs Obertauern's dedicated cross-country skiing school from the Gnadenalm — 5km north of the resort. Instruction in both classic and skating style on the 20km Gnadenalmloipe. Also organises laser biathlon sessions and night sledging.",
     highlights: [

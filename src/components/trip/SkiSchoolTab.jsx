@@ -80,7 +80,7 @@ const SCHOOLS = [
   },
   {
     id: "skischule-silvia-grillitsch", name: "Ski- & Snowboardschule Silvia Grillitsch & Partner", badge: "local_favourite",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.9, reviews: 210,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -99,7 +99,7 @@ const SCHOOLS = [
   },
   {
     id: "skischule-frau-holle", name: "Ski- & Snowboardschule Frau Holle", badge: "local_favourite",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.8, reviews: 156,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -118,7 +118,7 @@ const SCHOOLS = [
   },
   {
     id: "skischule-koch-obertauern", name: "Skischule Koch", badge: "local_favourite",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.7, reviews: 98,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -137,7 +137,7 @@ const SCHOOLS = [
   },
   {
     id: "skischule-krallinger", name: "Ski- & Snowboardschule Krallinger", badge: "local_favourite",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.8, reviews: 122,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -156,7 +156,7 @@ const SCHOOLS = [
   },
   {
     id: "skischule-top-obertauern", name: "Ski- & Snowboardschule Top", badge: "local_favourite",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.7, reviews: 89,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -175,7 +175,7 @@ const SCHOOLS = [
   },
   {
     id: "local-guides-am-tauern", name: "Local Guides am Tauern — Freeride Center", badge: "off_piste",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.9, reviews: 78,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -194,7 +194,7 @@ const SCHOOLS = [
   },
   {
     id: "snowboardschule-blue-tomato-obertauern", name: "Snowboardschule Blue Tomato", badge: "expert_pick",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.8, reviews: 134,
     location: "Obertauern, Salzburg, Austria",
     languages: ["German", "English"],
@@ -213,7 +213,7 @@ const SCHOOLS = [
   },
   {
     id: "langlaufschule-gnadenalm-obertauern", name: "Langlaufschule Gnadenalm", badge: "cross_country",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b84a745d6_image.png",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5ae727518_image.png",
     rating: 4.8, reviews: 62,
     location: "Gnadenalm, near Obertauern",
     languages: ["German", "English"],
