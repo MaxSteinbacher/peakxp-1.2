@@ -62,8 +62,8 @@ async function fetchElevation(lon, lat) {
 
 // ─── Piste graph router ────────────────────────────────────────────────────
 // Grid-snapped node keys so nearby coords share the same bucket
-function gridKey(lon, lat, res = 4) {
-  return `${(lon * res).toFixed(0)},${(lat * res).toFixed(0)}`;
+function gridKey(lon, lat, res = 10000) {
+  return `${Math.round(lon * res)},${Math.round(lat * res)}`;
 }
 
 function buildPisteGraph(features) {
@@ -130,7 +130,7 @@ function dijkstra(graph, startCoord, endCoord) {
 
   const { idx: S, dist: dS } = nearest(startCoord);
   const { idx: E, dist: dE } = nearest(endCoord);
-  if (S < 0 || E < 0 || dS > 1.5 || dE > 1.5) return null; // >1.5 km from any piste
+  if (S < 0 || E < 0 || dS > 2.0 || dE > 2.0) return null; // >2km from any piste
 
   if (S === E) return [startCoord, endCoord];
 
@@ -141,11 +141,29 @@ function dijkstra(graph, startCoord, endCoord) {
   const visited = new Uint8Array(nodeCoords.length);
 
   // Min-heap via sorted array (sufficient for ~5k nodes)
-  const pq = [[0, S]];
+  // Simple binary min-heap — much faster than pq.sort for large graphs
+  const heap = [[0, S]];
+  function heapPush(item) {
+    heap.push(item);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (heap[p][0] <= heap[i][0]) break;
+      [heap[p], heap[i]] = [heap[i], heap[p]]; i = p;
+    }
+  }
+  function heapPop() {
+    const top = heap[0]; const last = heap.pop();
+    if (heap.length) { heap[0] = last; let i = 0;
+      while (true) { let s = i, l = 2*i+1, r = 2*i+2;
+        if (l < heap.length && heap[l][0] < heap[s][0]) s = l;
+        if (r < heap.length && heap[r][0] < heap[s][0]) s = r;
+        if (s === i) break; [heap[i], heap[s]] = [heap[s], heap[i]]; i = s; } }
+    return top;
+  }
 
-  while (pq.length) {
-    pq.sort((a, b) => a[0] - b[0]);
-    const [d, u] = pq.shift();
+  while (heap.length) {
+    const [d, u] = heapPop();
     if (visited[u]) continue;
     visited[u] = 1;
     if (u === E) break;
@@ -155,7 +173,7 @@ function dijkstra(graph, startCoord, endCoord) {
         distArr[to] = nd;
         prevNode[to] = u;
         prevEdgeIdx[to] = idx;
-        pq.push([nd, to]);
+        heapPush([nd, to]);
       }
     }
   }
@@ -224,6 +242,7 @@ export default function ResortRoutePlanner() {
   const [savedRoutes, setSavedRoutes] = useState([]);
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
+  const [undoStack, setUndoStack] = useState([]); // stack of {points, path} snapshots
 
   useEffect(() => { routeRef.current = routePoints; }, [routePoints]);
   useEffect(() => { routeModeRef.current = routeMode; }, [routeMode]);
@@ -346,6 +365,8 @@ export default function ResortRoutePlanner() {
           const prev = routeRef.current;
           const newPt = { id: Date.now(), lngLat: coord, name: snapName || `Point ${prev.length + 1}`, elevation, type: prev.length === 0 ? "start" : "waypoint" };
           const newPts = [...prev, newPt];
+          // Save undo snapshot
+          setUndoStack(stack => [...stack.slice(-20), { points: prev, path: pathRef.current }]);
           setRoutePoints(newPts);
 
           // Update point markers
@@ -398,6 +419,23 @@ export default function ResortRoutePlanner() {
   }
   function handleReverse() { setRoutePoints(prev => [...prev].reverse()); }
   function handleReorder(arr) { setRoutePoints(arr); }
+  function handleUndo() {
+    setUndoStack(stack => {
+      if (!stack.length) return stack;
+      const last = stack[stack.length - 1];
+      const newStack = stack.slice(0, -1);
+      setRoutePoints(last.points);
+      setRoutePathCoords(last.path);
+      const lineSrc = mapInstance.current?.getSource("route-line");
+      const ptSrc = mapInstance.current?.getSource("route-points");
+      if (lineSrc) lineSrc.setData(last.path.length >= 2
+        ? { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: last.path }, properties: {} }] }
+        : EMPTY_FC);
+      if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: last.points.map((p,i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+      return newStack;
+    });
+  }
+
   function handleSave() {
     if (routePoints.length < 2 || !resort) return;
     const route = { id: Date.now(), name: `Route at ${resort.name}`, resortId: resort.id, resortName: resort.name, points: routePoints, pathCoords: routePathCoords, stats, createdAt: new Date().toISOString() };
@@ -451,7 +489,8 @@ export default function ResortRoutePlanner() {
             onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange}
             onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder}
             savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute}
-            routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
+            routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES}
+            onUndo={handleUndo} canUndo={undoStack.length > 0} />
         </div>
 
         {/* Map */}
@@ -475,7 +514,7 @@ export default function ResortRoutePlanner() {
                 <span className="font-bold text-peak-text text-sm">Route & Layers</span>
                 <button onClick={() => setLeftOpen(false)} className="text-peak-text-secondary text-xl leading-none">×</button>
               </div>
-              <LeftPanel routePoints={routePoints} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} />
+              <LeftPanel routePoints={routePoints} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} onUndo={handleUndo} canUndo={undoStack.length > 0} />
             </div>
             <div className="flex-1" onClick={() => setLeftOpen(false)} />
           </div>
