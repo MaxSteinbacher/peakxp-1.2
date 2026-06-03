@@ -259,18 +259,7 @@ export default function ResortsTab({ standalone = false }) {
                 <Link key={resort.id} to={`/resort/${resort.id}`}
                   className="group bg-peak-card border border-white/5 hover:border-peak-blue/30 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1">
                   <div className="relative h-44 overflow-hidden">
-                    {resort.videos && resort.videos.length > 0 ? (
-                      <video
-                        src={resort.videos[0].url}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <img src={resort.image} alt={resort.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    )}
+                    <img src={resort.image} alt={resort.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 left-3 bg-peak-bg/80 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-medium text-peak-text">
                       {resort.flag} {Array.isArray(resort.country) ? resort.country[0] : resort.country}
                     </div>
