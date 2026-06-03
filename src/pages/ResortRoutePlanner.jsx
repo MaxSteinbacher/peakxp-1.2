@@ -77,20 +77,7 @@ function buildPisteGraph(features) {
     return coordGrid.get(k);
   }
 
-  // Elevation from lat — crude approximation using coord[2] if available
-  function elev(c) { return c[2] ?? null; }
-
-  // Grade = elevation drop / horizontal distance (positive = downhill)
-  function grade(from, to) {
-    const eFrom = elev(from), eTo = elev(to);
-    if (eFrom == null || eTo == null) return null;
-    const drop = eFrom - eTo; // positive = downhill
-    const horiz = haversineKm(from, to) * 1000; // metres
-    return horiz > 0 ? drop / horiz : 0; // fraction, positive = downhill
-  }
-
   const DIFF_WEIGHT = { novice: 1, easy: 1, beginner: 1, intermediate: 1.3, advanced: 1.8, expert: 2.5, freeride: 2.5 };
-  const FLAT_THRESHOLD = 0.04; // <4% grade = bidirectional
 
   features.forEach(f => {
     if (f.geometry.type !== "LineString") return;
@@ -99,7 +86,7 @@ function buildPisteGraph(features) {
     if (!isLift && !isPiste) return;
 
     const diff = f.properties["piste:difficulty"] || "intermediate";
-    const baseW = isLift ? 0.4 : (DIFF_WEIGHT[diff] ?? 1.3);
+    const w = isLift ? 0.4 : (DIFF_WEIGHT[diff] ?? 1.3);
     const coords = f.geometry.coordinates;
 
     for (let i = 0; i < coords.length - 1; i++) {
@@ -107,44 +94,11 @@ function buildPisteGraph(features) {
       const b = getNode(coords[i + 1]);
       if (a === b) continue;
       const d = haversineKm(coords[i], coords[i + 1]);
-      const g = grade(coords[i], coords[i + 1]); // positive = downhill i→j
-      const fwd = [coords[i], coords[i + 1]];
-      const bwd = [coords[i + 1], coords[i]];
-
-      if (isLift) {
-        // Lifts only go in their stored direction (uphill in OSM)
-        // OSM aerialways: stored bottom → top
-        // So forward = uphill (valid for lift), reverse = downhill on lift (forbidden)
-        edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
-        // Do NOT add reverse lift edge — you can't ride a lift down
-      } else {
-        // Piste: determine direction from elevation or OSM storage (top→bottom)
-        // If elevation data: forward is downhill if g > FLAT_THRESHOLD
-        // If no elevation: OSM pistes are usually stored top→bottom, so forward = downhill
-        const hasElev = elev(coords[i]) != null && elev(coords[i + 1]) != null;
-        
-        if (hasElev) {
-          const isFlatSeg = Math.abs(g) < FLAT_THRESHOLD;
-          if (g >= -FLAT_THRESHOLD) {
-            // Forward is downhill or flat — allow it
-            edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
-          }
-          if (g <= FLAT_THRESHOLD) {
-            // Backward is downhill or flat — allow it  
-            edges.push({ from: b, to: a, dist: d * baseW, segCoords: bwd });
-          }
-        } else {
-          // No elevation data — use heuristic: forward allowed (assume OSM top→bottom)
-          // Also allow reverse with a heavy penalty (connectivity fallback only)
-          edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
-          edges.push({ from: b, to: a, dist: d * baseW * 12, segCoords: bwd }); // heavy uphill penalty
-        }
-      }
+      // Both directions — ensures fully connected graph so Dijkstra always finds a path
+      edges.push({ from: a, to: b, dist: d * w,      segCoords: [coords[i], coords[i+1]] });
+      edges.push({ from: b, to: a, dist: d * w * 1.5, segCoords: [coords[i+1], coords[i]] });
     }
   });
-
-  // Add lift→piste connections: where lift top station is near a piste start, connect them
-  // (This happens naturally via node merging with gridKey)
 
   const adj = new Map();
   edges.forEach((e, idx) => {
