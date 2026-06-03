@@ -67,19 +67,30 @@ function gridKey(lon, lat, res = 10000) {
 }
 
 function buildPisteGraph(features) {
-  // Two-pass: first collect all coords, then merge nearby nodes via grid
-  const coordGrid = new Map(); // gridKey → nodeIdx
-  const nodeCoords = [];       // nodeIdx → [lon, lat]
+  const coordGrid = new Map();
+  const nodeCoords = [];
   const edges = [];
 
   function getNode(c) {
     const k = gridKey(c[0], c[1]);
-    if (!coordGrid.has(k)) {
-      coordGrid.set(k, nodeCoords.length);
-      nodeCoords.push(c);
-    }
+    if (!coordGrid.has(k)) { coordGrid.set(k, nodeCoords.length); nodeCoords.push(c); }
     return coordGrid.get(k);
   }
+
+  // Elevation from lat — crude approximation using coord[2] if available
+  function elev(c) { return c[2] ?? null; }
+
+  // Grade = elevation drop / horizontal distance (positive = downhill)
+  function grade(from, to) {
+    const eFrom = elev(from), eTo = elev(to);
+    if (eFrom == null || eTo == null) return null;
+    const drop = eFrom - eTo; // positive = downhill
+    const horiz = haversineKm(from, to) * 1000; // metres
+    return horiz > 0 ? drop / horiz : 0; // fraction, positive = downhill
+  }
+
+  const DIFF_WEIGHT = { novice: 1, easy: 1, beginner: 1, intermediate: 1.3, advanced: 1.8, expert: 2.5, freeride: 2.5 };
+  const FLAT_THRESHOLD = 0.04; // <4% grade = bidirectional
 
   features.forEach(f => {
     if (f.geometry.type !== "LineString") return;
@@ -88,22 +99,52 @@ function buildPisteGraph(features) {
     if (!isLift && !isPiste) return;
 
     const diff = f.properties["piste:difficulty"] || "intermediate";
-    const WEIGHT = { easy: 1, novice: 1, beginner: 1, intermediate: 1.4, advanced: 2, expert: 3 };
-    const w = isLift ? 0.5 : (WEIGHT[diff] ?? 1.4);
-
+    const baseW = isLift ? 0.4 : (DIFF_WEIGHT[diff] ?? 1.3);
     const coords = f.geometry.coordinates;
+
     for (let i = 0; i < coords.length - 1; i++) {
       const a = getNode(coords[i]);
       const b = getNode(coords[i + 1]);
       if (a === b) continue;
       const d = haversineKm(coords[i], coords[i + 1]);
-      const segCoords = [coords[i], coords[i + 1]];
-      edges.push({ from: a, to: b, dist: d * w, segCoords });
-      // Add reverse edge: lifts go both ways; pistes also added in reverse
-      // with higher cost (going uphill on piste = almost impossible but keep connected)
-      edges.push({ from: b, to: a, dist: d * (isLift ? w : w * 8), segCoords: [coords[i+1], coords[i]] });
+      const g = grade(coords[i], coords[i + 1]); // positive = downhill i→j
+      const fwd = [coords[i], coords[i + 1]];
+      const bwd = [coords[i + 1], coords[i]];
+
+      if (isLift) {
+        // Lifts only go in their stored direction (uphill in OSM)
+        // OSM aerialways: stored bottom → top
+        // So forward = uphill (valid for lift), reverse = downhill on lift (forbidden)
+        edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
+        // Do NOT add reverse lift edge — you can't ride a lift down
+      } else {
+        // Piste: determine direction from elevation or OSM storage (top→bottom)
+        // If elevation data: forward is downhill if g > FLAT_THRESHOLD
+        // If no elevation: OSM pistes are usually stored top→bottom, so forward = downhill
+        const hasElev = elev(coords[i]) != null && elev(coords[i + 1]) != null;
+        
+        if (hasElev) {
+          const isFlatSeg = Math.abs(g) < FLAT_THRESHOLD;
+          if (g >= -FLAT_THRESHOLD) {
+            // Forward is downhill or flat — allow it
+            edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
+          }
+          if (g <= FLAT_THRESHOLD) {
+            // Backward is downhill or flat — allow it  
+            edges.push({ from: b, to: a, dist: d * baseW, segCoords: bwd });
+          }
+        } else {
+          // No elevation data — use heuristic: forward allowed (assume OSM top→bottom)
+          // Also allow reverse with a heavy penalty (connectivity fallback only)
+          edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
+          edges.push({ from: b, to: a, dist: d * baseW * 12, segCoords: bwd }); // heavy uphill penalty
+        }
+      }
     }
   });
+
+  // Add lift→piste connections: where lift top station is near a piste start, connect them
+  // (This happens naturally via node merging with gridKey)
 
   const adj = new Map();
   edges.forEach((e, idx) => {
@@ -318,33 +359,44 @@ export default function ResortRoutePlanner() {
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
 
         // Fetch piste data from Overpass
-        const pad = 0.09;
-        const [S, N, W, E] = [lat-pad, lat+pad, lng-pad, lng+pad];
-        const query = `[out:json][timeout:20];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
+        // Larger bounding box: 0.25° ≈ 20-25km — covers most full resorts
+        // For very large ski areas (Ski Welt, Trois Vallées), this still covers the core
+        const pad = 0.25;
+        const lonPad = pad / Math.cos(lat * Math.PI / 180); // correct for longitude compression
+        const [S, N, W, E] = [lat-pad, lat+pad, lng-lonPad, lng+lonPad];
+        const query = `[out:json][timeout:40];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
         try {
           const ctrl = new AbortController();
-          setTimeout(() => ctrl.abort(), 18000);
+          setTimeout(() => ctrl.abort(), 38000);
           const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
           const data = await res.json();
           if (unmounted) return;
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
           map.addSource("openski-data", { type: "geojson", data: geojson });
-          [
-            { id: "osm-pistes-black", difficulty: "expert",                    color: "#2a2a2a", outline: "#ffffff", width: 5 },
-            { id: "osm-pistes-red",   difficulty: "advanced",                  color: "#e63946", outline: "#ffffff", width: 4 },
-            { id: "osm-pistes-blue",  difficulty: "intermediate",               color: "#2196F3", outline: "#ffffff", width: 4 },
-            { id: "osm-pistes-green", difficulty: ["easy","novice","beginner"], color: "#43a047", outline: "#ffffff", width: 4 },
-          ].forEach(({ id: lid, difficulty, color, outline, width }) => {
-            const filter = Array.isArray(difficulty)
-              ? ["in", ["get","piste:difficulty"], ["literal", difficulty]]
-              : ["==", ["get","piste:difficulty"], difficulty];
-            // White outline for readability
+          // Difficulty colour mapping — European Alpine standard:
+          // novice/easy → green (#43a047), intermediate → blue (#1565C0),
+          // advanced → red (#D32F2F), expert/freeride → black (#111111)
+          const PISTE_DEFS = [
+            { id: "px-green", values: ["novice","easy","beginner"],  color: "#43a047", outline: "rgba(255,255,255,0.6)", width: 3.5 },
+            { id: "px-blue",  values: ["intermediate"],              color: "#1565C0", outline: "rgba(255,255,255,0.6)", width: 3.5 },
+            { id: "px-red",   values: ["advanced"],                  color: "#D32F2F", outline: "rgba(255,255,255,0.6)", width: 3.5 },
+            { id: "px-black", values: ["expert","freeride"],         color: "#111111", outline: "rgba(255,255,255,0.7)", width: 4   },
+          ];
+          PISTE_DEFS.forEach(({ id: lid, values, color, outline, width }) => {
+            const filter = ["in", ["get","piste:difficulty"], ["literal", values]];
             map.addLayer({ id: lid + "-outline", type: "line", source: "openski-data", filter,
-              paint: { "line-color": outline, "line-width": width + 2, "line-opacity": 0.5 } });
+              paint: { "line-color": outline, "line-width": width + 2.5, "line-opacity": 0.7 },
+              layout: { "line-cap": "round", "line-join": "round" } });
             map.addLayer({ id: lid, type: "line", source: "openski-data", filter,
-              paint: { "line-color": color, "line-width": width, "line-opacity": 0.95 } });
+              paint: { "line-color": color, "line-width": width, "line-opacity": 1 },
+              layout: { "line-cap": "round", "line-join": "round" } });
           });
+          // Runs with no difficulty tag — show as grey
+          map.addLayer({ id: "px-unknown", type: "line", source: "openski-data",
+            filter: ["all", ["has","piste:type"], ["!", ["in", ["get","piste:difficulty"], ["literal", ["novice","easy","beginner","intermediate","advanced","expert","freeride"]]]]],
+            paint: { "line-color": "#888888", "line-width": 3, "line-opacity": 0.7 },
+            layout: { "line-cap": "round", "line-join": "round" } });
           map.addLayer({ id: "piste-labels", type: "symbol", source: "openski-data", filter: ["has","name"], layout: { "text-field": ["get","name"], "text-size": 11, "text-font": ["Open Sans Bold","Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff", "text-halo-color": "#0a0a1a", "text-halo-width": 1.5 } });
           map.addLayer({ id: "lifts-line", type: "line", source: "openski-data", filter: ["has","aerialway"], paint: { "line-color": "#FB343D", "line-width": 2, "line-dasharray": [2,1], "line-opacity": 0.85 } });
           map.addLayer({ id: "lifts-label", type: "symbol", source: "openski-data", filter: ["all",["has","aerialway"],["has","name"]], layout: { "text-field": ["get","name"], "text-size": 10, "text-font": ["Open Sans Regular","Arial Unicode MS Regular"] }, paint: { "text-color": "#FB343D", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
