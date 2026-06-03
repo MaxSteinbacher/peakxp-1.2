@@ -1,261 +1,592 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Download, Share2, Edit2, Trash2 } from "lucide-react";
-import PeakMap from "../components/shared/PeakMap";
-import BackButton from "../components/shared/BackButton";
-import { AreaChart, Area, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
-import { getActivityById, deleteActivity, exportActivityAsGPX, saveActivity } from "../lib/activities";
-import { toast } from "sonner";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeft, List, BarChart2 } from "lucide-react";
+import { getResortById } from "../lib/data";
+import LeftPanel from "../components/route/LeftPanel";
+import RightPanel from "../components/route/RightPanel";
 
-function fmtSec(s) {
-  if (!s) return "—";
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m ${sec}s`;
+const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
+const MAP_STYLE = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
+
+const ROUTE_MODES = [
+  { key: "fastest", label: "Fastest", icon: "⚡", desc: "Shortest path A to B" },
+  { key: "easy_only", label: "Easy only", icon: "🟢", desc: "Blue & green runs only" },
+  { key: "variety", label: "Best variety", icon: "🎿", desc: "Mix of difficulty levels" },
+  { key: "scenic", label: "Most scenic", icon: "🏔️", desc: "Longest, most scenic" },
+];
+
+const EMPTY_FC = { type: "FeatureCollection", features: [] };
+
+function haversineKm(a, b) {
+  const R = 6371;
+  const dLat = (b[1] - a[1]) * Math.PI / 180;
+  const dLon = (b[0] - a[0]) * Math.PI / 180;
+  const s = Math.sin(dLat/2)**2 + Math.cos(a[1]*Math.PI/180)*Math.cos(b[1]*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
 }
 
-function speedColor(spd) {
-  if (spd < 20) return "#3894E3";
-  if (spd < 40) return "#22c55e";
-  if (spd < 60) return "#eab308";
-  return "#FB343D";
+function calcStats(points, pathCoords) {
+  if (points.length < 2) return { distanceKm: "0.0", totalDescent: 0, totalAscent: 0, estimatedMinutes: 0 };
+  let dist = 0;
+  const coords = (pathCoords && pathCoords.length >= 2) ? pathCoords : points.map(p => p.lngLat);
+  for (let i = 1; i < coords.length; i++) dist += haversineKm(coords[i-1], coords[i]);
+  let descent = 0, ascent = 0;
+  for (let i = 1; i < points.length; i++) {
+    if (points[i].elevation != null && points[i-1].elevation != null) {
+      const diff = points[i-1].elevation - points[i].elevation;
+      if (diff > 0) descent += diff; else ascent += Math.abs(diff);
+    }
+  }
+  return { distanceKm: dist.toFixed(1), totalDescent: Math.round(descent), totalAscent: Math.round(ascent), estimatedMinutes: Math.round(dist / 30 * 60) };
 }
 
-export default function ActivityDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [activity, setActivity] = useState(null);
-  const [showDelete, setShowDelete] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editNotes, setEditNotes] = useState("");
-
-  useEffect(() => {
-    const act = getActivityById(id);
-    if (!act) { navigate("/tracking/log"); return; }
-    setActivity(act);
-    setEditName(act.name);
-    setEditNotes(act.notes || "");
-  }, [id]);
-
-  function addActivityRouteToMap(map, trackPoints) {
-    const pts = trackPoints || [];
-    if (pts.length === 0) return;
-    const sdk = window.maptilersdk;
-    pts.forEach((pt, i) => {
-      if (i === 0) return;
-      const prev = pts[i - 1];
-      const color = speedColor(pt.speed || 0);
-      map.addSource(`seg-${i}`, { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: [[prev.lon, prev.lat], [pt.lon, pt.lat]] } } });
-      map.addLayer({ id: `seg-${i}`, type: "line", source: `seg-${i}`, paint: { "line-color": color, "line-width": 4 }, layout: { "line-cap": "round" } });
+function nearestPointOnFeatures(coord, features) {
+  let best = null, bestDist = Infinity;
+  features.forEach(f => {
+    if (f.geometry.type !== "LineString") return;
+    f.geometry.coordinates.forEach(c => {
+      const d = Math.hypot(c[0]-coord[0], c[1]-coord[1]) * 111000;
+      if (d < bestDist) { bestDist = d; best = c; }
     });
-    const startEl = document.createElement("div");
-    startEl.style.cssText = "width:14px;height:14px;background:#22c55e;border-radius:50%;border:2px solid white;";
-    new sdk.Marker({ element: startEl }).setLngLat([pts[0].lon, pts[0].lat]).addTo(map);
-    const endEl = document.createElement("div");
-    endEl.style.cssText = "width:14px;height:14px;background:#FB343D;border:2px solid white;border-radius:2px;";
-    new sdk.Marker({ element: endEl }).setLngLat([pts[pts.length - 1].lon, pts[pts.length - 1].lat]).addTo(map);
+  });
+  return { point: best, dist: bestDist };
+}
+
+async function fetchElevation(lon, lat) {
+  try {
+    const res = await fetch(`https://api.maptiler.com/elevation/point?lon=${lon}&lat=${lat}&key=${MAPTILER_KEY}`);
+    const data = await res.json();
+    return data.elevation ?? null;
+  } catch { return null; }
+}
+
+// ─── Piste graph router ────────────────────────────────────────────────────
+// Grid-snapped node keys so nearby coords share the same bucket
+function gridKey(lon, lat, res = 10000) {
+  return `${Math.round(lon * res)},${Math.round(lat * res)}`;
+}
+
+function buildPisteGraph(features) {
+  const coordGrid = new Map();
+  const nodeCoords = [];
+  const edges = [];
+
+  function getNode(c) {
+    const k = gridKey(c[0], c[1]);
+    if (!coordGrid.has(k)) { coordGrid.set(k, nodeCoords.length); nodeCoords.push(c); }
+    return coordGrid.get(k);
   }
 
-  if (!activity) return null;
+  const DIFF_WEIGHT = { novice: 1, easy: 1, beginner: 1, intermediate: 1.3, advanced: 1.8, expert: 2.5, freeride: 2.5 };
 
-  const s = activity.stats || {};
-  const pts = activity.trackPoints || [];
+  features.forEach(f => {
+    if (f.geometry.type !== "LineString") return;
+    const isLift = !!f.properties["aerialway"];
+    const isPiste = !!f.properties["piste:type"];
+    if (!isLift && !isPiste) return;
 
-  const elevData = pts.filter((_, i) => i % 3 === 0).map((p, i) => ({ i, alt: Math.round(p.altitude || 0), spd: p.speed || 0 }));
-  const speedData = pts.filter((_, i) => i % 3 === 0).map((p, idx) => {
-    const ms = Math.floor(idx * 3);
-    return { t: `${Math.floor(ms / 60)}:${String(ms % 60).padStart(2, "0")}`, spd: Math.round(p.speed || 0) };
+    const diff = f.properties["piste:difficulty"] || "intermediate";
+    const w = isLift ? 0.4 : (DIFF_WEIGHT[diff] ?? 1.3);
+    const coords = f.geometry.coordinates;
+
+    for (let i = 0; i < coords.length - 1; i++) {
+      const a = getNode(coords[i]);
+      const b = getNode(coords[i + 1]);
+      if (a === b) continue;
+      const d = haversineKm(coords[i], coords[i + 1]);
+      // Both directions — ensures fully connected graph so Dijkstra always finds a path
+      edges.push({ from: a, to: b, dist: d * w,      segCoords: [coords[i], coords[i+1]] });
+      edges.push({ from: b, to: a, dist: d * w * 1.5, segCoords: [coords[i+1], coords[i]] });
+    }
   });
 
-  const totalTime = (s.durationSkiing || 0) + (s.durationLift || 0) + (s.durationIdle || 0) || 1;
+  const adj = new Map();
+  edges.forEach((e, idx) => {
+    if (!adj.has(e.from)) adj.set(e.from, []);
+    adj.get(e.from).push({ to: e.to, dist: e.dist, idx });
+  });
 
-  const statCards = [
-    ["Total Duration", fmtSec(s.durationTotal)],
-    ["Skiing Time", fmtSec(s.durationSkiing)],
-    ["Lift Time", fmtSec(s.durationLift)],
-    ["Idle Time", fmtSec(s.durationIdle)],
-    ["Downhill Distance", `${s.distanceDownhill?.toFixed(1) || 0} km`],
-    ["Vertical Descent", `${(s.verticalDescent || 0).toLocaleString()} m`],
-    ["Vertical Ascent", `${(s.verticalAscent || 0).toLocaleString()} m`],
-    ["Runs", s.runs || 0],
-    ["Max Speed", `${s.maxSpeed || 0} km/h`],
-    ["Avg Skiing Speed", `${s.avgSpeed || 0} km/h`],
-    ["Turns", s.turns || 0],
-    ["Max Altitude", s.maxAltitude ? `${s.maxAltitude} m` : "—"],
-    ["Min Altitude", s.minAltitude ? `${s.minAltitude} m` : "—"],
-    ["Start Altitude", s.startAltitude ? `${s.startAltitude} m` : "—"],
-  ];
+  return { nodeCoords, edges, adj };
+}
 
-  function handleDelete() {
-    deleteActivity(activity.id);
-    toast.success("Activity deleted");
-    navigate("/tracking/log");
+function dijkstra(graph, startCoord, endCoord) {
+  const { nodeCoords, edges, adj } = graph;
+  if (!nodeCoords.length) return null;
+
+  // Snap click coords to nearest node
+  function nearest(coord) {
+    let best = -1, bestD = Infinity;
+    for (let i = 0; i < nodeCoords.length; i++) {
+      const d = haversineKm(coord, nodeCoords[i]);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    return { idx: best, dist: bestD };
   }
 
-  function handleSaveEdit() {
-    const updated = { ...activity, name: editName, notes: editNotes };
-    saveActivity(updated);
-    setActivity(updated);
-    setShowEdit(false);
-    toast.success("Activity updated");
+  const { idx: S, dist: dS } = nearest(startCoord);
+  const { idx: E, dist: dE } = nearest(endCoord);
+  if (S < 0 || E < 0 || dS > 2.0 || dE > 2.0) return null; // >2km from any piste
+
+  if (S === E) return [startCoord, endCoord];
+
+  const distArr = new Float64Array(nodeCoords.length).fill(Infinity);
+  distArr[S] = 0;
+  const prevNode = new Int32Array(nodeCoords.length).fill(-1);
+  const prevEdgeIdx = new Int32Array(nodeCoords.length).fill(-1);
+  const visited = new Uint8Array(nodeCoords.length);
+
+  // Min-heap via sorted array (sufficient for ~5k nodes)
+  // Simple binary min-heap — much faster than pq.sort for large graphs
+  const heap = [[0, S]];
+  function heapPush(item) {
+    heap.push(item);
+    let i = heap.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (heap[p][0] <= heap[i][0]) break;
+      [heap[p], heap[i]] = [heap[i], heap[p]]; i = p;
+    }
   }
+  function heapPop() {
+    const top = heap[0]; const last = heap.pop();
+    if (heap.length) { heap[0] = last; let i = 0;
+      while (true) { let s = i, l = 2*i+1, r = 2*i+2;
+        if (l < heap.length && heap[l][0] < heap[s][0]) s = l;
+        if (r < heap.length && heap[r][0] < heap[s][0]) s = r;
+        if (s === i) break; [heap[i], heap[s]] = [heap[s], heap[i]]; i = s; } }
+    return top;
+  }
+
+  while (heap.length) {
+    const [d, u] = heapPop();
+    if (visited[u]) continue;
+    visited[u] = 1;
+    if (u === E) break;
+    for (const { to, dist: w, idx } of (adj.get(u) || [])) {
+      const nd = d + w;
+      if (nd < distArr[to]) {
+        distArr[to] = nd;
+        prevNode[to] = u;
+        prevEdgeIdx[to] = idx;
+        heapPush([nd, to]);
+      }
+    }
+  }
+
+  if (prevNode[E] === -1) return null;
+
+  // Reconstruct
+  const edgePath = [];
+  let cur = E;
+  while (prevEdgeIdx[cur] !== -1) {
+    edgePath.unshift(prevEdgeIdx[cur]);
+    cur = prevNode[cur];
+    if (cur === S) break;
+  }
+
+  const path = [];
+  edgePath.forEach(ei => {
+    const seg = edges[ei].segCoords;
+    if (!path.length) path.push(...seg);
+    else path.push(seg[1]);
+  });
+
+  return path.length >= 2 ? path : null;
+}
+
+function routeAlongPistes(start, end, graph) {
+  if (!graph?.nodeCoords?.length) return null;
+  try {
+    return dijkstra(graph, start, end);
+  } catch (e) {
+    console.warn("Routing error:", e);
+    return null;
+  }
+}
+
+function overpassToGeoJSON(data) {
+  const nodes = {};
+  data.elements.forEach(el => { if (el.type === "node") nodes[el.id] = [el.lon, el.lat]; });
+  const features = [];
+  data.elements.forEach(el => {
+    if (el.type === "way" && el.nodes) {
+      const coords = el.nodes.map(n => nodes[n]).filter(Boolean);
+      if (coords.length >= 2) features.push({ type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: { ...el.tags } });
+    }
+  });
+  return { type: "FeatureCollection", features };
+}
+
+export default function ResortRoutePlanner() {
+  const { id } = useParams();
+  const resort = getResortById(id);
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const geojsonRef = useRef(null);
+  const graphRef = useRef(null);
+  const routeRef = useRef([]);
+  const pathRef = useRef([]);
+  const routeModeRef = useRef("fastest");
+
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [overpassStatus, setOverpassStatus] = useState("loading");
+  const [routePoints, setRoutePoints] = useState([]);
+  const [routePathCoords, setRoutePathCoords] = useState([]);
+  const [routeMode, setRouteMode] = useState("fastest");
+  const [stats, setStats] = useState({ distanceKm: "0.0", totalDescent: 0, totalAscent: 0, estimatedMinutes: 0 });
+  const [savedRoutes, setSavedRoutes] = useState([]);
+  const [leftOpen, setLeftOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(false);
+  const [undoStack, setUndoStack] = useState([]); // stack of {points, path} snapshots
+
+  useEffect(() => { routeRef.current = routePoints; }, [routePoints]);
+  useEffect(() => { routeModeRef.current = routeMode; }, [routeMode]);
+  useEffect(() => { pathRef.current = routePathCoords; }, [routePathCoords]);
+
+  // Load saved routes
+  useEffect(() => {
+    if (!id) return;
+    try { const raw = localStorage.getItem(`routes:${id}`); if (raw) setSavedRoutes(JSON.parse(raw)); } catch {}
+  }, [id]);
+
+
+  // Re-route when mode changes
+  useEffect(() => {
+    const pts = routeRef.current;
+    if (pts.length < 2 || !geojsonRef.current) return;
+    (() => {
+      let combined = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, graphRef.current);
+        if (seg) combined = combined.concat(seg);
+        else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
+      }
+      setRoutePathCoords(combined);
+      const lineSrc = mapInstance.current?.getSource("route-line");
+      if (lineSrc && combined.length >= 2) {
+        lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: combined }, properties: {} }] });
+      }
+    })();
+  }, [routeMode]);
+
+  // Stats update
+  useEffect(() => {
+    setStats(calcStats(routePoints, routePathCoords));
+  }, [routePoints, routePathCoords]);
+
+  // ── Map initialization — same pattern as TrackingRecord ──────────────────
+  useEffect(() => {
+    if (!resort?.lat || !resort?.lng) { setLoading(false); return; }
+    const lat = resort.lat, lng = resort.lng;
+    let unmounted = false;
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
+    script.onload = () => {
+      if (unmounted) return;
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
+      document.head.appendChild(link);
+
+      const sdk = window.maptilersdk;
+      sdk.config.apiKey = MAPTILER_KEY;
+
+      const map = new sdk.Map({
+        container: mapRef.current,
+        style: MAP_STYLE,
+        center: [lng, lat],
+        zoom: 13,
+        pitch: 55,
+        bearing: 0,
+        terrain: { source: "terrain", exaggeration: 1.5 },
+      });
+
+      map.addControl(new sdk.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "bottom-right");
+      map.addControl(new sdk.ScaleControl({ unit: "metric" }), "bottom-left");
+
+      map.on("load", async () => {
+        if (unmounted) return;
+
+        // Pre-add route sources (layers added after piste data so they render on top)
+        map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
+        map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
+
+        // Add route layers immediately
+        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
+        map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 4, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+        map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+        map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
+
+        // Build routing graph from vector tiles already loaded in the map
+        function tryBuildGraph() {
+          if (unmounted) return false;
+          try {
+            // Query ALL line features with no filter — inspect what's available
+            const allFeatures = map.queryRenderedFeatures(undefined);
+            const lineFeatures = allFeatures.filter(f => f.geometry.type === "LineString");
+            
+            // Log unique layer IDs so we can identify piste layers
+            const layerIds = [...new Set(lineFeatures.map(f => f.layer?.id || "unknown"))];
+            console.log("[PeakXP] All line layer IDs:", layerIds);
+            
+            // Log sample properties from each layer
+            layerIds.slice(0, 10).forEach(lid => {
+              const sample = lineFeatures.find(f => (f.layer?.id || "unknown") === lid);
+              if (sample) console.log(`[PeakXP] Layer "${lid}" props:`, JSON.stringify(sample.properties).slice(0, 200));
+            });
+            
+            // Try multiple property patterns used by different MapTiler styles
+            const pisteLines = lineFeatures.filter(f => {
+              const p = f.properties || {};
+              const lid = (f.layer?.id || "").toLowerCase();
+              const srcLayer = (f.layer?.["source-layer"] || "").toLowerCase();
+              return (
+                p["piste:type"] ||
+                p.class === "piste" ||
+                p.subclass === "piste" ||
+                p.aerialway ||
+                lid.includes("piste") ||
+                lid.includes("ski") ||
+                lid.includes("slope") ||
+                lid.includes("aerial") ||
+                lid.includes("lift") ||
+                srcLayer.includes("piste") ||
+                srcLayer.includes("winter")
+              );
+            });
+            
+            console.log(`[PeakXP] Found ${lineFeatures.length} total lines, ${pisteLines.length} piste/lift lines`);
+            
+            if (pisteLines.length > 3) {
+              const mapped = pisteLines.map(f => ({
+                type: "Feature",
+                geometry: f.geometry,
+                properties: {
+                  "piste:type": f.properties["piste:type"] || f.properties.class || "downhill",
+                  "piste:difficulty": f.properties["piste:difficulty"] || f.properties.difficulty || f.properties.subclass || "intermediate",
+                  "aerialway": f.properties.aerialway || f.properties.subclass || null,
+                  "name": f.properties.name || f.properties.ref || null,
+                }
+              }));
+              geojsonRef.current = { type: "FeatureCollection", features: mapped };
+              graphRef.current = buildPisteGraph(mapped);
+              setOverpassStatus("ready");
+              console.log(`[PeakXP] Graph built: ${graphRef.current.nodeCoords.length} nodes`);
+              return true;
+            }
+            
+            console.log("[PeakXP] Not enough piste features yet, will retry...");
+          } catch(e) { console.warn("[PeakXP] queryRenderedFeatures error:", e); }
+          return false;
+        }
+
+        // Try after tiles load, retry as more tiles arrive
+        setTimeout(() => {
+          if (!tryBuildGraph()) {
+            let n = 0;
+            const iv = setInterval(() => {
+              n++;
+              if (tryBuildGraph() || n > 10) {
+                clearInterval(iv);
+                if (n > 10 && !graphRef.current) setOverpassStatus("failed");
+              }
+            }, 1500);
+          }
+        }, 2500);
+
+        // Click handler — snap to piste + route
+        map.on("click", async e => {
+          if (unmounted) return;
+          const { lngLat } = e;
+          let coord = [lngLat.lng, lngLat.lat];
+          let snapName = null;
+          const gj = geojsonRef.current;
+          if (gj) {
+            const pisteOnly = gj.features.filter(f => f.properties["piste:type"]);
+            const { point, dist } = nearestPointOnFeatures(coord, pisteOnly);
+            if (point && dist < 60) { coord = point; snapName = pisteOnly.find(f => f.geometry.coordinates.includes(point))?.properties?.name || null; }
+          }
+          const elevation = await fetchElevation(coord[0], coord[1]);
+          const prev = routeRef.current;
+          const newPt = { id: Date.now(), lngLat: coord, name: snapName || `Point ${prev.length + 1}`, elevation, type: prev.length === 0 ? "start" : "waypoint" };
+          const newPts = [...prev, newPt];
+          // Save undo snapshot
+          setUndoStack(stack => [...stack.slice(-20), { points: prev, path: pathRef.current }]);
+          setRoutePoints(newPts);
+
+          // Update point markers
+          const ptSrc = map.getSource("route-points");
+          if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: newPts.map((p, i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+
+          // Route from previous point to this one
+          if (newPts.length >= 2) {
+            const prev2 = newPts[newPts.length-2];
+            const seg = routeAlongPistes(prev2.lngLat, coord, graphRef.current);
+            const existing = pathRef.current;
+            const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
+            setRoutePathCoords(combined);
+            const lineSrc = map.getSource("route-line");
+            if (lineSrc && combined.length >= 2) lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: combined }, properties: {} }] });
+          }
+        });
+
+        mapInstance.current = map;
+        setMapLoaded(true);
+        setLoading(false);
+      });
+    };
+    script.onerror = () => setLoading(false);
+    document.head.appendChild(script);
+
+    return () => {
+      unmounted = true;
+      if (mapInstance.current) { try { mapInstance.current.remove(); } catch {} mapInstance.current = null; }
+    };
+  }, [resort?.id]);
+
+  function handleDelete(ptId) {
+    const newPts = routePoints.filter(p => p.id !== ptId);
+    setRoutePoints(newPts);
+    setRoutePathCoords([]);
+    const lineSrc = mapInstance.current?.getSource("route-line");
+    const ptSrc = mapInstance.current?.getSource("route-points");
+    if (lineSrc) lineSrc.setData(EMPTY_FC);
+    if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: newPts.map((p,i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+  }
+  function handleRename(ptId, name) { setRoutePoints(prev => prev.map(p => p.id === ptId ? { ...p, name } : p)); }
+  function handleTypeChange(ptId, type) { setRoutePoints(prev => prev.map(p => p.id === ptId ? { ...p, type } : p)); }
+  function handleClear() {
+    setRoutePoints([]); setRoutePathCoords([]);
+    const lineSrc = mapInstance.current?.getSource("route-line");
+    const ptSrc = mapInstance.current?.getSource("route-points");
+    if (lineSrc) lineSrc.setData(EMPTY_FC);
+    if (ptSrc) ptSrc.setData(EMPTY_FC);
+  }
+  function handleReverse() { setRoutePoints(prev => [...prev].reverse()); }
+  function handleReorder(arr) { setRoutePoints(arr); }
+  function handleUndo() {
+    setUndoStack(stack => {
+      if (!stack.length) return stack;
+      const last = stack[stack.length - 1];
+      const newStack = stack.slice(0, -1);
+      setRoutePoints(last.points);
+      setRoutePathCoords(last.path);
+      const lineSrc = mapInstance.current?.getSource("route-line");
+      const ptSrc = mapInstance.current?.getSource("route-points");
+      if (lineSrc) lineSrc.setData(last.path.length >= 2
+        ? { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: last.path }, properties: {} }] }
+        : EMPTY_FC);
+      if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: last.points.map((p,i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+      return newStack;
+    });
+  }
+
+  function handleSave() {
+    if (routePoints.length < 2 || !resort) return;
+    const route = { id: Date.now(), name: `Route at ${resort.name}`, resortId: resort.id, resortName: resort.name, points: routePoints, pathCoords: routePathCoords, stats, createdAt: new Date().toISOString() };
+    const updated = [route, ...savedRoutes];
+    localStorage.setItem(`routes:${id}`, JSON.stringify(updated));
+    setSavedRoutes(updated);
+  }
+  function handleLoadRoute(route) {
+    setRoutePoints(route.points);
+    const path = route.pathCoords || [];
+    setRoutePathCoords(path);
+    const lineSrc = mapInstance.current?.getSource("route-line");
+    const ptSrc = mapInstance.current?.getSource("route-points");
+    if (lineSrc && path.length >= 2) lineSrc.setData({ type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "LineString", coordinates: path }, properties: {} }] });
+    if (ptSrc) ptSrc.setData({ type: "FeatureCollection", features: route.points.map((p,i) => ({ type: "Feature", geometry: { type: "Point", coordinates: p.lngLat }, properties: { pointIndex: i+1, type: p.type } })) });
+  }
+
+  if (!resort) return <div className="min-h-screen bg-peak-bg flex items-center justify-center"><p className="text-peak-text-secondary">Resort not found.</p></div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20">
-      <BackButton to="/tracking/log" label="Peak Log" className="mb-6" />
-
+    <div style={{ height: "calc(100vh - 64px)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="font-display font-extrabold text-3xl text-peak-text mb-1">{activity.name}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-peak-text-secondary">{new Date(activity.date).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
-            {activity.resortName && <span className="bg-peak-surface border border-white/10 px-2 py-0.5 rounded-full text-peak-text-secondary">{activity.resortName}</span>}
-            <span className="bg-peak-blue/10 border border-peak-blue/20 text-peak-blue px-2 py-0.5 rounded-full capitalize">{activity.type}</span>
-            <span className="border border-white/10 px-2 py-0.5 rounded-full text-peak-text-secondary capitalize">{activity.source}</span>
-          </div>
-        </div>
-        <div className="flex gap-2 flex-shrink-0 flex-wrap">
-          <button onClick={() => exportActivityAsGPX(activity)} className="flex items-center gap-1.5 px-3 py-2 border border-white/10 rounded-xl text-peak-text-secondary hover:text-peak-text text-sm transition-colors"><Download className="h-4 w-4" />Export GPX</button>
-          <button onClick={() => toast.info("Community sharing coming soon")} className="flex items-center gap-1.5 px-3 py-2 border border-white/10 rounded-xl text-peak-text-secondary hover:text-peak-text text-sm transition-colors"><Share2 className="h-4 w-4" />Share</button>
-          <button onClick={() => setShowEdit(true)} className="flex items-center gap-1.5 px-3 py-2 border border-white/10 rounded-xl text-peak-text-secondary hover:text-peak-text text-sm transition-colors"><Edit2 className="h-4 w-4" />Edit</button>
-          <button onClick={() => setShowDelete(true)} className="flex items-center gap-1.5 px-3 py-2 border border-peak-red/20 rounded-xl text-peak-red text-sm hover:bg-peak-red/10 transition-colors"><Trash2 className="h-4 w-4" />Delete</button>
+      <div className="h-14 bg-peak-surface border-b border-white/5 flex items-center px-4 gap-4 flex-shrink-0 z-30">
+        <Link to={`/resort/${id}`} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text transition-colors text-sm">
+          <ArrowLeft className="h-4 w-4" /><span className="hidden sm:inline">{resort.name}</span>
+        </Link>
+        <div className="w-px h-5 bg-white/10 hidden sm:block" />
+        <span className="font-display font-bold text-peak-text text-lg hidden sm:block">Route Planner</span>
+        <div className="flex items-center gap-3 ml-auto text-sm">
+          <span className="text-peak-text-secondary hidden md:block">{stats.distanceKm} km</span>
+          <span className="text-peak-text-secondary hidden md:block">{stats.totalDescent} m ↓</span>
+          <span className="text-peak-text-secondary hidden md:block">~{stats.estimatedMinutes} min</span>
+          <button onClick={handleSave} disabled={routePoints.length < 2} className="bg-peak-red text-white px-4 py-1.5 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">Save route</button>
         </div>
       </div>
 
-      {/* Map */}
-      {pts.length > 0 && (() => {
-        const avgLat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
-        const avgLon = pts.reduce((s, p) => s + p.lon, 0) / pts.length;
-        return (
-          <div className="relative mb-8">
-            <PeakMap
-              center={[avgLon, avgLat]}
-              zoom={13}
-              pitch={45}
-              bearing={0}
-              height="h-96"
-              onMapLoad={(map) => addActivityRouteToMap(map, pts)}
-            />
-            {/* Speed legend */}
-            <div className="absolute bottom-4 left-4 bg-peak-bg/80 backdrop-blur-sm rounded-xl p-3 flex flex-col gap-1.5 z-10">
-              {[["Slow", "#3894E3"], ["Medium", "#22c55e"], ["Fast", "#eab308"], ["Very fast", "#FB343D"]].map(([label, color]) => (
-                <div key={label} className="flex items-center gap-2">
-                  <div className="w-4 h-3 rounded-sm" style={{ background: color }} />
-                  <span className="text-peak-text text-xs">{label}</span>
-                </div>
-              ))}
+      {/* Main */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0, position: "relative" }}>
+
+        {/* Loading overlay */}
+        {loading && (
+          <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#070B1E", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+            <div style={{ fontSize: 36, animation: "pulse 2s infinite" }}>⛷️</div>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Loading resort map…</p>
+          </div>
+        )}
+
+        {/* Routing status banner */}
+        {!loading && (
+          <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 30, background: "rgba(0,0,0,0.85)", borderRadius: 20, padding: "5px 16px", fontSize: 11, whiteSpace: "nowrap",
+            color: overpassStatus === "ready" ? "#4ade80" : overpassStatus === "failed" ? "#f87171" : "#facc15" }}>
+            {overpassStatus === "ready" ? "✓ Routing ready — click on the map to plan" : overpassStatus === "failed" ? "⚠ Slope data failed — showing straight lines" : "⏳ Loading slope data for routing…"}
+          </div>
+        )}
+
+        {/* Left panel */}
+        <div className="w-60 flex-shrink-0 bg-peak-surface border-r border-white/5 overflow-y-auto hidden lg:block z-10">
+          <LeftPanel routePoints={routePoints}
+            onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange}
+            onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder}
+            savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute}
+            routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES}
+            onUndo={handleUndo} canUndo={undoStack.length > 0} />
+        </div>
+
+        {/* Map */}
+        <div style={{ flex: 1, position: "relative", minWidth: 0, minHeight: 0 }}>
+          <div ref={mapRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
+        </div>
+
+        {/* Right panel */}
+        <div className="w-60 flex-shrink-0 bg-peak-surface/90 border-l border-white/5 overflow-y-auto hidden lg:block z-10">
+          <RightPanel stats={stats} routePoints={routePoints} resortId={id} routeName={`Route at ${resort.name}`} />
+        </div>
+
+        {/* Mobile FABs */}
+        <button onClick={() => setLeftOpen(o => !o)} className="lg:hidden absolute bottom-20 left-4 z-30 bg-peak-surface border border-white/10 rounded-full p-3 shadow-lg"><List className="h-5 w-5 text-peak-text" /></button>
+        <button onClick={() => setRightOpen(o => !o)} className="lg:hidden absolute bottom-20 right-4 z-30 bg-peak-surface border border-white/10 rounded-full p-3 shadow-lg"><BarChart2 className="h-5 w-5 text-peak-text" /></button>
+
+        {leftOpen && (
+          <div className="lg:hidden absolute inset-0 z-40 flex">
+            <div className="w-72 max-w-[85vw] bg-peak-surface h-full overflow-y-auto shadow-2xl">
+              <div className="flex items-center justify-between p-4 border-b border-white/5">
+                <span className="font-bold text-peak-text text-sm">Route & Layers</span>
+                <button onClick={() => setLeftOpen(false)} className="text-peak-text-secondary text-xl leading-none">×</button>
+              </div>
+              <LeftPanel routePoints={routePoints} onDelete={handleDelete} onRename={handleRename} onTypeChange={handleTypeChange} onClear={handleClear} onReverse={handleReverse} onReorder={handleReorder} savedRoutes={savedRoutes} onLoadRoute={handleLoadRoute} routeMode={routeMode} setRouteMode={setRouteMode} routeModes={ROUTE_MODES} onUndo={handleUndo} canUndo={undoStack.length > 0} />
+            </div>
+            <div className="flex-1" onClick={() => setLeftOpen(false)} />
+          </div>
+        )}
+        {rightOpen && (
+          <div className="lg:hidden absolute inset-0 z-40 flex justify-end">
+            <div className="flex-1" onClick={() => setRightOpen(false)} />
+            <div className="w-72 max-w-[85vw] bg-peak-surface h-full overflow-y-auto shadow-2xl">
+              <div className="flex items-center justify-between p-4 border-b border-white/5">
+                <span className="font-bold text-peak-text text-sm">Route Stats</span>
+                <button onClick={() => setRightOpen(false)} className="text-peak-text-secondary text-xl leading-none">×</button>
+              </div>
+              <RightPanel stats={stats} routePoints={routePoints} resortId={id} routeName={`Route at ${resort.name}`} />
             </div>
           </div>
-        );
-      })()}
-
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 my-8">
-        {statCards.map(([label, value]) => (
-          <div key={label} className="bg-peak-card border border-white/5 rounded-2xl p-5">
-            <div className="font-display font-bold text-2xl text-peak-text">{value}</div>
-            <div className="text-peak-text-secondary text-xs mt-1">{label}</div>
-          </div>
-        ))}
+        )}
       </div>
-
-      {/* Time breakdown bar */}
-      {(s.durationSkiing || s.durationLift || s.durationIdle) && (
-        <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mb-8">
-          <h3 className="font-bold text-peak-text mb-4">Time Breakdown</h3>
-          <div className="flex h-6 rounded-full overflow-hidden mb-3">
-            {[
-              { val: s.durationSkiing, color: "bg-peak-blue", label: "Skiing" },
-              { val: s.durationLift, color: "bg-yellow-500", label: "Lift" },
-              { val: s.durationIdle, color: "bg-peak-text-secondary/30", label: "Idle" },
-            ].filter(d => d.val > 0).map(d => (
-              <div key={d.label} className={`${d.color} h-full`} style={{ width: `${(d.val / totalTime) * 100}%` }} />
-            ))}
-          </div>
-          <div className="flex gap-6 flex-wrap">
-            {[
-              { label: "Skiing", val: s.durationSkiing, color: "text-peak-blue" },
-              { label: "Lift", val: s.durationLift, color: "text-yellow-400" },
-              { label: "Idle", val: s.durationIdle, color: "text-peak-text-secondary" },
-            ].filter(d => d.val > 0).map(d => (
-              <div key={d.label}>
-                <span className={`font-semibold ${d.color}`}>{fmtSec(d.val)}</span>
-                <span className="text-peak-text-secondary text-sm ml-1">{d.label} ({Math.round((d.val / totalTime) * 100)}%)</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Elevation profile */}
-      {elevData.length > 2 && (
-        <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mb-6">
-          <h3 className="font-bold text-peak-text mb-4">Elevation Profile</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={elevData}>
-              <defs>
-                <linearGradient id="elevGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3894E3" stopOpacity={0.8} />
-                  <stop offset="100%" stopColor="#3894E3" stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="i" hide />
-              <YAxis tick={{ fill: "#6B7490", fontSize: 11 }} unit="m" />
-              <Tooltip contentStyle={{ background: "#141A32", border: "none", borderRadius: 8 }} formatter={(v, n) => [n === "alt" ? `${v}m` : `${v}km/h`, n === "alt" ? "Altitude" : "Speed"]} />
-              <Area type="monotone" dataKey="alt" stroke="#3894E3" fill="url(#elevGrad)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Speed chart */}
-      {speedData.length > 2 && (
-        <div className="bg-peak-card border border-white/5 rounded-2xl p-5 mb-6">
-          <h3 className="font-bold text-peak-text mb-4">Speed Chart</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={speedData}>
-              <XAxis dataKey="t" tick={{ fill: "#6B7490", fontSize: 10 }} interval="preserveStartEnd" />
-              <YAxis tick={{ fill: "#6B7490", fontSize: 11 }} unit=" km/h" />
-              <Tooltip contentStyle={{ background: "#141A32", border: "none", borderRadius: 8 }} formatter={v => [`${v} km/h`, "Speed"]} />
-              {s.maxSpeed > 0 && <ReferenceLine y={s.maxSpeed} stroke="#FB343D" strokeDasharray="4 2" label={{ value: `Max ${s.maxSpeed}`, fill: "#FB343D", fontSize: 10 }} />}
-              {s.avgSpeed > 0 && <ReferenceLine y={s.avgSpeed} stroke="#3894E3" strokeDasharray="4 2" label={{ value: `Avg ${s.avgSpeed}`, fill: "#3894E3", fontSize: 10 }} />}
-              <Line type="monotone" dataKey="spd" stroke="#3894E3" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Delete confirmation */}
-      {showDelete && (
-        <div className="fixed inset-0 bg-peak-bg/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-peak-card border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4">
-            <h2 className="font-display font-bold text-xl text-peak-text mb-2">Delete activity?</h2>
-            <p className="text-peak-text-secondary text-sm mb-6">This cannot be undone.</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowDelete(false)} className="flex-1 border border-white/10 text-peak-text-secondary rounded-xl py-3 hover:text-peak-text">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 bg-peak-red text-white font-bold rounded-xl py-3">Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit modal */}
-      {showEdit && (
-        <div className="fixed inset-0 bg-peak-bg/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-peak-card border border-white/10 rounded-2xl p-6 max-w-sm w-full mx-4">
-            <h2 className="font-display font-bold text-xl text-peak-text mb-4">Edit activity</h2>
-            <div className="space-y-4">
-              <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-              <textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={3} placeholder="Notes..." className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue resize-none" />
-              <div className="flex gap-3">
-                <button onClick={() => setShowEdit(false)} className="flex-1 border border-white/10 text-peak-text-secondary rounded-xl py-3">Cancel</button>
-                <button onClick={handleSaveEdit} className="flex-1 bg-peak-red text-white font-bold rounded-xl py-3">Save</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
