@@ -313,40 +313,54 @@ export default function ResortRoutePlanner() {
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
 
-        // Fetch piste data from Overpass
-        // Bounding box: 0.15° ≈ 12-16km radius — covers most single resort areas
-        const pad = 0.15;
-        const lonPad = pad / Math.cos(lat * Math.PI / 180);
-        const [S, N, W, E] = [lat-pad, lat+pad, lng-lonPad, lng+lonPad];
-        const query = `[out:json][timeout:25][maxsize:50000000];(way["piste:type"="downhill"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
-        try {
-          const ctrl = new AbortController();
-          setTimeout(() => ctrl.abort(), 24000);
-          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
-          const data = await res.json();
-          if (unmounted) return;
-          const geojson = overpassToGeoJSON(data);
-          geojsonRef.current = geojson;
-          graphRef.current = buildPisteGraph(geojson.features);
-          setOverpassStatus("ready");
-          map.addSource("openski-data", { type: "geojson", data: geojson });
-          // Overpass data used for routing graph only — no visual layers added
-          // The PeakXP custom map style already renders pistes with correct colours
+        // Add route layers immediately
+        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
+        map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 4, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+        map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+        map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
 
-          // Route layers added LAST so they always render on top of piste data
-          map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } }); // white shadow
-          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
-          map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
-        } catch {
-          setOverpassStatus("failed");
-          setLoading(false);
-          // Overpass failed — still add route layers so drawing works
-          map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
-          map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
+        // Build routing graph from vector tiles already loaded in the map
+        // No external API — uses data the map style already downloaded
+        function tryBuildGraph() {
+          if (unmounted) return false;
+          try {
+            const features = map.queryRenderedFeatures(undefined, {
+              filter: ["any",
+                ["==", ["get", "piste:type"], "downhill"],
+                ["==", ["get", "class"], "piste"],
+                ["has", "aerialway"],
+              ]
+            });
+            const lines = features.filter(f => f.geometry.type === "LineString" && f.geometry.coordinates.length >= 2)
+              .map(f => ({ type: "Feature", geometry: f.geometry, properties: {
+                "piste:type": f.properties["piste:type"] || f.properties.class || "downhill",
+                "piste:difficulty": f.properties["piste:difficulty"] || f.properties.difficulty || "intermediate",
+                "aerialway": f.properties.aerialway || null,
+                "name": f.properties.name || null,
+              }}));
+            if (lines.length > 5) {
+              geojsonRef.current = { type: "FeatureCollection", features: lines };
+              graphRef.current = buildPisteGraph(lines);
+              setOverpassStatus("ready");
+              return true;
+            }
+          } catch(e) { console.warn("queryRenderedFeatures:", e); }
+          return false;
         }
+
+        // Try after tiles load, retry as more tiles arrive
+        setTimeout(() => {
+          if (!tryBuildGraph()) {
+            let n = 0;
+            const iv = setInterval(() => {
+              n++;
+              if (tryBuildGraph() || n > 10) {
+                clearInterval(iv);
+                if (n > 10 && !graphRef.current) setOverpassStatus("failed");
+              }
+            }, 1500);
+          }
+        }, 2500);
 
         // Click handler — snap to piste + route
         map.on("click", async e => {
