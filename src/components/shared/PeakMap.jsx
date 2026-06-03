@@ -17,16 +17,16 @@ function loadSDK() {
     sdkLoading = true;
 
     // CSS
-    if (!document.querySelector('link[href*="maptiler-sdk.css"]')) {
+    if (!document.querySelector('link[href*="v2.2.0/maptiler-sdk.css"]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.css";
+      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
       document.head.appendChild(link);
     }
 
     // Script
     const script = document.createElement("script");
-    script.src = "https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.umd.min.js";
+    script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
     script.async = true;
     script.onload = () => {
       const wait = setInterval(() => {
