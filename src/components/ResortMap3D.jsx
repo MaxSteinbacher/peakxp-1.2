@@ -4,36 +4,38 @@ import { Mountain } from "lucide-react";
 const MAPTILER_KEY = "lNsV1pOMdNShmVL9tiih";
 const STYLE_URL = `https://api.maptiler.com/maps/019c8160-59cd-7579-afc6-753ee61bd724/style.json?key=${MAPTILER_KEY}`;
 
-let sdkLoadPromise = null;
+// Load SDK using exact TrackingRecord pattern — v2.2.0 pinned, no promise caching
 function loadSDK() {
-  if (sdkLoadPromise) return sdkLoadPromise;
-  sdkLoadPromise = new Promise((resolve, reject) => {
-    if (window.maptilersdk) return resolve(window.maptilersdk);
-    if (!document.querySelector('link[href*="maptiler-sdk.css"]')) {
+  return new Promise((resolve, reject) => {
+    // Already loaded
+    if (window.maptilersdk) { resolve(window.maptilersdk); return; }
+    // CSS
+    if (!document.querySelector('link[href*="v2.2.0/maptiler-sdk.css"]')) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.css";
+      link.href = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.css";
       document.head.appendChild(link);
     }
-    if (!document.querySelector('script[src*="maptiler-sdk.umd.min.js"]')) {
+    // Script
+    if (!document.querySelector('script[src*="v2.2.0/maptiler-sdk.umd.min.js"]')) {
       const script = document.createElement("script");
-      script.src = "https://cdn.maptiler.com/maptiler-sdk-js/latest/maptiler-sdk.umd.min.js";
+      script.src = "https://cdn.maptiler.com/maptiler-sdk-js/v2.2.0/maptiler-sdk.umd.min.js";
       script.onload = () => {
         const check = setInterval(() => {
           if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); }
         }, 50);
-        setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
+        setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 12000);
       };
       script.onerror = reject;
       document.head.appendChild(script);
     } else {
+      // Script tag exists — wait for it
       const check = setInterval(() => {
         if (window.maptilersdk) { clearInterval(check); resolve(window.maptilersdk); }
       }, 50);
-      setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 10000);
+      setTimeout(() => { clearInterval(check); reject(new Error("SDK timeout")); }, 12000);
     }
   });
-  return sdkLoadPromise;
 }
 
 function overpassToGeoJSON(data) {
@@ -110,12 +112,7 @@ export default function ResortMap3D({ resort }) {
         touchZoomRotate: true,
         keyboard: false,
         attributionControl: false,
-        maxBounds: bounds,
-        maxZoom: 16,
-        minZoom: 11,
-        fadeDuration: 0,
-        optimizeForTerrain: true,
-        maxTileCacheSize: 50,
+        terrain: { source: "terrain", exaggeration: 1.5 },
       });
 
       map.addControl(new sdk.NavigationControl({ showCompass: true, showZoom: true, visualizePitch: true }), "bottom-right");
@@ -125,24 +122,9 @@ export default function ResortMap3D({ resort }) {
       map.on("load", async () => {
         if (unmounted) return;
 
-        // Fix 3: remove built-in piste/ski/slope layers from base style
-        const styleLayers = map.getStyle().layers || [];
-        styleLayers.forEach(layer => {
-          const id = layer.id.toLowerCase();
-          if (id.includes("piste") || id.includes("ski") || id.includes("slope")) {
-            if (map.getLayer(layer.id)) map.removeLayer(layer.id);
-          }
-        });
+        // Note: don't remove style layers — can cause crashes. Custom style handles piste rendering.
 
-        // Fix 4: add DEM terrain source explicitly
-        if (!map.getSource("maptiler-dem")) {
-          map.addSource("maptiler-dem", {
-            type: "raster-dem",
-            url: `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`,
-            tileSize: 256,
-          });
-        }
-        map.setTerrain({ source: "maptiler-dem", exaggeration: 1.5 });
+        // Terrain is set via constructor — nothing needed here
 
         mapLoadedRef.current = true;
         if (!unmounted) setLoading(false);
@@ -307,7 +289,7 @@ export default function ResortMap3D({ resort }) {
     });
     // Fix 4: terrain toggle references maptiler-dem source
     try {
-      map.setTerrain(layers.terrain ? { source: "maptiler-dem", exaggeration: 1.5 } : null);
+      map.setTerrain(layers.terrain ? { source: "terrain", exaggeration: 1.5 } : null);
     } catch {}
   }, [layers]);
 
