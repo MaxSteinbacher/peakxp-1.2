@@ -65,10 +65,10 @@ export default function ResortDetail() {
         {/* Left: name, country, status */}
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap mb-2">
-            {resort.logo && (
+            {(resort.logo || resort.logoImage) && (
               <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center flex-shrink-0 overflow-hidden p-1 border border-white/10">
                 <img
-                  src={resort.logo}
+                  src={resort.logo || resort.logoImage}
                   alt={resort.name}
                   className="w-full h-full object-contain"
                   onError={(e) => { e.target.style.display = 'none'; }}

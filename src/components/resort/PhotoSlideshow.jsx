@@ -1,12 +1,22 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
+function getYouTubeId(url) {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?/]+)/);
+  return m ? m[1] : null;
+}
+
 export default function PhotoSlideshow({ images, videos }) {
   const [idx, setIdx] = useState(0);
 
   // Build unified slides: video first, then photos
   const slides = [
-    ...(videos || []).map(v => ({ type: "video", src: v.url, credits: v.credits })),
+    ...(videos || []).map(v => {
+      const ytId = getYouTubeId(v.url);
+      return ytId
+        ? { type: "youtube", ytId, title: v.title, credits: v.credits }
+        : { type: "video", src: v.url, credits: v.credits };
+    }),
     ...(images || []).map(i => typeof i === "string" ? { type: "image", src: i } : { type: "image", src: i.src, credits: i.credits }),
   ];
 
@@ -19,7 +29,16 @@ export default function PhotoSlideshow({ images, videos }) {
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl mb-8 group" style={{ height: '70vh', maxHeight: '600px' }}>
-      {current.type === "video" ? (
+      {current.type === "youtube" ? (
+        <iframe
+          key={current.ytId}
+          src={`https://www.youtube.com/embed/${current.ytId}?autoplay=1&mute=1&loop=1&playlist=${current.ytId}&controls=0&modestbranding=1&rel=0`}
+          title={current.title || "Resort video"}
+          allow="autoplay; fullscreen"
+          className="w-full h-full"
+          style={{ border: "none" }}
+        />
+      ) : current.type === "video" ? (
         <video
           key={current.src}
           src={current.src}
@@ -80,7 +99,7 @@ export default function PhotoSlideshow({ images, videos }) {
 
       {/* Counter + video badge */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
-        {current.type === "video" && (
+        {(current.type === "video" || current.type === "youtube") && (
           <div className="flex items-center gap-1.5 bg-peak-red/80 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full">
             <Play className="h-3 w-3 fill-white" />
             Video
