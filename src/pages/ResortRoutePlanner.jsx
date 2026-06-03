@@ -240,9 +240,10 @@ function dijkstra(graph, startCoord, endCoord) {
   return path.length >= 2 ? path : null;
 }
 
-function routeAlongPistes(start, end, graph) {
-  if (!graph || !graph.nodeCoords?.length) return null;
+function routeAlongPistes(start, end, geojson) {
+  if (!geojson?.features?.length) return null;
   try {
+    const graph = buildPisteGraph(geojson.features);
     return dijkstra(graph, start, end);
   } catch (e) {
     console.warn("Routing error:", e);
@@ -269,7 +270,6 @@ export default function ResortRoutePlanner() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const geojsonRef = useRef(null);
-  const graphRef = useRef(null); // cached Dijkstra graph — built once from Overpass
   const routeRef = useRef([]);
   const pathRef = useRef([]);
   const routeModeRef = useRef("fastest");
@@ -303,7 +303,7 @@ export default function ResortRoutePlanner() {
     (() => {
       let combined = [];
       for (let i = 0; i < pts.length - 1; i++) {
-        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, graphRef.current);
+        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current);
         if (seg) combined = combined.concat(seg);
         else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
       }
@@ -373,8 +373,6 @@ export default function ResortRoutePlanner() {
           if (unmounted) return;
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
-          // Build graph once — reused on every click (avoid rebuilding per click)
-          graphRef.current = buildPisteGraph(geojson.features);
           setLoading(false);
           map.addSource("openski-data", { type: "geojson", data: geojson });
           // Overpass data used for routing graph only — no visual layers added
@@ -421,7 +419,7 @@ export default function ResortRoutePlanner() {
           // Route from previous point to this one
           if (newPts.length >= 2) {
             const prev2 = newPts[newPts.length-2];
-            const seg = routeAlongPistes(prev2.lngLat, coord, graphRef.current);
+            const seg = routeAlongPistes(prev2.lngLat, coord, gj);
             const existing = pathRef.current;
             const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
             setRoutePathCoords(combined);
