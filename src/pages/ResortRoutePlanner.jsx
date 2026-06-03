@@ -313,12 +313,9 @@ export default function ResortRoutePlanner() {
       map.on("load", async () => {
         if (unmounted) return;
 
-        // Route drawing sources
+        // Pre-add route sources (layers added after piste data so they render on top)
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
-        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 4, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
-        map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 8, "circle-color": "#FB343D", "circle-stroke-width": 2, "circle-stroke-color": "#ffffff" } });
-        map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 10, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
 
         // Fetch piste data from Overpass
         const pad = 0.09;
@@ -334,20 +331,36 @@ export default function ResortRoutePlanner() {
           geojsonRef.current = geojson;
           map.addSource("openski-data", { type: "geojson", data: geojson });
           [
-            { id: "pistes-black", difficulty: "expert", color: "#333", width: 4 },
-            { id: "pistes-red", difficulty: "advanced", color: "#e63946", width: 3.5 },
-            { id: "pistes-blue", difficulty: "intermediate", color: "#3894E3", width: 3.5 },
-            { id: "pistes-green", difficulty: ["easy","novice"], color: "#2d6a4f", width: 3.5 },
-          ].forEach(({ id: lid, difficulty, color, width }) => {
+            { id: "osm-pistes-black", difficulty: "expert",                    color: "#2a2a2a", outline: "#ffffff", width: 5 },
+            { id: "osm-pistes-red",   difficulty: "advanced",                  color: "#e63946", outline: "#ffffff", width: 4 },
+            { id: "osm-pistes-blue",  difficulty: "intermediate",               color: "#2196F3", outline: "#ffffff", width: 4 },
+            { id: "osm-pistes-green", difficulty: ["easy","novice","beginner"], color: "#43a047", outline: "#ffffff", width: 4 },
+          ].forEach(({ id: lid, difficulty, color, outline, width }) => {
             const filter = Array.isArray(difficulty)
               ? ["in", ["get","piste:difficulty"], ["literal", difficulty]]
               : ["==", ["get","piste:difficulty"], difficulty];
-            map.addLayer({ id: lid, type: "line", source: "openski-data", filter, paint: { "line-color": color, "line-width": width, "line-opacity": 0.9 } });
+            // White outline for readability
+            map.addLayer({ id: lid + "-outline", type: "line", source: "openski-data", filter,
+              paint: { "line-color": outline, "line-width": width + 2, "line-opacity": 0.5 } });
+            map.addLayer({ id: lid, type: "line", source: "openski-data", filter,
+              paint: { "line-color": color, "line-width": width, "line-opacity": 0.95 } });
           });
           map.addLayer({ id: "piste-labels", type: "symbol", source: "openski-data", filter: ["has","name"], layout: { "text-field": ["get","name"], "text-size": 11, "text-font": ["Open Sans Bold","Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff", "text-halo-color": "#0a0a1a", "text-halo-width": 1.5 } });
           map.addLayer({ id: "lifts-line", type: "line", source: "openski-data", filter: ["has","aerialway"], paint: { "line-color": "#FB343D", "line-width": 2, "line-dasharray": [2,1], "line-opacity": 0.85 } });
           map.addLayer({ id: "lifts-label", type: "symbol", source: "openski-data", filter: ["all",["has","aerialway"],["has","name"]], layout: { "text-field": ["get","name"], "text-size": 10, "text-font": ["Open Sans Regular","Arial Unicode MS Regular"] }, paint: { "text-color": "#FB343D", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
-        } catch {}
+
+          // Route layers added LAST so they always render on top of piste data
+          map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } }); // white shadow
+          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+          map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
+        } catch {
+          // Overpass failed — still add route layers so drawing works
+          map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+          map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
+        }
 
         // Click handler — snap to piste + route
         map.on("click", async e => {
