@@ -230,6 +230,7 @@ export default function ResortRoutePlanner() {
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [overpassStatus, setOverpassStatus] = useState("loading");
   const [routePoints, setRoutePoints] = useState([]);
   const [routePathCoords, setRoutePathCoords] = useState([]);
   const [routeMode, setRouteMode] = useState("fastest");
@@ -327,6 +328,7 @@ export default function ResortRoutePlanner() {
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
           graphRef.current = buildPisteGraph(geojson.features);
+          setOverpassStatus("ready");
           map.addSource("openski-data", { type: "geojson", data: geojson });
           // Overpass data used for routing graph only — no visual layers added
           // The PeakXP custom map style already renders pistes with correct colours
@@ -337,6 +339,7 @@ export default function ResortRoutePlanner() {
           map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
           map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
         } catch {
+          setOverpassStatus("failed");
           setLoading(false);
           // Overpass failed — still add route layers so drawing works
           map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
@@ -476,6 +479,14 @@ export default function ResortRoutePlanner() {
           <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#070B1E", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
             <div style={{ fontSize: 36, animation: "pulse 2s infinite" }}>⛷️</div>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Loading resort map…</p>
+          </div>
+        )}
+
+        {/* Routing status banner */}
+        {!loading && (
+          <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 30, background: "rgba(0,0,0,0.85)", borderRadius: 20, padding: "5px 16px", fontSize: 11, whiteSpace: "nowrap",
+            color: overpassStatus === "ready" ? "#4ade80" : overpassStatus === "failed" ? "#f87171" : "#facc15" }}>
+            {overpassStatus === "ready" ? "✓ Routing ready — click on the map to plan" : overpassStatus === "failed" ? "⚠ Slope data failed — showing straight lines" : "⏳ Loading slope data for routing…"}
           </div>
         )}
 
