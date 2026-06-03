@@ -77,7 +77,20 @@ function buildPisteGraph(features) {
     return coordGrid.get(k);
   }
 
+  // Elevation from lat — crude approximation using coord[2] if available
+  function elev(c) { return c[2] ?? null; }
+
+  // Grade = elevation drop / horizontal distance (positive = downhill)
+  function grade(from, to) {
+    const eFrom = elev(from), eTo = elev(to);
+    if (eFrom == null || eTo == null) return null;
+    const drop = eFrom - eTo; // positive = downhill
+    const horiz = haversineKm(from, to) * 1000; // metres
+    return horiz > 0 ? drop / horiz : 0; // fraction, positive = downhill
+  }
+
   const DIFF_WEIGHT = { novice: 1, easy: 1, beginner: 1, intermediate: 1.3, advanced: 1.8, expert: 2.5, freeride: 2.5 };
+  const FLAT_THRESHOLD = 0.04; // <4% grade = bidirectional
 
   features.forEach(f => {
     if (f.geometry.type !== "LineString") return;
@@ -86,7 +99,7 @@ function buildPisteGraph(features) {
     if (!isLift && !isPiste) return;
 
     const diff = f.properties["piste:difficulty"] || "intermediate";
-    const w = isLift ? 0.4 : (DIFF_WEIGHT[diff] ?? 1.3);
+    const baseW = isLift ? 0.4 : (DIFF_WEIGHT[diff] ?? 1.3);
     const coords = f.geometry.coordinates;
 
     for (let i = 0; i < coords.length - 1; i++) {
@@ -94,11 +107,44 @@ function buildPisteGraph(features) {
       const b = getNode(coords[i + 1]);
       if (a === b) continue;
       const d = haversineKm(coords[i], coords[i + 1]);
-      // Both directions — ensures fully connected graph so Dijkstra always finds a path
-      edges.push({ from: a, to: b, dist: d * w,      segCoords: [coords[i], coords[i+1]] });
-      edges.push({ from: b, to: a, dist: d * w * 1.5, segCoords: [coords[i+1], coords[i]] });
+      const g = grade(coords[i], coords[i + 1]); // positive = downhill i→j
+      const fwd = [coords[i], coords[i + 1]];
+      const bwd = [coords[i + 1], coords[i]];
+
+      if (isLift) {
+        // Lifts only go in their stored direction (uphill in OSM)
+        // OSM aerialways: stored bottom → top
+        // So forward = uphill (valid for lift), reverse = downhill on lift (forbidden)
+        edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
+        // Do NOT add reverse lift edge — you can't ride a lift down
+      } else {
+        // Piste: determine direction from elevation or OSM storage (top→bottom)
+        // If elevation data: forward is downhill if g > FLAT_THRESHOLD
+        // If no elevation: OSM pistes are usually stored top→bottom, so forward = downhill
+        const hasElev = elev(coords[i]) != null && elev(coords[i + 1]) != null;
+        
+        if (hasElev) {
+          const isFlatSeg = Math.abs(g) < FLAT_THRESHOLD;
+          if (g >= -FLAT_THRESHOLD) {
+            // Forward is downhill or flat — allow it
+            edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
+          }
+          if (g <= FLAT_THRESHOLD) {
+            // Backward is downhill or flat — allow it  
+            edges.push({ from: b, to: a, dist: d * baseW, segCoords: bwd });
+          }
+        } else {
+          // No elevation data — use heuristic: forward allowed (assume OSM top→bottom)
+          // Also allow reverse with a heavy penalty (connectivity fallback only)
+          edges.push({ from: a, to: b, dist: d * baseW, segCoords: fwd });
+          edges.push({ from: b, to: a, dist: d * baseW * 12, segCoords: bwd }); // heavy uphill penalty
+        }
+      }
     }
   });
+
+  // Add lift→piste connections: where lift top station is near a piste start, connect them
+  // (This happens naturally via node merging with gridKey)
 
   const adj = new Map();
   edges.forEach((e, idx) => {
@@ -194,9 +240,10 @@ function dijkstra(graph, startCoord, endCoord) {
   return path.length >= 2 ? path : null;
 }
 
-function routeAlongPistes(start, end, graph) {
-  if (!graph?.nodeCoords?.length) return null;
+function routeAlongPistes(start, end, geojson) {
+  if (!geojson?.features?.length) return null;
   try {
+    const graph = buildPisteGraph(geojson.features);
     return dijkstra(graph, start, end);
   } catch (e) {
     console.warn("Routing error:", e);
@@ -223,14 +270,12 @@ export default function ResortRoutePlanner() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const geojsonRef = useRef(null);
-  const graphRef = useRef(null);
   const routeRef = useRef([]);
   const pathRef = useRef([]);
   const routeModeRef = useRef("fastest");
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [overpassStatus, setOverpassStatus] = useState("loading");
   const [routePoints, setRoutePoints] = useState([]);
   const [routePathCoords, setRoutePathCoords] = useState([]);
   const [routeMode, setRouteMode] = useState("fastest");
@@ -258,7 +303,7 @@ export default function ResortRoutePlanner() {
     (() => {
       let combined = [];
       for (let i = 0; i < pts.length - 1; i++) {
-        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, graphRef.current);
+        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current);
         if (seg) combined = combined.concat(seg);
         else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
       }
@@ -313,100 +358,39 @@ export default function ResortRoutePlanner() {
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
 
-        // Add route layers immediately
-        map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
-        map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 4, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
-        map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
-        map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
+        // Fetch piste data from Overpass
+        // Bounding box: 0.15° ≈ 12-16km radius — covers most single resort areas
+        const pad = 0.15;
+        const lonPad = pad / Math.cos(lat * Math.PI / 180);
+        const [S, N, W, E] = [lat-pad, lat+pad, lng-lonPad, lng+lonPad];
+        const query = `[out:json][timeout:25][maxsize:50000000];(way["piste:type"="downhill"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
+        try {
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 24000);
+          setLoading(true); // show loading while fetching piste data
+          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
+          const data = await res.json();
+          if (unmounted) return;
+          const geojson = overpassToGeoJSON(data);
+          geojsonRef.current = geojson;
+          setLoading(false);
+          map.addSource("openski-data", { type: "geojson", data: geojson });
+          // Overpass data used for routing graph only — no visual layers added
+          // The PeakXP custom map style already renders pistes with correct colours
 
-        // Build routing graph using querySourceFeatures — reads ALL loaded tiles
-        // More reliable than queryRenderedFeatures (not limited to visible viewport)
-        function tryBuildGraph() {
-          if (unmounted) return false;
-          try {
-            let pisteLines = [];
-
-            // Step 1: find source names from the loaded style
-            const style = map.getStyle();
-            const sourceNames = Object.keys(style?.sources || {});
-            console.log("[PeakXP] Available sources:", sourceNames);
-
-            // Step 2: try querySourceFeatures with every source + common source-layer combos
-            const sourceLayers = ["transportation", "piste", "landuse", "winter_sports", "ski"];
-            const pisteClasses = ["piste", "downhill", "ski", "aerialway", "gondola", "chair_lift", "cable_car", "drag_lift"];
-
-            for (const srcName of sourceNames) {
-              for (const srcLayer of sourceLayers) {
-                try {
-                  const features = map.querySourceFeatures(srcName, { sourceLayer: srcLayer });
-                  const lines = features.filter(f => {
-                    if (f.geometry.type !== "LineString") return false;
-                    const p = f.properties || {};
-                    return pisteClasses.some(c =>
-                      p.class === c || p.subclass === c ||
-                      p["piste:type"] || p.aerialway || p.type === "piste"
-                    );
-                  });
-                  if (lines.length > 0) {
-                    console.log(`[PeakXP] Found ${lines.length} piste lines in ${srcName}/${srcLayer}`);
-                    pisteLines = pisteLines.concat(lines);
-                  }
-                } catch {} // source-layer doesn't exist in this source — skip
-              }
-            }
-
-            // Step 3: fallback — queryRenderedFeatures with broad filter
-            if (pisteLines.length < 5) {
-              console.log("[PeakXP] querySourceFeatures found nothing, trying queryRenderedFeatures...");
-              const allFeatures = map.queryRenderedFeatures();
-              pisteLines = allFeatures.filter(f => {
-                if (f.geometry.type !== "LineString") return false;
-                const lid = (f.layer?.id || "").toLowerCase();
-                const p = f.properties || {};
-                return lid.includes("piste") || lid.includes("ski") || lid.includes("slope") ||
-                       lid.includes("aerial") || lid.includes("lift") || lid.includes("winter") ||
-                       p["piste:type"] || p.aerialway || p.class === "piste";
-              });
-              console.log(`[PeakXP] queryRenderedFeatures found ${pisteLines.length} piste lines`);
-            }
-
-            console.log(`[PeakXP] Total piste lines: ${pisteLines.length}`);
-            if (pisteLines.length > 3) {
-              const mapped = pisteLines.map(f => ({
-                type: "Feature", geometry: f.geometry,
-                properties: {
-                  "piste:type": f.properties["piste:type"] || f.properties.class || "downhill",
-                  "piste:difficulty": f.properties["piste:difficulty"] || f.properties.difficulty || f.properties.subclass || "intermediate",
-                  "aerialway": f.properties.aerialway || f.properties.subclass || null,
-                  "name": f.properties.name || f.properties.ref || null,
-                }
-              }));
-              geojsonRef.current = { type: "FeatureCollection", features: mapped };
-              graphRef.current = buildPisteGraph(mapped);
-              setOverpassStatus("ready");
-              console.log(`[PeakXP] Graph built with ${graphRef.current.nodeCoords.length} nodes, ${graphRef.current.edges.length} edges`);
-              return true;
-            }
-          } catch(e) { console.warn("[PeakXP] graph build error:", e); }
-          return false;
+          // Route layers added LAST so they always render on top of piste data
+          map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } }); // white shadow
+          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+          map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
+        } catch {
+          setLoading(false);
+          // Overpass failed — still add route layers so drawing works
+          map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+          map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
         }
-
-        // Try after tiles load, retry as more tiles stream in
-        setTimeout(() => {
-          if (!tryBuildGraph()) {
-            let n = 0;
-            const iv = setInterval(() => {
-              n++;
-              if (tryBuildGraph() || n > 12) {
-                clearInterval(iv);
-                if (!graphRef.current) {
-                  setOverpassStatus("failed");
-                  console.warn("[PeakXP] Could not build routing graph after", n, "attempts");
-                }
-              }
-            }, 1500);
-          }
-        }, 2000);
 
         // Click handler — snap to piste + route
         map.on("click", async e => {
@@ -435,7 +419,7 @@ export default function ResortRoutePlanner() {
           // Route from previous point to this one
           if (newPts.length >= 2) {
             const prev2 = newPts[newPts.length-2];
-            const seg = routeAlongPistes(prev2.lngLat, coord, graphRef.current);
+            const seg = routeAlongPistes(prev2.lngLat, coord, gj);
             const existing = pathRef.current;
             const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
             setRoutePathCoords(combined);
@@ -446,7 +430,7 @@ export default function ResortRoutePlanner() {
 
         mapInstance.current = map;
         setMapLoaded(true);
-        setLoading(false);
+        // Don't set loading false yet — wait for Overpass fetch
       });
     };
     script.onerror = () => setLoading(false);
@@ -539,14 +523,6 @@ export default function ResortRoutePlanner() {
           <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#070B1E", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
             <div style={{ fontSize: 36, animation: "pulse 2s infinite" }}>⛷️</div>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Loading resort map…</p>
-          </div>
-        )}
-
-        {/* Routing status banner */}
-        {!loading && (
-          <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 30, background: "rgba(0,0,0,0.85)", borderRadius: 20, padding: "5px 16px", fontSize: 11, whiteSpace: "nowrap",
-            color: overpassStatus === "ready" ? "#4ade80" : overpassStatus === "failed" ? "#f87171" : "#facc15" }}>
-            {overpassStatus === "ready" ? "✓ Routing ready — click on the map to plan" : overpassStatus === "failed" ? "⚠ Slope data failed — showing straight lines" : "⏳ Loading slope data for routing…"}
           </div>
         )}
 
