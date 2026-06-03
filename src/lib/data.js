@@ -267,45 +267,7 @@ const _rawResorts = [...[
     ],
     instructors: []
   },
-  // Davos Klosters Mountains — full profile is in swissResorts3.js under id "davos-klosters"
-  // This stub is kept for backward-compatibility with any links using id="davos"
-  {
-    id: "davos",
-    name: "Davos Klosters Mountains",
-    country: "Switzerland",
-    countryCode: "CH",
-    flag: "🇨🇭",
-    rating: 8.5,
-    ratingLabel: "Excellent",
-    priceFrom: 63,
-    pisteKm: 255,
-    maxAltitude: 2844,
-    minAltitude: 810,
-    runs: 82,
-    lifts: 45,
-    difficulty: ["beginner", "intermediate", "expert"],
-    facilities: ["terrain_park", "night_skiing", "kids_area"],
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/6a854ca0b_20230418-_KD_0779.jpg",
-    images: [
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/6a854ca0b_20230418-_KD_0779.jpg",
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e07f72e50__DSC3578.jpg",
-      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/0d14a7a98__DSC3642.jpg",
-    ],
-    description: "Europe's highest city meets Switzerland's most expansive mountain playground. Five ski mountains — Parsenn, Jakobshorn, Rinerhorn, Madrisa and Pischa — covering 255km of pistes. A favourite with royalty and freeride experts alike.",
-    weather: { temp: -7, snowDepth: 180, condition: "Clear", forecast: [
-      { day: "Today", high: -5, low: -11, condition: "clear" },
-      { day: "Tomorrow", high: -6, low: -12, condition: "partly_cloudy" },
-      { day: "Thu", high: -8, low: -14, condition: "snow" },
-    ]},
-    reviews: { overall: 8.5, breakdown: { pistes: 8.6, lifts: 8.4, apresSki: 8.2, value: 8.0, beginners: 8.8 }, items: [] },
-    liftPasses: [
-      { type: "1-day", adult: 63, child: 32, senior: 50, badge: null },
-      { type: "3-day", adult: 173, child: 87, senior: 138, badge: "Best value" },
-      { type: "6-day", adult: 323, child: 162, senior: 258, badge: null },
-      { type: "Season", adult: 1450, child: 725, senior: 1160, badge: null },
-    ],
-    instructors: []
-  },
+
   {
     id: "cervinia",
     name: "Cervinia",
