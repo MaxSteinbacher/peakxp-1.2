@@ -354,15 +354,6 @@ export default function ResortRoutePlanner() {
       map.on("load", async () => {
         if (unmounted) return;
 
-        // Hide the custom style's own piste layers so our Overpass layers show cleanly
-        const styleLayers = map.getStyle()?.layers || [];
-        styleLayers.forEach(layer => {
-          const id = layer.id.toLowerCase();
-          if (id.includes("piste") || id.includes("ski") || id.includes("slope") || id.includes("aerialway")) {
-            try { map.setLayoutProperty(layer.id, "visibility", "none"); } catch {}
-          }
-        });
-
         // Pre-add route sources (layers added after piste data so they render on top)
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
@@ -384,32 +375,8 @@ export default function ResortRoutePlanner() {
           geojsonRef.current = geojson;
           setLoading(false);
           map.addSource("openski-data", { type: "geojson", data: geojson });
-          // Difficulty colour mapping — European Alpine standard:
-          // novice/easy → green (#43a047), intermediate → blue (#1565C0),
-          // advanced → red (#D32F2F), expert/freeride → black (#111111)
-          const PISTE_DEFS = [
-            { id: "px-green", values: ["novice","easy","beginner"],  color: "#43a047", outline: "rgba(255,255,255,0.6)", width: 3.5 },
-            { id: "px-blue",  values: ["intermediate"],              color: "#1565C0", outline: "rgba(255,255,255,0.6)", width: 3.5 },
-            { id: "px-red",   values: ["advanced"],                  color: "#D32F2F", outline: "rgba(255,255,255,0.6)", width: 3.5 },
-            { id: "px-black", values: ["expert","freeride"],         color: "#111111", outline: "rgba(255,255,255,0.7)", width: 4   },
-          ];
-          PISTE_DEFS.forEach(({ id: lid, values, color, outline, width }) => {
-            const filter = ["in", ["get","piste:difficulty"], ["literal", values]];
-            map.addLayer({ id: lid + "-outline", type: "line", source: "openski-data", filter,
-              paint: { "line-color": outline, "line-width": width + 2.5, "line-opacity": 0.7 },
-              layout: { "line-cap": "round", "line-join": "round" } });
-            map.addLayer({ id: lid, type: "line", source: "openski-data", filter,
-              paint: { "line-color": color, "line-width": width, "line-opacity": 1 },
-              layout: { "line-cap": "round", "line-join": "round" } });
-          });
-          // Runs with no difficulty tag — show as grey
-          map.addLayer({ id: "px-unknown", type: "line", source: "openski-data",
-            filter: ["all", ["has","piste:type"], ["!", ["in", ["get","piste:difficulty"], ["literal", ["novice","easy","beginner","intermediate","advanced","expert","freeride"]]]]],
-            paint: { "line-color": "#888888", "line-width": 3, "line-opacity": 0.7 },
-            layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "piste-labels", type: "symbol", source: "openski-data", filter: ["has","name"], layout: { "text-field": ["get","name"], "text-size": 11, "text-font": ["Open Sans Bold","Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff", "text-halo-color": "#0a0a1a", "text-halo-width": 1.5 } });
-          map.addLayer({ id: "lifts-line", type: "line", source: "openski-data", filter: ["has","aerialway"], paint: { "line-color": "#FB343D", "line-width": 2, "line-dasharray": [2,1], "line-opacity": 0.85 } });
-          map.addLayer({ id: "lifts-label", type: "symbol", source: "openski-data", filter: ["all",["has","aerialway"],["has","name"]], layout: { "text-field": ["get","name"], "text-size": 10, "text-font": ["Open Sans Regular","Arial Unicode MS Regular"] }, paint: { "text-color": "#FB343D", "text-halo-color": "#ffffff", "text-halo-width": 1.5 } });
+          // Overpass data used for routing graph only — no visual layers added
+          // The PeakXP custom map style already renders pistes with correct colours
 
           // Route layers added LAST so they always render on top of piste data
           map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } }); // white shadow
