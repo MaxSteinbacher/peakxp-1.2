@@ -354,25 +354,35 @@ export default function ResortRoutePlanner() {
       map.on("load", async () => {
         if (unmounted) return;
 
+        // Hide the custom style's own piste layers so our Overpass layers show cleanly
+        const styleLayers = map.getStyle()?.layers || [];
+        styleLayers.forEach(layer => {
+          const id = layer.id.toLowerCase();
+          if (id.includes("piste") || id.includes("ski") || id.includes("slope") || id.includes("aerialway")) {
+            try { map.setLayoutProperty(layer.id, "visibility", "none"); } catch {}
+          }
+        });
+
         // Pre-add route sources (layers added after piste data so they render on top)
         map.addSource("route-line", { type: "geojson", data: EMPTY_FC });
         map.addSource("route-points", { type: "geojson", data: EMPTY_FC });
 
         // Fetch piste data from Overpass
-        // Larger bounding box: 0.25° ≈ 20-25km — covers most full resorts
-        // For very large ski areas (Ski Welt, Trois Vallées), this still covers the core
-        const pad = 0.25;
-        const lonPad = pad / Math.cos(lat * Math.PI / 180); // correct for longitude compression
+        // Bounding box: 0.15° ≈ 12-16km radius — covers most single resort areas
+        const pad = 0.15;
+        const lonPad = pad / Math.cos(lat * Math.PI / 180);
         const [S, N, W, E] = [lat-pad, lat+pad, lng-lonPad, lng+lonPad];
-        const query = `[out:json][timeout:40];(way["piste:type"="downhill"](${S},${W},${N},${E});way["piste:type"="nordic"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
+        const query = `[out:json][timeout:25][maxsize:50000000];(way["piste:type"="downhill"](${S},${W},${N},${E});way["aerialway"](${S},${W},${N},${E}););out body;>;out skel qt;`;
         try {
           const ctrl = new AbortController();
-          setTimeout(() => ctrl.abort(), 38000);
+          setTimeout(() => ctrl.abort(), 24000);
+          setLoading(true); // show loading while fetching piste data
           const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
           const data = await res.json();
           if (unmounted) return;
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
+          setLoading(false);
           map.addSource("openski-data", { type: "geojson", data: geojson });
           // Difficulty colour mapping — European Alpine standard:
           // novice/easy → green (#43a047), intermediate → blue (#1565C0),
@@ -407,6 +417,7 @@ export default function ResortRoutePlanner() {
           map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
           map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
         } catch {
+          setLoading(false);
           // Overpass failed — still add route layers so drawing works
           map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
           map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
@@ -452,7 +463,7 @@ export default function ResortRoutePlanner() {
 
         mapInstance.current = map;
         setMapLoaded(true);
-        setLoading(false);
+        // Don't set loading false yet — wait for Overpass fetch
       });
     };
     script.onerror = () => setLoading(false);
