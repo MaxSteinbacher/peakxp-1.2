@@ -319,48 +319,94 @@ export default function ResortRoutePlanner() {
         map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
         map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
 
-        // Build routing graph from vector tiles already loaded in the map
-        // No external API — uses data the map style already downloaded
+        // Build routing graph using querySourceFeatures — reads ALL loaded tiles
+        // More reliable than queryRenderedFeatures (not limited to visible viewport)
         function tryBuildGraph() {
           if (unmounted) return false;
           try {
-            const features = map.queryRenderedFeatures(undefined, {
-              filter: ["any",
-                ["==", ["get", "piste:type"], "downhill"],
-                ["==", ["get", "class"], "piste"],
-                ["has", "aerialway"],
-              ]
-            });
-            const lines = features.filter(f => f.geometry.type === "LineString" && f.geometry.coordinates.length >= 2)
-              .map(f => ({ type: "Feature", geometry: f.geometry, properties: {
-                "piste:type": f.properties["piste:type"] || f.properties.class || "downhill",
-                "piste:difficulty": f.properties["piste:difficulty"] || f.properties.difficulty || "intermediate",
-                "aerialway": f.properties.aerialway || null,
-                "name": f.properties.name || null,
-              }}));
-            if (lines.length > 5) {
-              geojsonRef.current = { type: "FeatureCollection", features: lines };
-              graphRef.current = buildPisteGraph(lines);
+            let pisteLines = [];
+
+            // Step 1: find source names from the loaded style
+            const style = map.getStyle();
+            const sourceNames = Object.keys(style?.sources || {});
+            console.log("[PeakXP] Available sources:", sourceNames);
+
+            // Step 2: try querySourceFeatures with every source + common source-layer combos
+            const sourceLayers = ["transportation", "piste", "landuse", "winter_sports", "ski"];
+            const pisteClasses = ["piste", "downhill", "ski", "aerialway", "gondola", "chair_lift", "cable_car", "drag_lift"];
+
+            for (const srcName of sourceNames) {
+              for (const srcLayer of sourceLayers) {
+                try {
+                  const features = map.querySourceFeatures(srcName, { sourceLayer: srcLayer });
+                  const lines = features.filter(f => {
+                    if (f.geometry.type !== "LineString") return false;
+                    const p = f.properties || {};
+                    return pisteClasses.some(c =>
+                      p.class === c || p.subclass === c ||
+                      p["piste:type"] || p.aerialway || p.type === "piste"
+                    );
+                  });
+                  if (lines.length > 0) {
+                    console.log(`[PeakXP] Found ${lines.length} piste lines in ${srcName}/${srcLayer}`);
+                    pisteLines = pisteLines.concat(lines);
+                  }
+                } catch {} // source-layer doesn't exist in this source — skip
+              }
+            }
+
+            // Step 3: fallback — queryRenderedFeatures with broad filter
+            if (pisteLines.length < 5) {
+              console.log("[PeakXP] querySourceFeatures found nothing, trying queryRenderedFeatures...");
+              const allFeatures = map.queryRenderedFeatures();
+              pisteLines = allFeatures.filter(f => {
+                if (f.geometry.type !== "LineString") return false;
+                const lid = (f.layer?.id || "").toLowerCase();
+                const p = f.properties || {};
+                return lid.includes("piste") || lid.includes("ski") || lid.includes("slope") ||
+                       lid.includes("aerial") || lid.includes("lift") || lid.includes("winter") ||
+                       p["piste:type"] || p.aerialway || p.class === "piste";
+              });
+              console.log(`[PeakXP] queryRenderedFeatures found ${pisteLines.length} piste lines`);
+            }
+
+            console.log(`[PeakXP] Total piste lines: ${pisteLines.length}`);
+            if (pisteLines.length > 3) {
+              const mapped = pisteLines.map(f => ({
+                type: "Feature", geometry: f.geometry,
+                properties: {
+                  "piste:type": f.properties["piste:type"] || f.properties.class || "downhill",
+                  "piste:difficulty": f.properties["piste:difficulty"] || f.properties.difficulty || f.properties.subclass || "intermediate",
+                  "aerialway": f.properties.aerialway || f.properties.subclass || null,
+                  "name": f.properties.name || f.properties.ref || null,
+                }
+              }));
+              geojsonRef.current = { type: "FeatureCollection", features: mapped };
+              graphRef.current = buildPisteGraph(mapped);
               setOverpassStatus("ready");
+              console.log(`[PeakXP] Graph built with ${graphRef.current.nodeCoords.length} nodes, ${graphRef.current.edges.length} edges`);
               return true;
             }
-          } catch(e) { console.warn("queryRenderedFeatures:", e); }
+          } catch(e) { console.warn("[PeakXP] graph build error:", e); }
           return false;
         }
 
-        // Try after tiles load, retry as more tiles arrive
+        // Try after tiles load, retry as more tiles stream in
         setTimeout(() => {
           if (!tryBuildGraph()) {
             let n = 0;
             const iv = setInterval(() => {
               n++;
-              if (tryBuildGraph() || n > 10) {
+              if (tryBuildGraph() || n > 12) {
                 clearInterval(iv);
-                if (n > 10 && !graphRef.current) setOverpassStatus("failed");
+                if (!graphRef.current) {
+                  setOverpassStatus("failed");
+                  console.warn("[PeakXP] Could not build routing graph after", n, "attempts");
+                }
               }
             }, 1500);
           }
-        }, 2500);
+        }, 2000);
 
         // Click handler — snap to piste + route
         map.on("click", async e => {
