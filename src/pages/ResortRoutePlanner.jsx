@@ -240,10 +240,9 @@ function dijkstra(graph, startCoord, endCoord) {
   return path.length >= 2 ? path : null;
 }
 
-function routeAlongPistes(start, end, geojson) {
-  if (!geojson?.features?.length) return null;
+function routeAlongPistes(start, end, graph) {
+  if (!graph?.nodeCoords?.length) return null;
   try {
-    const graph = buildPisteGraph(geojson.features);
     return dijkstra(graph, start, end);
   } catch (e) {
     console.warn("Routing error:", e);
@@ -270,6 +269,7 @@ export default function ResortRoutePlanner() {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const geojsonRef = useRef(null);
+  const graphRef = useRef(null);
   const routeRef = useRef([]);
   const pathRef = useRef([]);
   const routeModeRef = useRef("fastest");
@@ -303,7 +303,7 @@ export default function ResortRoutePlanner() {
     (() => {
       let combined = [];
       for (let i = 0; i < pts.length - 1; i++) {
-        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, geojsonRef.current);
+        const seg = routeAlongPistes(pts[i].lngLat, pts[i+1].lngLat, graphRef.current);
         if (seg) combined = combined.concat(seg);
         else combined = combined.concat([pts[i].lngLat, pts[i+1].lngLat]);
       }
@@ -367,28 +367,27 @@ export default function ResortRoutePlanner() {
         try {
           const ctrl = new AbortController();
           setTimeout(() => ctrl.abort(), 24000);
-          setLoading(true); // show loading while fetching piste data
           const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
           const data = await res.json();
           if (unmounted) return;
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
-          setLoading(false);
+          graphRef.current = buildPisteGraph(geojson.features);
           map.addSource("openski-data", { type: "geojson", data: geojson });
           // Overpass data used for routing graph only — no visual layers added
           // The PeakXP custom map style already renders pistes with correct colours
 
           // Route layers added LAST so they always render on top of piste data
           map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } }); // white shadow
-          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
           map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
         } catch {
           setLoading(false);
           // Overpass failed — still add route layers so drawing works
           map.addLayer({ id: "route-line", type: "line", source: "route-line", paint: { "line-color": "#ffffff", "line-width": 6, "line-opacity": 0.25 }, layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FB343D", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
-          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FB343D", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
+          map.addLayer({ id: "route-line-core", type: "line", source: "route-line", paint: { "line-color": "#FF00C8", "line-width": 3.5, "line-opacity": 1 }, layout: { "line-cap": "round", "line-join": "round" } });
+          map.addLayer({ id: "route-points-circle", type: "circle", source: "route-points", paint: { "circle-radius": 9, "circle-color": "#FF00C8", "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } });
           map.addLayer({ id: "route-labels", type: "symbol", source: "route-points", layout: { "text-field": ["get", "pointIndex"], "text-size": 11, "text-anchor": "center", "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"] }, paint: { "text-color": "#ffffff" } });
         }
 
@@ -419,7 +418,7 @@ export default function ResortRoutePlanner() {
           // Route from previous point to this one
           if (newPts.length >= 2) {
             const prev2 = newPts[newPts.length-2];
-            const seg = routeAlongPistes(prev2.lngLat, coord, gj);
+            const seg = routeAlongPistes(prev2.lngLat, coord, graphRef.current);
             const existing = pathRef.current;
             const combined = [...existing, ...(seg || [prev2.lngLat, coord])];
             setRoutePathCoords(combined);
@@ -430,7 +429,7 @@ export default function ResortRoutePlanner() {
 
         mapInstance.current = map;
         setMapLoaded(true);
-        // Don't set loading false yet — wait for Overpass fetch
+        setLoading(false);
       });
     };
     script.onerror = () => setLoading(false);
