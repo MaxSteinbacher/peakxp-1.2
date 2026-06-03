@@ -6,17 +6,25 @@ import DateRangePicker from "../shared/DateRangePicker";
 import RangeSlider from "../shared/RangeSlider";
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { resorts } from "../../lib/data";
+import { hotels as hotelData } from "../../lib/hotels";
 import { sortByProximity } from "../../lib/proximity";
 
-const mockProperties = [
-  { id: "hotel-kitzhof", name: "Hotel Kitzhof Mountain Design Resort", type: "Hotel", location: "Kitzbühel, Austria", price: 195, rating: 9.1, image: "https://media.base44.com/images/public/69f1c737747c83c0b091a543/18c29298b_AuenansichtfrontHotelKitzhof.jpg", stars: 4, coordinates: { lat: 47.445, lon: 12.393 }, facilities: ["Spa", "Restaurant", "Bar", "Free WiFi", "Ski storage", "Parking"], boardBasis: "Bed and breakfast", cancellation: "Free cancellation" },
-  { id: 2, name: "Alpenhof Boutique Hotel", type: "Hotel", location: "Verbier, Switzerland", price: 189, rating: 9.2, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/65c315351_image.png", stars: 4, facilities: ["Spa", "Restaurant", "Free WiFi", "Ski storage"], boardBasis: "Bed and breakfast", cancellation: "Free cancellation" },
-  { id: 3, name: "Chalet Blanc", type: "Chalet", location: "Courchevel, France", price: 420, rating: 9.5, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/65c315351_image.png", stars: 5, facilities: ["Restaurant", "Free WiFi", "Ski-in ski-out", "Ski storage"], boardBasis: "Half board", cancellation: "Non-refundable" },
-  { id: 4, name: "Mountain View Apartments", type: "Apartment", location: "Zermatt, Switzerland", price: 95, rating: 8.7, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/65c315351_image.png", stars: 3, facilities: ["Free WiFi", "Parking"], boardBasis: "Room only", cancellation: "Free cancellation" },
-  { id: 5, name: "Tyrolean B&B", type: "B&B", location: "St. Anton, Austria", price: 72, rating: 8.4, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/65c315351_image.png", stars: 3, facilities: ["Free WiFi", "Bar"], boardBasis: "Bed and breakfast", cancellation: "Free cancellation" },
-  { id: 6, name: "Summit Lodge", type: "Hotel", location: "Val Thorens, France", price: 155, rating: 8.9, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/65c315351_image.png", stars: 4, facilities: ["Pool", "Restaurant", "Free WiFi", "Ski storage"], boardBasis: "Half board", cancellation: "Free cancellation" },
-  { id: 7, name: "The Ski Haus", type: "Chalet", location: "Kitzbühel, Austria", price: 310, rating: 9.1, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/65c315351_image.png", stars: 5, facilities: ["Ski-in ski-out", "Free WiFi", "Ski storage", "Bar"], boardBasis: "Full board", cancellation: "Non-refundable" },
-];
+// Map hotels from lib/hotels.js to the shape this component uses
+const mockProperties = hotelData.map(h => ({
+  id: h.id,
+  name: h.name,
+  type: h.category?.toLowerCase().includes("apartment") || h.category?.toLowerCase().includes("ferienwohn") ? "Apartment" : "Hotel",
+  location: `${h.city}, ${h.country}`,
+  price: h.priceFrom,
+  rating: h.rating || null,
+  image: h.images?.[0] || "",
+  stars: h.stars || 4,
+  coordinates: h.coordinates,
+  facilities: h.amenities || [],
+  boardBasis: "Bed and breakfast",
+  cancellation: "Free cancellation",
+  resortId: h.resortId,
+}));
 
 // Seed-based pseudo-random offset so placeholder hotels appear near resort consistently
 function seededOffset(str, scale) {

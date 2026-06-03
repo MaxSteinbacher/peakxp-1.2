@@ -140,6 +140,7 @@ export const hotels = [
     partnerBadge: true,
     seasonOpen: "December",
     seasonClose: "April",
+    resortId: "kitzbuehel",
   },
 
   // ─── Mountain Plaza Hotel ──────────────────────────────────────────────────
