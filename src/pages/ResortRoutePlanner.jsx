@@ -276,7 +276,6 @@ export default function ResortRoutePlanner() {
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [overpassReady, setOverpassReady] = useState(false);
   const [routePoints, setRoutePoints] = useState([]);
   const [routePathCoords, setRoutePathCoords] = useState([]);
   const [routeMode, setRouteMode] = useState("fastest");
@@ -368,25 +367,14 @@ export default function ResortRoutePlanner() {
         try {
           const ctrl = new AbortController();
           setTimeout(() => ctrl.abort(), 24000);
-          // Don't block map with loading overlay — Overpass loads in background
-          // Try primary then fallback mirror
-          let res;
-          try {
-            res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          } catch {
-            // Fallback to second mirror
-            const ctrl2 = new AbortController();
-            setTimeout(() => ctrl2.abort(), 20000);
-            res = await fetch(`https://overpass.openstreetmap.ru/cgi/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl2.signal });
-          }
+          setLoading(true); // show loading while fetching piste data
+          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`, { signal: ctrl.signal });
           const data = await res.json();
           if (unmounted) return;
           const geojson = overpassToGeoJSON(data);
           geojsonRef.current = geojson;
           // Build graph once — reused on every click (avoid rebuilding per click)
           graphRef.current = buildPisteGraph(geojson.features);
-          setOverpassReady(true);
           setLoading(false);
           map.addSource("openski-data", { type: "geojson", data: geojson });
           // Overpass data used for routing graph only — no visual layers added
@@ -444,7 +432,7 @@ export default function ResortRoutePlanner() {
 
         mapInstance.current = map;
         setMapLoaded(true);
-        setLoading(false); // Map is ready — Overpass loads in background
+        // Don't set loading false yet — wait for Overpass fetch
       });
     };
     script.onerror = () => setLoading(false);
@@ -532,19 +520,11 @@ export default function ResortRoutePlanner() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0, position: "relative" }}>
 
-        {/* Loading overlay — only while map tiles load */}
+        {/* Loading overlay */}
         {loading && (
           <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#070B1E", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-            <div style={{ fontSize: 36 }}>⛷️</div>
+            <div style={{ fontSize: 36, animation: "pulse 2s infinite" }}>⛷️</div>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>Loading resort map…</p>
-          </div>
-        )}
-
-        {/* Small routing-data banner — map stays clickable */}
-        {!loading && !overpassReady && (
-          <div style={{ position: "absolute", bottom: 48, left: "50%", transform: "translateX(-50%)", zIndex: 20, background: "rgba(7,11,30,0.9)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "8px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF00C8", animation: "pulse 1.5s infinite" }} />
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, margin: 0 }}>Loading slope data for routing…</p>
           </div>
         )}
 
