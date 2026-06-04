@@ -65,8 +65,19 @@ function buildGraph(features, mode) {
       const a = node(cs[i]), b = node(cs[i+1]);
       if (a === b) continue;
       const d = hav(cs[i], cs[i+1]);
-      edges.push({ from:a, to:b, d:d*w,     seg:[cs[i], cs[i+1]] });
-      edges.push({ from:b, to:a, d:d*w*1.5, seg:[cs[i+1], cs[i]] });
+
+      if (lift) {
+        // Lifts: OSM stores bottom→top, so forward = uphill (valid).
+        // Never allow riding a lift downhill.
+        edges.push({ from:a, to:b, d:d*w, seg:[cs[i], cs[i+1]] });
+        // No reverse edge for lifts.
+      } else {
+        // Pistes: OSM stores top→bottom, so forward = downhill (valid, preferred).
+        // Reverse = uphill — technically possible on flat cat tracks but very costly.
+        // We add a high-cost reverse edge only to keep graph connected across flat links.
+        edges.push({ from:a, to:b, d:d*w,      seg:[cs[i], cs[i+1]] }); // downhill ✓
+        edges.push({ from:b, to:a, d:d*w*15,   seg:[cs[i+1], cs[i]] }); // uphill ✗ (15× penalty, last resort only)
+      }
     }
   });
 
