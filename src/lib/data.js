@@ -547,6 +547,7 @@ export const SEASON_PASSES = {
   "epic-pass": { name: "Epic Pass", color: "#065F46", regions: 40, priceFrom: 849 },
   "snowcard-tirol": { name: "Snowcard Tirol", color: "#0891B2", regions: 14, priceFrom: 699 },
   "superski": { name: "SuperSki Card", color: "#EA580C", regions: 28, priceFrom: 589 },
+  "skirama-dolomiti": { name: "Skirama Dolomiti", color: "#0077B6", regions: 8, priceFrom: 699 },
   "salzburg-super-ski-card": { name: "Salzburg Super Ski Card", color: "#c0392b", regions: 25, priceFrom: 699 },
   "lungo": { name: "LUNGO Pass", color: "#8e44ad", regions: 3, priceFrom: 0 },
 };
