@@ -9,6 +9,8 @@ export default function ResortCard({ resort, compact = false }) {
 
   const passPrice = resort.liftPasses?.[0]?.adult ?? resort.priceFrom;
 
+  const heroVideo = resort.videos?.[0]?.url || null;
+
   if (compact) {
     return (
       <Link
@@ -16,11 +18,15 @@ export default function ResortCard({ resort, compact = false }) {
         className="group rounded-xl overflow-hidden bg-peak-card border border-white/5 hover:border-peak-blue/30 transition-all duration-300 hover:-translate-y-1"
       >
         <div className="relative h-44 overflow-hidden">
+          {heroVideo ? (
+            <video src={heroVideo} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+          ) : (
           <img
             src={resort.image}
             alt={resort.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+          )}
           <div className="absolute top-3 right-3 bg-peak-bg/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold text-peak-text">
             {resort.rating}
           </div>
@@ -50,11 +56,15 @@ export default function ResortCard({ resort, compact = false }) {
   return (
     <div className="group rounded-xl overflow-hidden bg-peak-card border border-white/5 hover:border-peak-blue/30 transition-all duration-300 hover:-translate-y-1">
       <div className="relative h-48 overflow-hidden">
+        {heroVideo ? (
+          <video src={heroVideo} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+        ) : (
         <img
           src={resort.image}
           alt={resort.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
+        )}
         <button
           onClick={(e) => { e.preventDefault(); setSaved(!saved); }}
           className="absolute top-3 right-3 p-2 rounded-full bg-peak-bg/60 backdrop-blur-sm hover:bg-peak-bg/80 transition-colors"

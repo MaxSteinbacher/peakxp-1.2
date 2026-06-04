@@ -5,8 +5,9 @@ import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 export default function PhotoSlideshow({ images, videos }) {
   const [idx, setIdx] = useState(0);
 
-  // Build unified slides: photos only (YouTube embeds are blocked by iframe policy)
+  // Build unified slides: videos first, then photos
   const slides = [
+    ...(videos || []).filter(v => v.url).map(v => ({ type: "video", src: v.url, credits: v.credits })),
     ...(images || []).map(i => typeof i === "string" ? { type: "image", src: i } : { type: "image", src: i.src, credits: i.credits }),
   ];
 
