@@ -229,6 +229,9 @@ export const italianResorts = [
     logo: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7f91dd0a4_Kronplatz_Logo.png",
     logoBackground: "blue",
     image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c9faa11d5_wwwwisthalercom_26_04_kronplatz__HW87405.jpg",
+    videos: [
+      { url: "https://media.base44.com/videos/public/6a19694d2b38b5e31a976be8/7852f268d_Kronplatzcut.mp4", credits: "© Skirama Kronplatz" }
+    ],
     images: [
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/44a1c2214_wisthalercom_24_01_kronplatz_heli__HW65361.jpg", credits: "© Harald Wisthaler / Kronplatz" },
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c9faa11d5_wwwwisthalercom_26_04_kronplatz__HW87405.jpg", credits: "© Harald Wisthaler / Kronplatz" },
