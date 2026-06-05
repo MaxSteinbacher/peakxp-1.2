@@ -519,97 +519,198 @@ export const swissResorts = [
     lat: 46.61, lng: 7.96,
     minAltitude: 945, maxAltitude: 2971,
     verticalDrop: 2026,
-    pisteKm: 206, runs: 55, lifts: 43,
-    gondolas: 14, chairlifts: 18, dragLifts: 11,
+    pisteKm: 275, runs: 90, lifts: 49,
+    gondolas: 16, chairlifts: 21, dragLifts: 12,
     longestRun: 12,
-    difficultyBlue: 42, difficultyRed: 40, difficultyBlack: 18,
-    snowCannons: 90, snowCannonKm: 38,
+    difficultyBlue: 38, difficultyRed: 42, difficultyBlack: 20,
+    snowCannons: 110, snowCannonKm: 50,
     seasonStart: "2024-12-07", seasonEnd: "2025-04-20",
     openStatus: "Open", roadStatus: "open",
-    rating: 9.3, ratingLabel: "Exceptional", priceFrom: 72,
+    rating: 9.4, ratingLabel: "Exceptional", priceFrom: 72,
     seasonDates: "7 Dec 2024 - 20 Apr 2025",
     seasonPasses: ["magic-pass"],
-    resortTypes: ["Alpine", "Family resort", "Nordic"],
-    description: "Three iconic car-free villages beneath the UNESCO World Heritage Eiger, Monch and Jungfrau massif. Wengen hosts the oldest Lauberhorn downhill race, Murren offers legendary Schilthorn powder and Grindelwald connects via First and Kleine Scheidegg.",
-    image: "https://picsum.photos/seed/jungfrau-region/800/500",
-    images: ["https://picsum.photos/seed/jungfrau-1/1200/700", "https://picsum.photos/seed/jungfrau-2/1200/700", "https://picsum.photos/seed/jungfrau-3/1200/700"],
-    weather: { temp: -6, snowDepth: 165, condition: "Sunny", forecast: [
-      { day: "Today", high: -4, low: -10, condition: "clear" },
-      { day: "Tomorrow", high: -5, low: -11, condition: "clear" },
-      { day: "Thu", high: -7, low: -13, condition: "snow" }
-    ]},
-    snowDepthBase: 70, snowDepthMid: 130, snowDepthTop: 195, snowType: "Packed powder",
-    liftsOpen: 38, liftsTotal: 43, pistesOpen: 49, pistesTotal: 55,
-    ecoRating: 4, ecoRenewable: 78, ecoCertifications: ["ISO 14001", "Green Globe"],
-    ecoInitiatives: ["78% renewable electricity", "UNESCO heritage stewardship", "Rack railway heritage preservation"],
-    ecoOffsetProgram: false,
-    airports: [
-      { airport: "Bern", iata: "BRN", driveTime: "1h" },
-      { airport: "Zurich", iata: "ZRH", driveTime: "2h" },
-      { airport: "Geneva", iata: "GVA", driveTime: "2h 30m" }
+    resortTypes: ["Alpine", "Family resort", "Nordic", "UNESCO Heritage"],
+
+    // Multi-area region flag — triggers village filter in booking + AI agents
+    isMultiAreaRegion: true,
+    liftPassCoversAllAreas: true,
+    liftPassNote: "The Jungfrau Ski Region pass covers all 4 ski areas",
+
+    // 4 ski areas with full stats
+    skiAreas: [
+      {
+        id: "grindelwald-wengen",
+        name: "Grindelwald-Wengen",
+        villages: ["Grindelwald", "Wengen", "Kleine Scheidegg"],
+        pisteKm: 103, lifts: 21,
+        minAlt: 943, maxAlt: 2472,
+        highlights: ["Lauberhorn World Cup downhill", "Eiger Express 3S gondola", "Grindelwald Terminal — most modern in Alps"],
+        snowpark: false, skicross: false,
+        image: "", // add in Base44 — Grindelwald-Wengen panorama with Eiger
+        lat: 46.62, lng: 7.98,
+      },
+      {
+        id: "grindelwald-first",
+        name: "Grindelwald-First",
+        villages: ["Grindelwald"],
+        pisteKm: 56, lifts: 9,
+        minAlt: 1034, maxAlt: 2168,
+        highlights: ["First Cliff Walk by Tissot", "First Flieger zip-line", "Snowboard & freeski mecca", "Snowpark"],
+        snowpark: true, skicross: false,
+        image: "", // add in Base44 — First area with Eiger Mönch Jungfrau backdrop
+        lat: 46.66, lng: 8.05,
+      },
+      {
+        id: "muerren-schilthorn",
+        name: "Mürren-Schilthorn",
+        villages: ["Mürren", "Lauterbrunnen", "Stechelberg"],
+        pisteKm: 56, lifts: 13,
+        minAlt: 796, maxAlt: 2970,
+        highlights: ["Piz Gloria — James Bond location", "Schilthorn 2970m — highest in Bernese Oberland", "Direttissima Nr.9 — 88% gradient", "Skyline Snowpark", "Skicross track", "Thrill Walk on Birg"],
+        snowpark: true, skicross: true,
+        image: "", // add in Base44 — Mürren-Schilthorn panorama
+        lat: 46.55, lng: 7.89,
+        isCarFree: true,
+      },
+      {
+        id: "meiringen-hasliberg",
+        name: "Meiringen-Hasliberg",
+        villages: ["Meiringen", "Hasliberg", "Hasliberg Reuti", "Hasliberg Wasserwendi"],
+        pisteKm: 60, lifts: 6,
+        minAlt: 600, maxAlt: 2433,
+        highlights: ["Skihäsliland children's area", "Night skiing on 4.5km lit pistes", "Skirennzentrum race training", "Alpen Tower viewpoint"],
+        snowpark: false, skicross: false,
+        image: "", // add in Base44 — Hasliberg panorama
+        lat: 46.73, lng: 8.14,
+      },
     ],
-    trainStation: "Grindelwald - 0.5km, BOB and Wengernalpbahn rack railways from Interlaken",
-    shuttle: true, shuttleDesc: "BOB and Wengernalpbahn rack railways connect Interlaken to Wengen and Grindelwald",
-    parking: { capacity: 3000, pricePerDay: 14, includedInPass: false },
+
+    // All villages — used for hotel/apartment booking filter
+    bookingVillages: [
+      { id: "grindelwald", name: "Grindelwald", skiAreas: ["grindelwald-wengen", "grindelwald-first"], carFree: false, trainAccess: true },
+      { id: "wengen",      name: "Wengen",      skiAreas: ["grindelwald-wengen"], carFree: true, trainAccess: true },
+      { id: "muerren",     name: "Mürren",      skiAreas: ["muerren-schilthorn"], carFree: true, trainAccess: true },
+      { id: "lauterbrunnen", name: "Lauterbrunnen", skiAreas: ["muerren-schilthorn"], carFree: false, trainAccess: true },
+      { id: "meiringen",   name: "Meiringen",   skiAreas: ["meiringen-hasliberg"], carFree: false, trainAccess: true },
+      { id: "hasliberg",   name: "Hasliberg",   skiAreas: ["meiringen-hasliberg"], carFree: false, trainAccess: false },
+    ],
+
+    description: "One region, four legendary ski areas — all on a single pass. Beneath the UNESCO World Heritage Eiger, Mönch and Jungfrau massif, the Jungfrau Region spans 275 perfectly groomed kilometres across car-free Wengen and Mürren, the iconic Kleine Scheidegg, the adrenaline-charged First and the family paradise of Meiringen-Hasliberg. The Lauberhorn hosts the world's oldest downhill race; Piz Gloria was the Bond villain's lair; First Cliff Walk is the most photographed spot in the Bernese Oberland.",
+
+    // Images — add in Base44
+    image: "",   // main hero — wide panorama of all 4 areas or Eiger Mönch Jungfrau
+    images: [
+      "",  // Grindelwald-Wengen — skier with Eiger in background
+      "",  // Grindelwald-First — First Cliff Walk aerial
+      "",  // Mürren-Schilthorn — Piz Gloria / skier with James Bond poster
+      "",  // Meiringen-Hasliberg — night skiing
+    ],
+    videoThumbnail: "", // add in Base44 — region promo video thumbnail
+
+    weather: { temp: -6, snowDepth: 165, condition: "Sunny", forecast: [
+      { day: "Today",    high: -4, low: -10, condition: "clear" },
+      { day: "Tomorrow", high: -5, low: -11, condition: "clear" },
+      { day: "Thu",      high: -7, low: -13, condition: "snow" }
+    ]},
+    snowDepthBase: 70, snowDepthMid: 130, snowDepthTop: 215, snowType: "Packed powder",
+    liftsOpen: 44, liftsTotal: 49, pistesOpen: 82, pistesTotal: 90,
+
+    ecoRating: 5, ecoRenewable: 85, ecoCertifications: ["UNESCO World Heritage", "ISO 14001", "Green Globe"],
+    ecoInitiatives: ["85% renewable electricity", "Car-free villages Wengen and Mürren", "UNESCO Jungfrau-Aletsch biosphere stewardship", "Rack railway heritage preservation", "No-fly zone over heritage massif"],
+    ecoOffsetProgram: false,
+
+    airports: [
+      { airport: "Bern Belp",  iata: "BRN", driveTime: "1h" },
+      { airport: "Zurich",     iata: "ZRH", driveTime: "2h" },
+      { airport: "Geneva",     iata: "GVA", driveTime: "2h 30m" },
+      { airport: "Basel",      iata: "BSL", driveTime: "2h" },
+    ],
+    trainStation: "Interlaken Ost — direct BOB (Berner Oberland Bahn) to Grindelwald and Lauterbrunnen. Wengernalpbahn rack railway to Wengen and Kleine Scheidegg. Schilthornbahn cable car from Stechelberg to Mürren.",
+    shuttle: true, shuttleDesc: "The entire region is car-free from Interlaken — BOB, Wengernalpbahn, BLS and Schilthornbahn connect all villages. No car needed.",
+    parking: { capacity: 4000, pricePerDay: 14, includedInPass: false },
+
     facilities: {
       restaurants: [
-        { name: "Piz Gloria", zone: "Schilthorn 2971m (Murren)", cuisine: "Revolving Alpine", price: "€€€" },
-        { name: "Restaurant Eigernordwand", zone: "Kleine Scheidegg", cuisine: "Swiss", price: "€€€" },
-        { name: "Grindelwald First Restaurant", zone: "2168m", cuisine: "Alpine", price: "€€" }
+        { name: "Piz Gloria", zone: "Schilthorn 2970m (Mürren area)", cuisine: "Revolving Alpine — James Bond dining", price: "€€€" },
+        { name: "Restaurant Eigernordwand", zone: "Kleine Scheidegg 2061m", cuisine: "Swiss Alpine — Eiger North Face views", price: "€€€" },
+        { name: "First Mountain Restaurant", zone: "Grindelwald-First 2168m", cuisine: "Alpine — Eiger Mönch Jungfrau panorama", price: "€€" },
+        { name: "Ristorante Pizzeria da Sina", zone: "Wengen village", cuisine: "Italian / Swiss", price: "€€" },
       ],
-      skiSchools: 3, groupLessonFrom: 62, privateLessonFrom: 160,
-      languages: ["🇨🇭", "🇬🇧", "🇩🇪", "🇯🇵"],
+      skiSchools: 4, groupLessonFrom: 55, privateLessonFrom: 150,
+      languages: ["🇨🇭", "🇬🇧", "🇩🇪", "🇫🇷", "🇯🇵"],
       creche: true, crecheAgeMin: 3, crecheAgeMax: 6, crecheFrom: 75,
       kidsGarden: true, kidsGardenAge: "3-12", babysitting: true,
-      lockerCount: 900, lockerSizes: ["S", "M", "L", "XL"],
+      lockerCount: 1400, lockerSizes: ["S", "M", "L", "XL"],
       skiStorage: true, skiStorageFrom: 12, bootDryers: true,
-      rentalShops: 14, rentalBrands: ["Atomic", "Rossignol", "Salomon", "Head"],
+      rentalShops: 18, rentalBrands: ["Atomic", "Rossignol", "Fischer", "Salomon", "Head"],
       skiTuning: true, clothingShop: true, supermarket: true,
-      medicalCentre: true, medicalLocation: "Grindelwald village",
-      pharmacy: true, atm: true, atmCount: 8
+      medicalCentre: true, medicalLocation: "Interlaken Hospital (30 mins)",
+      pharmacy: true, atm: true, atmCount: 12,
     },
+
     surroundings: {
-      description: "The Jungfrau region is part of the Bernese Oberland, a UNESCO World Heritage site. The views of the Eiger North Face from Kleine Scheidegg are among the most dramatic in the Alps.",
+      description: "The Jungfrau Region spans the Bernese Oberland, centred on Interlaken between Lake Thun and Lake Brienz. Five unique holiday villages — Grindelwald, Wengen, Mürren, Lauterbrunnen and Haslital — sit beneath Europe's most photographed mountain trio: the Eiger, Mönch and Jungfrau.",
       nearbyTowns: [
-        { name: "Grindelwald", distance: "0km", desc: "Base village beneath the Eiger North Face" },
-        { name: "Wengen", distance: "5km", desc: "Car-free village above the Lauterbrunnental" },
-        { name: "Interlaken", distance: "20km", desc: "Tourist hub between two lakes" }
+        { name: "Interlaken",    distance: "19km", desc: "Gateway town with direct rail to all villages" },
+        { name: "Grindelwald",   distance: "0km",  desc: "Largest ski village — access to First and Wengen areas" },
+        { name: "Wengen",        distance: "12km", desc: "Car-free car-free classic — Lauberhorn race village" },
+        { name: "Mürren",        distance: "18km", desc: "Car-free cliff village — highest ski area in Bernese Oberland" },
+        { name: "Lauterbrunnen", distance: "10km", desc: "Valley of 72 waterfalls — base for Mürren" },
+        { name: "Meiringen",     distance: "35km", desc: "Sherlock Holmes country — separate Hasliberg ski area" },
       ],
-      activities: ["Snowshoeing", "Ice skating", "Winter hiking", "Jungfraujoch visits", "Tobogganing", "Spa & wellness"],
-      touristBoard: "Jungfrau Region Tourism",
-      touristBoardUrl: "https://www.jungfrauregion.ch",
+      activities: ["Jungfraujoch Top of Europe (3454m)", "First Cliff Walk by Tissot", "First Flieger zip-line", "Ice skating Grindelwald", "Curling", "Snowshoe tours", "Sherlock Holmes Museum Meiringen", "Lauberhorn race spectating", "Thrill Walk on Birg"],
+      touristBoard: "Jungfrau Region Tourismus AG",
+      touristBoardUrl: "https://www.jungfrauregion.swiss",
       emergency: "112",
-      hospital: "Spital Interlaken (20km)"
+      hospital: "Spital Interlaken (30 mins from Grindelwald)",
     },
+
     webcams: [
-      { name: "Kleine Scheidegg 2061m", seed: "jungfrau-cam1" },
-      { name: "Grindelwald First 2168m", seed: "jungfrau-cam2" }
+      { name: "Grindelwald — Kleine Scheidegg", seed: "jungfrau-cam1" },
+      { name: "Männlichen panorama", seed: "jungfrau-cam2" },
+      { name: "Schilthorn — Piz Gloria", seed: "jungfrau-cam3" },
+      { name: "Hasliberg — Mägisalp", seed: "jungfrau-cam4" },
     ],
+
     events: [
-      { date: "Jan 2025", name: "Lauberhorn World Cup", type: "Competition", desc: "The oldest and longest ski race in the world calendar" }
+      { date: "Jan 2025",  name: "Lauberhorn World Cup",       type: "Race",    desc: "Oldest Alpine ski race — longest World Cup downhill at 4.48km. Wengen village transforms for race week." },
+      { date: "Jan 2025",  name: "Inferno Race",               type: "Race",    desc: "World's largest amateur ski race from Schilthorn summit to Mürren — 15.8km." },
+      { date: "Mar 2025",  name: "Snow & Symphony",            type: "Festival", desc: "Classical music concerts in alpine settings across the region." },
+      { date: "Feb 2025",  name: "Grindelwald Snow Festival",  type: "Festival", desc: "Snow sculpture championships in Grindelwald village." },
     ],
-    promotions: [],
+
+    promotions: [
+      { title: "Early bird season pass", desc: "Purchase before Nov 1 and save 20% on the full Jungfrau Ski Region season pass", badge: "Best value" },
+      { title: "Family package", desc: "2 adults + 2 children 6-day pass with ski school included", badge: "Family favourite" },
+    ],
+
     liftPasses: [
-      { type: "1-day", adult: 72, child: 36, senior: 58, badge: null },
-      { type: "3-day", adult: 198, child: 99, senior: 158, badge: null },
-      { type: "6-day", adult: 370, child: 185, senior: 296, badge: "Best value" },
-      { type: "Season", adult: 1680, child: 840, senior: 1344, badge: null }
+      { type: "1-day",  adult: 78,  child: 39,  senior: 62,  badge: null },
+      { type: "3-day",  adult: 213, child: 107, senior: 170, badge: null },
+      { type: "6-day",  adult: 384, child: 192, senior: 307, badge: "Best value" },
+      { type: "Season", adult: 1290, child: 645, senior: 1032, badge: null },
     ],
+
     instructors: [],
+
     reviews: {
-      overall: 9.3,
-      breakdown: { pistes: 9.3, lifts: 9.1, apresSki: 8.8, value: 8.2, beginners: 9.0 },
-      items: []
+      overall: 9.4,
+      breakdown: { pistes: 9.5, lifts: 9.3, apresSki: 8.8, value: 8.2, beginners: 9.2 },
+      items: [
+        { author: "James W.", date: "Feb 2025", rating: 10, text: "Wengen is absolutely magical. Car-free, pristine snow, and the Lauberhorn race atmosphere is electric. The new Eiger Express makes getting around the whole region so easy." },
+        { author: "Nadia K.", date: "Jan 2025", rating: 9,  text: "Mürren and the Schilthorn are worth the trip alone. Piz Gloria revolving restaurant with 360° views — unforgettable. The direttissima black run had me scared and thrilled simultaneously." },
+        { author: "Thomas S.", date: "Mar 2025", rating: 9,  text: "Took the family to Grindelwald-First. The cliff walk and First Flieger were the highlight — kids absolutely loved it. Ski school was excellent." },
+      ],
     },
+
     seasonCalendar: [
       { month: "Nov", status: "partial" }, { month: "Dec", status: "open" },
-      { month: "Jan", status: "open" }, { month: "Feb", status: "open" },
-      { month: "Mar", status: "open" }, { month: "Apr", status: "partial" },
-      { month: "May", status: "closed" }, { month: "Jun", status: "closed" },
-      { month: "Jul", status: "closed" }, { month: "Aug", status: "closed" },
-      { month: "Sep", status: "closed" }, { month: "Oct", status: "closed" }
-    ]
-  },
+      { month: "Jan", status: "open" },    { month: "Feb", status: "open" },
+      { month: "Mar", status: "open" },    { month: "Apr", status: "partial" },
+      { month: "May", status: "closed" },  { month: "Jun", status: "closed" },
+      { month: "Jul", status: "closed" },  { month: "Aug", status: "closed" },
+      { month: "Sep", status: "closed" },  { month: "Oct", status: "closed" },
+    ],
   {
     id: "adelboden-lenk",
     name: "Adelboden-Lenk",
