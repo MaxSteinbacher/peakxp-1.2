@@ -31,11 +31,11 @@ export default function Home() {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://picsum.photos/seed/alpshero/1920/1080"
-            alt="Alpine mountains"
+            src="https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1a8de7d69_crop3x2_-Lauterbrunnental.jpg"
+            alt="Lauterbrunnental valley"
             className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-peak-bg/80 backdrop-blur-sm" />
-          <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/40 to-transparent" />
+          <div className="absolute inset-0 bg-peak-bg/75 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-t from-peak-bg via-peak-bg/50 to-transparent" />
         </div>
 
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center" style={{ zIndex: 2 }}>
