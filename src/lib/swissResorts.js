@@ -711,6 +711,7 @@ export const swissResorts = [
       { month: "Jul", status: "closed" },  { month: "Aug", status: "closed" },
       { month: "Sep", status: "closed" },  { month: "Oct", status: "closed" },
     ],
+  },
   {
     id: "adelboden-lenk",
     name: "Adelboden-Lenk",
