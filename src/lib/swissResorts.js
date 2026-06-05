@@ -544,9 +544,9 @@ export const swissResorts = [
         villages: ["Grindelwald", "Wengen", "Kleine Scheidegg"],
         pisteKm: 103, lifts: 21,
         minAlt: 943, maxAlt: 2472,
-        highlights: ["Lauberhorn World Cup downhill", "Eiger Express 3S gondola", "Grindelwald Terminal — most modern in Alps"],
+        highlights: ["Lauberhorn World Cup downhill", "Eiger Express 3S gondola", "Grindelwald Terminal — most modern in Alps", "Männlichen 2230m panorama terrace", "Kleine Scheidegg — Jungfraujoch access"],
         snowpark: false, skicross: false,
-        image: "", // add in Base44 — Grindelwald-Wengen panorama with Eiger
+        image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b0a294b32_crop4x3_-SkifahrenimSkigebietGrindelwald-Wengen.jpg",
         lat: 46.62, lng: 7.98,
       },
       {
@@ -555,9 +555,9 @@ export const swissResorts = [
         villages: ["Grindelwald"],
         pisteKm: 56, lifts: 9,
         minAlt: 1034, maxAlt: 2168,
-        highlights: ["First Cliff Walk by Tissot", "First Flieger zip-line", "Snowboard & freeski mecca", "Snowpark"],
+        highlights: ["First Cliff Walk by Tissot — 45m walkway into void", "First Flieger zip-line", "Snowboard & freeski mecca", "Snowpark", "6-person gondola from Grindelwald village"],
         snowpark: true, skicross: false,
-        image: "", // add in Base44 — First area with Eiger Mönch Jungfrau backdrop
+        image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5278db4eb_crop4x3_-SkifahrenimSkigebietGrindelwaldFirst.jpg",
         lat: 46.66, lng: 8.05,
       },
       {
@@ -566,9 +566,9 @@ export const swissResorts = [
         villages: ["Mürren", "Lauterbrunnen", "Stechelberg"],
         pisteKm: 56, lifts: 13,
         minAlt: 796, maxAlt: 2970,
-        highlights: ["Piz Gloria — James Bond location", "Schilthorn 2970m — highest in Bernese Oberland", "Direttissima Nr.9 — 88% gradient", "Skyline Snowpark", "Skicross track", "Thrill Walk on Birg"],
+        highlights: ["Piz Gloria revolving restaurant — James Bond 'On Her Majesty's Secret Service'", "Schilthorn 2970m — highest ski area in Bernese Oberland", "Direttissima Nr.9 — 88% gradient, steepest piste in region", "Skyline Snowpark", "Skicross track", "Thrill Walk on Birg", "Open until end of April"],
         snowpark: true, skicross: true,
-        image: "", // add in Base44 — Mürren-Schilthorn panorama
+        image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/78b86ea17_crop4x3_-SkifahrenSkigebietMrren-Schilthorn.jpg",
         lat: 46.55, lng: 7.89,
         isCarFree: true,
       },
@@ -578,9 +578,9 @@ export const swissResorts = [
         villages: ["Meiringen", "Hasliberg", "Hasliberg Reuti", "Hasliberg Wasserwendi"],
         pisteKm: 60, lifts: 6,
         minAlt: 600, maxAlt: 2433,
-        highlights: ["Skihäsliland children's area", "Night skiing on 4.5km lit pistes", "Skirennzentrum race training", "Alpen Tower viewpoint"],
+        highlights: ["Skihäsliland Bidmi — dedicated children's ski school area", "Night skiing 4.5km lit pistes (Mägisalp–Reuti)", "Skirennzentrum race training", "Alpen Tower 360° viewpoint", "600–2500m altitude — longest vertical in region"],
         snowpark: false, skicross: false,
-        image: "", // add in Base44 — Hasliberg panorama
+        image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/168d90576_crop4x3_-SkifahrermitAlpenpanorama.jpg",
         lat: 46.73, lng: 8.14,
       },
     ],
@@ -595,17 +595,46 @@ export const swissResorts = [
       { id: "hasliberg",   name: "Hasliberg",   skiAreas: ["meiringen-hasliberg"], carFree: false, trainAccess: false },
     ],
 
-    description: "One region, four legendary ski areas — all on a single pass. Beneath the UNESCO World Heritage Eiger, Mönch and Jungfrau massif, the Jungfrau Region spans 275 perfectly groomed kilometres across car-free Wengen and Mürren, the iconic Kleine Scheidegg, the adrenaline-charged First and the family paradise of Meiringen-Hasliberg. The Lauberhorn hosts the world's oldest downhill race; Piz Gloria was the Bond villain's lair; First Cliff Walk is the most photographed spot in the Bernese Oberland.",
+    description: "One region, four legendary ski areas — all on a single pass. Beneath the UNESCO World Heritage Eiger, Mönch and Jungfrau massif, the Jungfrau Region spans 275 perfectly groomed kilometres across Grindelwald-Wengen (103km), Grindelwald-First (56km), Mürren-Schilthorn (56km) and Meiringen-Hasliberg (60km). The Lauberhorn in Wengen hosts the world's oldest and longest World Cup downhill (4.48km); Piz Gloria on the Schilthorn is the original James Bond villain's lair; the Direttissima at Birg is the steepest piste in the region (88% gradient); and the First Cliff Walk by Tissot is one of the most photographed experiences in Switzerland. The entire region is car-free from Interlaken, served by the iconic Wengernalpbahn rack railway, the Eiger Express 3S gondola (fastest connection to Eigergletscher) and the dramatic Schilthornbahn. Jungfraujoch — Top of Europe at 3,454m — is accessible directly from Kleine Scheidegg year-round.",
 
-    // Images — add in Base44
-    image: "",   // main hero — wide panorama of all 4 areas or Eiger Mönch Jungfrau
+    // Hero image: groomed piste at golden hour, Eiger-Mönch-Jungfrau backdrop
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/2887190c5_crop4x3_-PrparierteSkipisteimMorgenlichtvorEigerundMnch.jpg",
     images: [
-      "",  // Grindelwald-Wengen — skier with Eiger in background
-      "",  // Grindelwald-First — First Cliff Walk aerial
-      "",  // Mürren-Schilthorn — Piz Gloria / skier with James Bond poster
-      "",  // Meiringen-Hasliberg — night skiing
+      // === Grindelwald-Wengen area ===
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b0a294b32_crop4x3_-SkifahrenimSkigebietGrindelwald-Wengen.jpg",   credits: "© Jungfrau Region Tourismus AG" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/391daa008_crop4x3_-SkifahrenWengenGrindelwald-2.jpg",              credits: "© Jungfrau Region Tourismus AG" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/64fbf0af3_crop4x3_-SkifahrenWengenGrindelwald.jpg",                credits: "© Jungfrau Region Tourismus AG" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/388fffa5c_crop4x3_-SkifahrenWengenGrindelwald-1.jpg",              credits: "© Jungfrau Region Tourismus AG" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e491a2ed6_crop4x3_-SkifahrenimSkigebietGrindelwald-Wengen-1.jpg",  credits: "© Jungfrau Region Tourismus AG" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/da04ea15d_crop4x3_-EigerExpress.jpg",                            credits: "© Jungfrau Region Tourismus AG — Eiger Express 3S gondola" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/371e48cab_crop4x3_-Wengernalpbahn-1.jpg",                        credits: "© Jungfrau Region Tourismus AG — Wengernalpbahn" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/fdfed8f71_crop4x3_-Wengernalpbahn.jpg",                          credits: "© Jungfrau Region Tourismus AG — Wengernalpbahn" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/c5e8f4963_crop4x3_-WinterlandschaftMnnlichen.jpg",               credits: "© Jungfrau Region Tourismus AG — Männlichen" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/0bf0d85fd_crop4x3_-Jungfraujoch.jpg",                            credits: "© Jungfrau Region Tourismus AG — Jungfraujoch Top of Europe" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/2887190c5_crop4x3_-PrparierteSkipisteimMorgenlichtvorEigerundMnch.jpg", credits: "© Jungfrau Region Tourismus AG" },
+      // === Grindelwald-First area ===
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/5278db4eb_crop4x3_-SkifahrenimSkigebietGrindelwaldFirst.jpg",     credits: "© Jungfrau Region Tourismus AG — Grindelwald-First" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/74fca73eb_crop4x3_-FirstGliderWinter.jpg",                       credits: "© Jungfrau Region Tourismus AG — First Flieger" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1e1247f6f_crop4x3_-PanoRoyalWalkWinter.jpg",                     credits: "© Jungfrau Region Tourismus AG — First Cliff Walk" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/2ae82eded_crop4x3_-SchneeschuhlaufenGrindelwald.jpg",             credits: "© Jungfrau Region Tourismus AG — Snowshoeing Grindelwald" },
+      // === Mürren-Schilthorn area ===
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/78b86ea17_crop4x3_-SkifahrenSkigebietMrren-Schilthorn.jpg",      credits: "© Jungfrau Region Tourismus AG — Mürren-Schilthorn" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e2f826631_crop4x3_-Schilthornbahn09.jpg",                        credits: "© Jungfrau Region Tourismus AG — Schilthornbahn" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/771d7cd77_crop4x3_-Chnelegg-TrailMrren-1.jpg",                   credits: "© Jungfrau Region Tourismus AG — Mürren trail" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/aa3457d5d_crop4x3_-Chnelegg-TrailMrren.jpg",                     credits: "© Jungfrau Region Tourismus AG — Mürren trail" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/b16972a5a_crop3x2_-Lauterbrunnental.jpg",                        credits: "© Jungfrau Region Tourismus AG — Lauterbrunnental" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/a696aae3f_Lauterbrunnental.jpg",                                 credits: "© Jungfrau Region Tourismus AG — Lauterbrunnen valley" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/2f5e4f069_dji_20241204131640_0439_d_webalbum_print.jpg",          credits: "© Jungfrau Region Tourismus AG — aerial panorama" },
+      // === Meiringen-Hasliberg area ===
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/a8568ef35_crop4x3_-SkifahrenaufdemHasliberg.jpg",                credits: "© Jungfrau Region Tourismus AG — Hasliberg" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/efdda991b_crop4x3_-SkifahrenaufdemHasliberg-1.jpg",              credits: "© Jungfrau Region Tourismus AG — Hasliberg" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/4fc0f1139_crop4x3_-SkifahrenaufdemHasliberg-2.jpg",              credits: "© Jungfrau Region Tourismus AG — Hasliberg" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/168d90576_crop4x3_-SkifahrermitAlpenpanorama.jpg",               credits: "© Jungfrau Region Tourismus AG — Hasliberg panorama" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/46d5586c9_crop4x3_-BergstationMgisalp.jpg",                      credits: "© Jungfrau Region Tourismus AG — Mägisalp station" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/416e23572_crop4x3_-KuhstallbaraufderMgisalp.jpg",                credits: "© Jungfrau Region Tourismus AG — Mägisalp après" },
     ],
-    videoThumbnail: "", // add in Base44 — region promo video thumbnail
+    // YouTube video — no downloadable MP4 available; embed via youtubeId
+    youtubeId: "YEnWnjQUHdg",  // "Grindelwald-First — Top of Adventure Winter" official Jungfraubahnen film
 
     weather: { temp: -6, snowDepth: 165, condition: "Sunny", forecast: [
       { day: "Today",    high: -4, low: -10, condition: "clear" },
@@ -658,9 +687,34 @@ export const swissResorts = [
         { name: "Lauterbrunnen", distance: "10km", desc: "Valley of 72 waterfalls — base for Mürren" },
         { name: "Meiringen",     distance: "35km", desc: "Sherlock Holmes country — separate Hasliberg ski area" },
       ],
-      activities: ["Jungfraujoch Top of Europe (3454m)", "First Cliff Walk by Tissot", "First Flieger zip-line", "Ice skating Grindelwald", "Curling", "Snowshoe tours", "Sherlock Holmes Museum Meiringen", "Lauberhorn race spectating", "Thrill Walk on Birg"],
+      activities: [
+        "Jungfraujoch – Top of Europe (3454m) — accessible year-round via Wengernalpbahn + Jungfraubahn",
+        "First Cliff Walk by Tissot — steel walkway ending 45m over the void",
+        "First Flieger zip-line — eagle-shaped ride over Grindelwald valley",
+        "Thrill Walk on Birg — cliff-edge walkway above Mürren",
+        "Lauberhorn World Cup spectating — January race week, Wengen",
+        "Inferno Race — world's largest amateur ski race, Schilthorn to Mürren (15.8km)",
+        "Direttissima Mürren — Piste Nr.9, 88% gradient from Birg",
+        "Skyline Snowpark Mürren — halfpipe, kickers, rails",
+        "Snowpark Grindelwald-First — freeski & snowboard mecca",
+        "Night skiing — 4.5km lit pistes Mägisalp–Reuti (Hasliberg)",
+        "Kinderparadies Männlichen — dedicated family area",
+        "Skihäsliland Bidmi — children's ski school (Meiringen-Hasliberg)",
+        "bodmiARENA Grindelwald — outdoor ice rink & curling",
+        "Snowshoe tours — marked trails from all villages",
+        "Winter hiking — 100km+ cleared winter walking trails",
+        "Sherlock Holmes Museum — Meiringen (scene of 'The Final Problem')",
+        "Harder Kulm — Top of Interlaken panorama platform",
+        "Schynige Platte — alpine garden railway (summer)",
+      ],
       touristBoard: "Jungfrau Region Tourismus AG",
       touristBoardUrl: "https://www.jungfrauregion.swiss",
+      contact: {
+        website: "www.jungfrauregion.swiss",
+        ticketsWebsite: "www.jungfrau.ch",
+        phone: "+41 33 828 72 33",
+        email: "info@jungfrau.ch",
+      },
       emergency: "112",
       hospital: "Spital Interlaken (30 mins from Grindelwald)",
     },
