@@ -1,4 +1,44 @@
-import { useState, useEffect, useRef } from "react";
+function getQuestionCards(t) {
+  return {
+  family: [
+    { key: "group_composition", question: t("agent_q_family_1"), options: [t("agent_q_family_1_a"), t("agent_q_family_1_b"), t("agent_q_family_1_c"), t("agent_q_family_1_d")] },
+    { key: "children_skill",    question: t("agent_q_family_2"), options: [t("agent_q_family_2_a"), t("agent_q_family_2_b"), t("agent_q_family_2_c"), t("agent_q_family_2_d")] },
+    { key: "accommodation_priority", question: t("agent_q_family_3"), options: [t("agent_q_family_3_a"), t("agent_q_family_3_b"), t("agent_q_family_3_c"), t("agent_q_family_3_d")] },
+    { key: "budget",            question: t("agent_q_family_4"), options: [t("agent_q_family_4_a"), t("agent_q_family_4_b"), t("agent_q_family_4_c"), t("agent_q_family_4_d")] },
+    { key: "travel_dates",      question: t("agent_q_family_5"), options: [t("agent_q_family_5_a"), t("agent_q_family_5_b"), t("agent_q_family_5_c"), t("agent_q_family_5_d")] },
+  ],
+  luxury: [
+    { key: "experience_type",     question: t("agent_q_luxury_1"), options: [t("agent_q_luxury_1_a"), t("agent_q_luxury_1_b"), t("agent_q_luxury_1_c"), t("agent_q_luxury_1_d")] },
+    { key: "resort_preference",   question: t("agent_q_luxury_2"), options: [t("agent_q_luxury_2_a"), t("agent_q_luxury_2_b"), t("agent_q_luxury_2_c"), t("agent_q_luxury_2_d")] },
+    { key: "non_ski_priority",    question: t("agent_q_luxury_3"), options: [t("agent_q_luxury_3_a"), t("agent_q_luxury_3_b"), t("agent_q_luxury_3_c"), t("agent_q_luxury_3_d")] },
+    { key: "budget",              question: t("agent_q_luxury_4"), options: [t("agent_q_luxury_4_a"), t("agent_q_luxury_4_b"), t("agent_q_luxury_4_c"), t("agent_q_luxury_4_d")] },
+  ],
+  budget: [
+    { key: "group",             question: t("agent_q_budget_1"), options: [t("agent_q_budget_1_a"), t("agent_q_budget_1_b"), t("agent_q_budget_1_c"), t("agent_q_budget_1_d")] },
+    { key: "date_flexibility",  question: t("agent_q_budget_2"), options: [t("agent_q_budget_2_a"), t("agent_q_budget_2_b"), t("agent_q_budget_2_c"), t("agent_q_budget_2_d")] },
+    { key: "destination",       question: t("agent_q_budget_3"), options: [t("agent_q_budget_3_a"), t("agent_q_budget_3_b"), t("agent_q_budget_3_c"), t("agent_q_budget_3_d")] },
+    { key: "budget",            question: t("agent_q_budget_4"), options: [t("agent_q_budget_4_a"), t("agent_q_budget_4_b"), t("agent_q_budget_4_c"), t("agent_q_budget_4_d")] },
+  ],
+  advanced: [
+    { key: "terrain",             question: t("agent_q_advanced_1"), options: [t("agent_q_advanced_1_a"), t("agent_q_advanced_1_b"), t("agent_q_advanced_1_c"), t("agent_q_advanced_1_d")] },
+    { key: "offpiste_experience", question: t("agent_q_advanced_2"), options: [t("agent_q_advanced_2_a"), t("agent_q_advanced_2_b"), t("agent_q_advanced_2_c"), t("agent_q_advanced_2_d")] },
+    { key: "guide_preference",    question: t("agent_q_advanced_3"), options: [t("agent_q_advanced_3_a"), t("agent_q_advanced_3_b"), t("agent_q_advanced_3_c"), t("agent_q_advanced_3_d")] },
+    { key: "resort_vibe",         question: t("agent_q_advanced_4"), options: [t("agent_q_advanced_4_a"), t("agent_q_advanced_4_b"), t("agent_q_advanced_4_c"), t("agent_q_advanced_4_d")] },
+  ],
+  beginner: [
+    { key: "experience",    question: t("agent_q_beginner_1"), options: [t("agent_q_beginner_1_a"), t("agent_q_beginner_1_b"), t("agent_q_beginner_1_c"), t("agent_q_beginner_1_d")] },
+    { key: "discipline",    question: t("agent_q_beginner_2"), options: [t("agent_q_beginner_2_a"), t("agent_q_beginner_2_b"), t("agent_q_beginner_2_c"), t("agent_q_beginner_2_d")] },
+    { key: "top_priority",  question: t("agent_q_beginner_3"), options: [t("agent_q_beginner_3_a"), t("agent_q_beginner_3_b"), t("agent_q_beginner_3_c"), t("agent_q_beginner_3_d")] },
+    { key: "duration",      question: t("agent_q_beginner_4"), options: [t("agent_q_beginner_4_a"), t("agent_q_beginner_4_b"), t("agent_q_beginner_4_c"), t("agent_q_beginner_4_d")] },
+  ],
+  explorer: [
+    { key: "escape_from",         question: t("agent_q_explorer_1"), options: [t("agent_q_explorer_1_a"), t("agent_q_explorer_1_b"), t("agent_q_explorer_1_c"), t("agent_q_explorer_1_d")] },
+    { key: "hidden_gem_type",     question: t("agent_q_explorer_2"), options: [t("agent_q_explorer_2_a"), t("agent_q_explorer_2_b"), t("agent_q_explorer_2_c"), t("agent_q_explorer_2_d")] },
+    { key: "logistics_tolerance", question: t("agent_q_explorer_3"), options: [t("agent_q_explorer_3_a"), t("agent_q_explorer_3_b"), t("agent_q_explorer_3_c"), t("agent_q_explorer_3_d")] },
+    { key: "skill_level",         question: t("agent_q_explorer_4"), options: [t("agent_q_explorer_4_a"), t("agent_q_explorer_4_b"), t("agent_q_explorer_4_c"), t("agent_q_explorer_4_d")] },
+  ],
+  };
+}import { useState, useEffect, useRef } from "react";
 import { useT } from "../../lib/i18n";
 import { X, ChevronRight, Send, Edit2, CheckCircle2, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -19,270 +59,6 @@ function buildResortContext() {
     .join("\n");
 }
 
-const AGENT_QUESTIONS = {
-  family: [
-    {
-      key: "group_composition",
-      question: "Who is coming on this family trip?",
-      options: [
-        "2 adults + toddlers or under-8s",
-        "2 adults + children aged 8 to 14",
-        "2 adults + teenagers (14+)",
-        "Multi-generational — grandparents joining too",
-      ],
-    },
-    {
-      key: "children_skill",
-      question: "What is the kids experience on snow?",
-      options: [
-        "Complete first-timers — never worn skis",
-        "Had a lesson or two before",
-        "Can ski easy blue runs confidently",
-        "Mixed levels — some stronger than others",
-      ],
-    },
-    {
-      key: "accommodation_priority",
-      question: "What matters most for accommodation?",
-      options: [
-        "Ski-in ski-out — kids should not have to walk far",
-        "Hotel with a kids club so parents can ski freely",
-        "Self-catered apartment — more space and flexibility",
-        "Best value — keeping costs down matters most",
-      ],
-    },
-    {
-      key: "budget",
-      question: "What is your approximate total budget for the group?",
-      options: [
-        "Under 3,000 EUR",
-        "3,000 to 6,000 EUR",
-        "6,000 to 10,000 EUR",
-        "Over 10,000 EUR — quality is the priority",
-      ],
-    },
-    {
-      key: "travel_dates",
-      question: "When are you planning to travel?",
-      options: [
-        "December — early season, quieter slopes",
-        "January — best value, less crowded",
-        "February — school holidays, buzzing atmosphere",
-        "March — great snow and longer days",
-      ],
-    },
-  ],
-  luxury: [
-    {
-      key: "experience_type",
-      question: "What kind of luxury experience are you looking for?",
-      options: [
-        "Five-star hotel with Michelin-starred dining",
-        "Private ski-in ski-out chalet with a personal chef",
-        "Heli-skiing and exclusive off-piste experiences",
-        "The absolute best — money is no object",
-      ],
-    },
-    {
-      key: "resort_preference",
-      question: "Any resorts already on your radar?",
-      options: [
-        "Courchevel or Meribel (Les Trois Vallees)",
-        "Verbier or Zermatt (Swiss Alps)",
-        "Val d Isere or Megeve (French icons)",
-        "Surprise me — curate the very best option",
-      ],
-    },
-    {
-      key: "non_ski_priority",
-      question: "Beyond skiing, what is non-negotiable?",
-      options: [
-        "World-class spa and wellness",
-        "Exclusive apres-ski and vibrant nightlife",
-        "Private mountain guide and instruction",
-        "Total privacy — I prefer to avoid crowds",
-      ],
-    },
-    {
-      key: "budget",
-      question: "What is your investment range for this trip?",
-      options: [
-        "10,000 to 25,000 EUR",
-        "25,000 to 50,000 EUR",
-        "50,000 EUR or more",
-        "Open — show me the best first, budget is secondary",
-      ],
-    },
-  ],
-  budget: [
-    {
-      key: "group",
-      question: "Who is travelling with you?",
-      options: [
-        "Solo — just me",
-        "Couple",
-        "Group of friends, 3 to 6 people",
-        "Larger group — 7 or more",
-      ],
-    },
-    {
-      key: "date_flexibility",
-      question: "How flexible are your travel dates?",
-      options: [
-        "Very flexible — I want the cheapest possible dates",
-        "January specifically — cheapest month in the Alps",
-        "Some flexibility — roughly a 2 to 3 week window",
-        "Fixed dates I cannot change",
-      ],
-    },
-    {
-      key: "destination",
-      question: "Where are you happy to ski?",
-      options: [
-        "Austria — consistently best value in the Alps",
-        "Italy — great food and excellent prices",
-        "France — bigger ski areas worth the extra cost",
-        "Wherever is cheapest — I just want to ski",
-      ],
-    },
-    {
-      key: "budget",
-      question: "What is your total budget for the whole group?",
-      options: [
-        "Under 1,500 EUR",
-        "1,500 to 3,000 EUR",
-        "3,000 to 5,000 EUR",
-        "5,000 to 8,000 EUR",
-      ],
-    },
-  ],
-  advanced: [
-    {
-      key: "terrain",
-      question: "What terrain are you chasing?",
-      options: [
-        "Steep groomed blacks and mogul fields",
-        "Lift-accessed off-piste and powder stashes",
-        "Guided backcountry ski touring",
-        "Freeride zones and high-altitude glaciers",
-      ],
-    },
-    {
-      key: "offpiste_experience",
-      question: "What is your off-piste experience level?",
-      options: [
-        "Strong on-piste skier, ready to try off-piste",
-        "A few off-piste runs with a guide before",
-        "Regular off-piste skier, confident in most terrain",
-        "Expert — I ski serious backcountry independently",
-      ],
-    },
-    {
-      key: "guide_preference",
-      question: "Do you want a mountain guide?",
-      options: [
-        "Yes — book me a private IFMGA-certified guide",
-        "Group guiding is fine",
-        "I am experienced enough to go independently",
-        "Recommend what best suits my level",
-      ],
-    },
-    {
-      key: "resort_vibe",
-      question: "What kind of resort atmosphere suits you?",
-      options: [
-        "Raw and extreme — the mountain is everything",
-        "Expert terrain plus great apres-ski",
-        "A lesser-known gem with no lift queues",
-        "Show me the best expert resort overall",
-      ],
-    },
-  ],
-  beginner: [
-    {
-      key: "experience",
-      question: "What is your experience on snow?",
-      options: [
-        "Complete beginner — never worn skis or a snowboard",
-        "Tried it once or twice, a while ago",
-        "Can get down easy slopes but want proper coaching",
-        "I am confident — planning this for a beginner in my group",
-      ],
-    },
-    {
-      key: "discipline",
-      question: "Skiing or snowboarding?",
-      options: [
-        "Skiing",
-        "Snowboarding",
-        "Not sure — what would you recommend for a beginner?",
-        "Mixed — different people in the group want each",
-      ],
-    },
-    {
-      key: "top_priority",
-      question: "What matters most for this trip?",
-      options: [
-        "A relaxed resort where I will not feel intimidated",
-        "The best ski school — I want to genuinely improve",
-        "Slope-side accommodation so I am not exhausted walking",
-        "A great social scene even when off the slopes",
-      ],
-    },
-    {
-      key: "duration",
-      question: "How many days are you planning?",
-      options: [
-        "3 days — a short taster trip",
-        "4 to 5 days — enough to really get going",
-        "7 days — a full week",
-        "More than a week",
-      ],
-    },
-  ],
-  explorer: [
-    {
-      key: "escape_from",
-      question: "What are you trying to escape at your usual resort?",
-      options: [
-        "Lift queues and overcrowded pistes",
-        "Overpriced and overhyped destinations",
-        "Generic resort towns with no local character",
-        "All of the above — I want something completely different",
-      ],
-    },
-    {
-      key: "hidden_gem_type",
-      question: "What kind of hidden gem excites you most?",
-      options: [
-        "A tiny snow-sure village with massive snowfall (Warth, Damuls)",
-        "Extreme freeride terrain with zero crowds (La Grave, Alagna)",
-        "Authentic local culture with zero tourist traps",
-        "An emerging destination before it gets discovered",
-      ],
-    },
-    {
-      key: "logistics_tolerance",
-      question: "How adventurous are you with the journey there?",
-      options: [
-        "Happy with complex transfers for the right place",
-        "Open to unusual places but prefer manageable travel",
-        "Need decent transport links — no long detours",
-        "Best destination wins — I will figure out the journey",
-      ],
-    },
-    {
-      key: "skill_level",
-      question: "What is your skiing level?",
-      options: [
-        "Beginner or still progressing",
-        "Intermediate — comfortable on reds",
-        "Advanced — I ski blacks and off-piste",
-        "Expert — I want serious or extreme terrain",
-      ],
-    },
-  ],
-};
 
 function now() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -459,7 +235,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
   const userInitials = user ? (user.firstName?.[0] || user.full_name?.[0] || "G") : "G";
-  const questionCards = agent ? (AGENT_QUESTIONS[agent.key] || []) : [];
+  const questionCards = agent ? (getQuestionCards(t)[agent.key] || []) : [];
   const totalIntakeQ = questionCards.length;
   const totalSteps = totalIntakeQ + 1;
 
@@ -497,7 +273,7 @@ export default function AgentChat({ agent, isOpen, onClose }) {
     setConfirmLoading(false);
     setEditingFromSummary(false);
     setShowCard(false);
-    const qCards = AGENT_QUESTIONS[ag.key] || [];
+    const qCards = getQuestionCards(t)[ag.key] || [];
     if (qCards.length) setTimeout(() => setShowCard(true), 400);
   }
 
