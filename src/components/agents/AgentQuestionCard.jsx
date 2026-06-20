@@ -139,7 +139,7 @@ export default function AgentQuestionCard({
           >
             <Pencil className="w-3.5 h-3.5 text-peak-text-secondary group-hover:text-peak-text transition-colors flex-shrink-0" />
             <span className="text-peak-text-secondary text-sm group-hover:text-peak-text transition-colors">
-              Something else…
+              {t("something_else_label")}
             </span>
           </button>
         ) : (
@@ -166,7 +166,7 @@ export default function AgentQuestionCard({
                   : "bg-white/5 text-peak-text-secondary/40 cursor-default"
               }`}
             >
-              Send
+              {t("confirm_selection") || "Send"}
             </button>
           </div>
         )}
@@ -187,7 +187,7 @@ export default function AgentQuestionCard({
             onClick={onSkip}
             className="text-peak-text-secondary/50 hover:text-peak-text-secondary text-xs transition-colors"
           >
-            Skip this question
+            {t("skip_question_label")}
           </button>
         )}
       </div>
