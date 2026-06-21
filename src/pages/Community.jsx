@@ -3,7 +3,6 @@ import { useAppAuth } from "../context/AppAuthContext";
 import { Heart, Flame, Snowflake, Trophy, Star, Mountain, Camera, Plus, Upload, ChevronRight, X, Check, Users, BarChart3, Award, Target, Filter, Globe, MapPin, Zap } from "lucide-react";
 import { parseGPX, saveActivity, getActivities, getStats, getChallengeProgress, SYSTEM_CHALLENGES, createCustomChallenge, getLeaderboard } from "../lib/activityTracking";
 import { USER_BADGES, getEarnedUserBadges } from "../lib/badges";
-import AuthGate from "../components/AuthGate";
 
 const REACTIONS = [
   { id:"heart",    icon:"❤️", label:"Love" },
@@ -723,7 +722,6 @@ export default function Community() {
   }
 
   return (
-    <AuthGate>
       <div className="max-w-3xl mx-auto px-4 py-6">
         {/* Notification toast */}
         {notification && (
@@ -773,6 +771,5 @@ export default function Community() {
 
         {showCreatePost && <CreatePostModal user={user} onClose={()=>setShowCreatePost(false)} onPost={handlePost}/>}
       </div>
-    </AuthGate>
   );
 }
