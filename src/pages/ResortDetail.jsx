@@ -4,6 +4,8 @@ import { Mountain, ArrowLeft, Heart, Share2, MapPin, Snowflake, Thermometer, Car
 import { useT } from "../lib/i18n";
 import BackButton from "../components/shared/BackButton";
 import { getResortById, SEASON_PASSES } from "../lib/data";
+import ResortBadgesPanel from "../components/badges/ResortBadges";
+import { getRealRating } from "../lib/externalRatings";
 import ReviewCard from "../components/ReviewCard";
 import InstructorCard from "../components/InstructorCard";
 import OverviewTab from "../components/resort/OverviewTab";
@@ -76,8 +78,17 @@ export default function ResortDetail() {
               </div>
             )}
             <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text">{resort.name}</h1>
-            <span className="bg-peak-blue text-white text-sm font-bold px-3 py-1 rounded-lg">{resort.rating}</span>
-            <span className="text-peak-text-secondary text-sm">{resort.ratingLabel}</span>
+            {(() => {
+              const ext = getRealRating(resort);
+              return ext ? (
+                <div className="flex flex-col items-start">
+                  <span className="bg-peak-blue text-white text-sm font-bold px-3 py-1 rounded-lg">{ext.overall}</span>
+                  <a href={ext.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-peak-text-secondary text-xs hover:text-peak-blue mt-0.5">Source: skiresort.de ↗</a>
+                </div>
+              ) : (
+                <span className="text-peak-text-secondary text-sm">No verified rating yet</span>
+              );
+            })()}
           </div>
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="h-4 w-4 text-peak-text-secondary" />
@@ -163,6 +174,11 @@ export default function ResortDetail() {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Resort Badges */}
+      <div className="mb-6">
+        <ResortBadgesPanel resort={resort} />
       </div>
 
       {/* Tabs */}
