@@ -216,16 +216,7 @@ export default function ExpertAgents() {
                       <agent.icon style={{width:20,height:20,color:agent.accent}}/>
                     </div>
 
-                    {/* Badge — editorial style: dot + text, no fill */}
-                    <div style={{display:"flex",alignItems:"center",gap:6}}>
-                      <div style={{width:4,height:4,borderRadius:"50%",background:agent.accent,opacity:0.8}}/>
-                      <span style={{
-                        fontSize:10,fontWeight:700,letterSpacing:"0.1em",
-                        textTransform:"uppercase",color:agent.accent,opacity:0.8,
-                      }}>
-                        {agent.badge}
-                      </span>
-                    </div>
+  
                   </div>
 
                   {/* Name */}
