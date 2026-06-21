@@ -1,163 +1,258 @@
-import { useState } from "react";
-import { useT } from "../lib/i18n";
+import { useState, useRef } from "react";
 import { useAppAuth } from "../context/AppAuthContext";
-import BackButton from "../components/shared/BackButton";
-import { Link } from "react-router-dom";
-import { Heart, MessageCircle, Share2, Bookmark, Send, BarChart3, MapPin, Camera, Video, Tag } from "lucide-react";
+import { Heart, Flame, Snowflake, Trophy, Star, Mountain, Camera, Plus, Upload, ChevronRight, X, Check, Users, BarChart3, Award, Target, Filter, Globe, MapPin, Zap } from "lucide-react";
+import { parseGPX, saveActivity, getActivities, getStats, getChallengeProgress, SYSTEM_CHALLENGES, createCustomChallenge, getLeaderboard } from "../lib/activityTracking";
+import { USER_BADGES, getEarnedUserBadges } from "../lib/badges";
 import AuthGate from "../components/AuthGate";
 
-const CHALLENGES = [
-  { id: "c1", name: "2026/27 Centurion", desc: "Ski 100 days this season", type: "Global · Season", progress: 38, target: 100, badge: "🏅", participants: 2341, unlocked: false },
-  { id: "c2", name: "January Surge", desc: "4 days on snow in January", type: "Global · Monthly", progress: 4, target: 4, badge: "⚡", participants: 5892, unlocked: true },
-  { id: "c3", name: "Early Bird", desc: "First run before 8:30am, 5 times", type: "Global · Habit", progress: 3, target: 5, badge: "🌅", participants: 1247, unlocked: false },
+const REACTIONS = [
+  { id:"heart",    icon:"❤️", label:"Love" },
+  { id:"fire",     icon:"🔥", label:"Fire" },
+  { id:"snow",     icon:"❄️", label:"Cold!" },
+  { id:"ski",      icon:"⛷️", label:"Ski!" },
+  { id:"trophy",   icon:"🏆", label:"Epic" },
+  { id:"mountain", icon:"🏔️", label:"Stoked" },
+  { id:"crystal",  icon:"💎", label:"Class" },
+  { id:"ice",      icon:"🧊", label:"Icy" },
 ];
 
-const TRENDING_RESORTS = [
-  { id: "verbier", name: "Verbier", country: "🇨🇭 Switzerland", pisteKm: 410, rating: 4.9, image: "https://picsum.photos/seed/verbier_trend/300/200" },
-  { id: "zermatt", name: "Zermatt", country: "🇨🇭 Switzerland", pisteKm: 360, rating: 4.8, image: "https://picsum.photos/seed/zermatt_trend/300/200" },
-  { id: "chamonix", name: "Chamonix", country: "🇫🇷 France", pisteKm: 170, rating: 4.7, image: "https://picsum.photos/seed/chamonix_trend/300/200" },
+const TABS = [
+  { id:"feed",       label:"Feed",         icon:Globe },
+  { id:"challenges", label:"Challenges",   icon:Target },
+  { id:"ranking",    label:"Rankings",     icon:BarChart3 },
+  { id:"activities", label:"My Activities",icon:Mountain },
 ];
 
-const ACTIVE_FRIENDS = [
-  { name: "Marco R.", status: "Skiing at Verbier", avatar: "MR", time: null },
-  { name: "Sophie M.", status: "Skiing at Zermatt", avatar: "SM", time: null },
-  { name: "James K.", status: "Last seen 2h ago", avatar: "JK", time: "2h" },
-  { name: "Elena V.", status: "Skiing at Courchevel", avatar: "EV", time: null },
-];
+// ── Feed Post ─────────────────────────────────────────────────────────────────
+function FeedPost({ post, currentUser, onReact, onComment, onGiveBadge }) {
+  const [showReactions, setShowReactions] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [showComments, setShowComments] = useState(false);
+  const [showBadgePanel, setShowBadgePanel] = useState(false);
+  const peerBadges = USER_BADGES.filter(b => b.type === "peer");
 
-const RESORT_ALERTS = [
-  { resort: "Verbier", alert: "35cm fresh snow overnight — all lifts open" },
-  { resort: "Zermatt", alert: "Glacier runs open, -8°C at summit" },
-  { resort: "Chamonix", alert: "Aiguille du Midi reopens tomorrow after maintenance" },
-];
-
-const SUGGESTED_USERS = [
-  { name: "Alex Dupont", mutual: 4, avatar: "AD" },
-  { name: "Nina Schneider", mutual: 7, avatar: "NS" },
-  { name: "Luca Ferrari", mutual: 2, avatar: "LF" },
-];
-
-const INITIAL_FEED = [
-  {
-    id: "p1", type: "activity", user: "You", avatar: "YO", time: "Just now", resort: "Verbier", flag: "🇨🇭",
-    activity: { duration: "6h 40m", runs: 28, vertical: "4,200m", distance: "62km" },
-    photo: "https://picsum.photos/seed/feed1/800/500",
-    caption: "Best day of the season. Powder from top to bottom.",
-    conditions: "Powder", mood: "🤩",
-    likes: 42, comments: 8, shares: 3,
-    commentsOpen: false, commentText: "",
-    commentList: [
-      { user: "Marco R.", text: "Epic! Wish I was there." },
-      { user: "Sophie M.", text: "That vertical though 🔥" },
-    ],
-    liked: false, saved: false,
-  },
-  {
-    id: "p2", type: "resort", user: "Verbier Station", avatar: "V", time: "2h ago", resort: "Verbier", flag: "🇨🇭",
-    verified: true, sponsored: false,
-    photo: "https://picsum.photos/seed/feed2/800/500",
-    caption: "Fresh 40cm overnight — all 410km open from 08:30. See you on the mountain! 🎿",
-    likes: 312, comments: 24, shares: 56,
-    commentsOpen: false, commentText: "",
-    commentList: [],
-    liked: false, saved: false,
-  },
-  {
-    id: "p3", type: "photo", user: "Sophie M.", avatar: "SM", time: "3h ago", resort: "Zermatt", flag: "🇨🇭",
-    photo: "https://picsum.photos/seed/feed3/800/500",
-    caption: "The Matterhorn never gets old ❄️",
-    taggedResort: "Zermatt",
-    likes: 87, comments: 12, shares: 5,
-    commentsOpen: false, commentText: "",
-    commentList: [
-      { user: "James K.", text: "Stunning!" },
-    ],
-    liked: false, saved: false,
-  },
-  {
-    id: "p4", type: "challenge", user: "Marco R.", avatar: "MR", time: "5h ago",
-    challengeName: "January Surge", challengeDesc: "4 days on snow in January",
-    badge: "⚡",
-    likes: 31, comments: 6, shares: 2,
-    commentsOpen: false, commentText: "",
-    commentList: [],
-    liked: false, saved: false,
-    joined: false,
-  },
-  {
-    id: "p5", type: "sponsored", user: "Hotel Les Roches", avatar: "HR", time: "6h ago", resort: "Verbier", flag: "🇨🇭",
-    verified: true, sponsored: true,
-    photo: "https://picsum.photos/seed/feed5/800/500",
-    caption: "Last rooms available for peak week. Ski-in ski-out, heated pool, in-house boot room. From €280/night.",
-    cta: "Book now", ctaLink: "/trip-planning",
-    likes: 19, comments: 3, shares: 7,
-    commentsOpen: false, commentText: "",
-    commentList: [],
-    liked: false, saved: false,
-  },
-  {
-    id: "p6", type: "deal", user: "Val d'Isere", avatar: "VI", time: "1d ago", resort: "Val d'Isere", flag: "🇫🇷",
-    verified: true,
-    photo: "https://picsum.photos/seed/feed6/800/500",
-    dealHeadline: "Flash deal: 20% off 6-day lift passes", price: "€189", validity: "Valid until 31 Jan",
-    cta: "View deal", ctaLink: "/trip-planning",
-    likes: 224, comments: 41, shares: 88,
-    commentsOpen: false, commentText: "",
-    commentList: [],
-    liked: false, saved: false,
-  },
-];
-
-const NAV_ITEMS = ["For you", "Following", "Friends", "Resort updates", "Challenges", "Promotions"];
-
-function Avatar({ initials, size = "md" }) {
-  const sizeClass = size === "sm" ? "w-8 h-8 text-xs" : size === "lg" ? "w-12 h-12 text-base" : "w-9 h-9 text-sm";
   return (
-    <div className={`${sizeClass} rounded-full bg-peak-blue/20 text-peak-blue font-bold flex items-center justify-center flex-shrink-0`}>
-      {initials}
-    </div>
-  );
-}
-
-function ReactionRow({ post, onLike, onSave, onToggleComments }) {
-  return (
-    <div className="flex items-center gap-4 pt-3 border-t border-white/5">
-      <button onClick={onLike} className={`flex items-center gap-1.5 text-sm transition-colors ${post.liked ? "text-pink-400" : "text-peak-text-secondary hover:text-pink-400"}`}>
-        <Heart className={`h-4 w-4 ${post.liked ? "fill-pink-400" : ""}`} />{post.likes + (post.liked ? 1 : 0)}
-      </button>
-      <button onClick={onToggleComments} className="flex items-center gap-1.5 text-sm text-peak-text-secondary hover:text-peak-blue transition-colors">
-        <MessageCircle className="h-4 w-4" />{post.comments}
-      </button>
-      <button className="flex items-center gap-1.5 text-sm text-peak-text-secondary hover:text-peak-text transition-colors">
-        <Share2 className="h-4 w-4" />{post.shares}
-      </button>
-      <button onClick={onSave} className={`ml-auto transition-colors ${post.saved ? "text-peak-blue" : "text-peak-text-secondary hover:text-peak-blue"}`}>
-        <Bookmark className={`h-4 w-4 ${post.saved ? "fill-peak-blue" : ""}`} />
-      </button>
-    </div>
-  );
-}
-
-function CommentThread({ post, onAddComment, onTextChange }) {
-  return (
-    <div className="mt-3 pt-3 border-t border-white/5">
-      <div className="space-y-2 mb-3">
-        {post.commentList.map((c, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <Avatar initials={c.user.split(" ").map(w => w[0]).join("")} size="sm" />
-            <div className="bg-peak-surface rounded-xl px-3 py-2 text-xs text-peak-text flex-1">
-              <span className="font-semibold mr-1">{c.user}</span>{c.text}
-            </div>
+    <div className="bg-peak-surface border border-white/5 rounded-2xl overflow-hidden mb-4">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+        <div className="w-9 h-9 rounded-full bg-peak-red/20 border border-peak-red/30 flex items-center justify-center text-sm font-bold text-peak-red flex-shrink-0">
+          {post.avatar}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-peak-text font-semibold text-sm">{post.user}</p>
+            {post.verified && <span className="text-peak-blue text-xs">✓</span>}
+            {post.type === "activity" && post.resortName && (
+              <span className="text-peak-text-secondary text-xs">at {post.resortName}</span>
+            )}
           </div>
-        ))}
+          <p className="text-peak-text-secondary text-xs">{post.time}</p>
+        </div>
+        {post.privacy && (
+          <span className="text-peak-text-secondary text-xs border border-white/10 rounded-full px-2 py-0.5">
+            {post.privacy === "public" ? "🌍" : "👥"} {post.privacy === "public" ? "Public" : "Friends"}
+          </span>
+        )}
       </div>
-      <div className="flex gap-2">
-        <Avatar initials="YO" size="sm" />
-        <div className="flex-1 flex gap-2">
-          <input value={post.commentText} onChange={e => onTextChange(e.target.value)} placeholder="Add a comment..."
-            className="flex-1 bg-peak-surface border border-white/10 rounded-full px-4 py-2 text-xs text-peak-text outline-none focus:border-peak-blue" />
-          <button onClick={() => post.commentText && onAddComment()} className="text-peak-blue hover:text-peak-text transition-colors">
-            <Send className="h-4 w-4" />
+
+      {/* Activity stats */}
+      {post.type === "activity" && post.stats && (
+        <div className="mx-4 mb-3 bg-peak-card rounded-xl p-3 grid grid-cols-4 gap-2">
+          {[
+            { label:"Vertical", value:post.stats.verticalM ? `${(post.stats.verticalM/1000).toFixed(1)}km` : "—" },
+            { label:"Distance", value:post.stats.distanceKm ? `${post.stats.distanceKm}km` : "—" },
+            { label:"Duration", value:post.stats.durationMin ? `${Math.floor(post.stats.durationMin/60)}h${post.stats.durationMin%60}m` : "—" },
+            { label:"Max speed", value:post.stats.maxSpeedKmh ? `${post.stats.maxSpeedKmh}km/h` : "—" },
+          ].map(s => (
+            <div key={s.label} className="text-center">
+              <p className="text-peak-text font-bold text-sm">{s.value}</p>
+              <p className="text-peak-text-secondary text-xs">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Challenge completion */}
+      {post.type === "challenge" && (
+        <div className="mx-4 mb-3 bg-peak-blue/10 border border-peak-blue/20 rounded-xl p-3 flex items-center gap-3">
+          <span className="text-2xl">{post.challengeIcon || "🏆"}</span>
+          <div>
+            <p className="text-peak-text font-semibold text-sm">{post.challengeName}</p>
+            <p className="text-peak-text-secondary text-xs">{post.challengeDesc}</p>
+          </div>
+          <span className="ml-auto text-green-400 font-bold text-sm">Completed!</span>
+        </div>
+      )}
+
+      {/* Photo */}
+      {post.photo && (
+        <div className="relative">
+          <img src={post.photo} alt="" className="w-full object-cover" style={{maxHeight:360}} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        </div>
+      )}
+
+      {/* Caption */}
+      {post.caption && (
+        <p className="px-4 py-3 text-peak-text text-sm leading-relaxed">{post.caption}</p>
+      )}
+
+      {/* User badges received on this post */}
+      {post.badgesReceived?.length > 0 && (
+        <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+          {post.badgesReceived.map((b,i) => (
+            <span key={i} style={{
+              display:"inline-flex",alignItems:"center",gap:4,
+              fontSize:11,fontWeight:600,padding:"3px 9px",borderRadius:100,
+              background:`${b.color}18`,border:`1px solid ${b.color}30`,color:b.color,
+            }}>
+              {b.icon} {b.label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Action bar */}
+      <div className="px-4 py-3 border-t border-white/5 flex items-center gap-4">
+        {/* Reactions */}
+        <div className="relative">
+          <button onClick={() => setShowReactions(!showReactions)}
+            className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm transition-colors">
+            <span>{post.topReaction || "❤️"}</span>
+            <span>{post.reactionCount || 0}</span>
+          </button>
+          {showReactions && (
+            <div className="absolute bottom-8 left-0 z-20 bg-peak-surface border border-white/10 rounded-2xl p-2 flex gap-1 shadow-xl">
+              {REACTIONS.map(r => (
+                <button key={r.id} onClick={() => { onReact(post.id, r.id); setShowReactions(false); }}
+                  className="text-xl p-1.5 hover:scale-125 transition-transform rounded-lg hover:bg-white/5"
+                  title={r.label}>
+                  {r.icon}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Comments */}
+        <button onClick={() => setShowComments(!showComments)}
+          className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm transition-colors">
+          💬 <span>{post.commentCount || 0}</span>
+        </button>
+
+        {/* Give badge (friend-to-friend) */}
+        {post.user !== currentUser?.name && (
+          <button onClick={() => setShowBadgePanel(!showBadgePanel)}
+            className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-blue text-sm transition-colors ml-auto">
+            <Award className="h-4 w-4" /> Give badge
+          </button>
+        )}
+      </div>
+
+      {/* Badge panel */}
+      {showBadgePanel && (
+        <div className="px-4 pb-4">
+          <p className="text-peak-text-secondary text-xs mb-2">Award a peer badge to {post.user}:</p>
+          <div className="flex flex-wrap gap-1.5">
+            {peerBadges.map(b => (
+              <button key={b.id} onClick={() => { onGiveBadge(post.id, post.user, b); setShowBadgePanel(false); }}
+                style={{
+                  display:"inline-flex",alignItems:"center",gap:5,
+                  fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:100,
+                  border:`1px solid ${b.color}40`, color:b.color,
+                  background:`${b.color}12`, cursor:"pointer",
+                }}>
+                {b.icon} {b.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Comments */}
+      {showComments && (
+        <div className="px-4 pb-4 border-t border-white/5">
+          <div className="space-y-2 mt-3 mb-3">
+            {(post.comments || []).map((c,i) => (
+              <div key={i} className="flex gap-2">
+                <div className="w-6 h-6 rounded-full bg-peak-card flex items-center justify-center text-xs font-bold text-peak-text-secondary flex-shrink-0">
+                  {c.user[0]}
+                </div>
+                <div className="bg-peak-card rounded-xl px-3 py-2 flex-1">
+                  <p className="text-peak-text-secondary text-xs font-semibold">{c.user}</p>
+                  <p className="text-peak-text text-sm">{c.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input value={commentText} onChange={e=>setCommentText(e.target.value)}
+              onKeyDown={e=>{ if(e.key==="Enter"&&commentText.trim()){onComment(post.id,commentText.trim());setCommentText("");}}}
+              placeholder="Add a comment…"
+              className="flex-1 bg-peak-card border border-white/10 rounded-xl px-3 py-2 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+            <button onClick={()=>{if(commentText.trim()){onComment(post.id,commentText.trim());setCommentText("");}}}
+              disabled={!commentText.trim()}
+              className="bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-medium disabled:opacity-40">
+              Post
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Create post modal ─────────────────────────────────────────────────────────
+function CreatePostModal({ user, onClose, onPost }) {
+  const [caption, setCaption] = useState("");
+  const [privacy, setPrivacy] = useState("public");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const fileRef = useRef();
+
+  function handleSubmit() {
+    if (!caption.trim() && !photoUrl) return;
+    onPost({
+      id: `post_${Date.now()}`,
+      type: "photo",
+      user: user.name || user.displayName || "You",
+      avatar: (user.name || "Y")[0].toUpperCase(),
+      time: "Just now",
+      caption,
+      photo: photoUrl || null,
+      privacy,
+      reactionCount: 0, commentCount: 0, comments: [],
+      reactions: {}, topReaction: "❤️",
+    });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-4" onClick={onClose}>
+      <div className="bg-peak-surface border border-white/10 rounded-2xl w-full max-w-md" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <p className="text-peak-text font-bold">New post</p>
+          <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text">×</button>
+        </div>
+        <div className="p-5 space-y-4">
+          <textarea value={caption} onChange={e=>setCaption(e.target.value)} rows={3}
+            placeholder="What's happening on the mountain?"
+            className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-3 text-sm text-peak-text outline-none focus:border-white/20 resize-none placeholder:text-peak-text-secondary/40"/>
+          <input value={photoUrl} onChange={e=>setPhotoUrl(e.target.value)}
+            placeholder="Paste photo URL (optional)"
+            className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+          <div className="flex gap-2">
+            {["public","friends"].map(p => (
+              <button key={p} onClick={()=>setPrivacy(p)}
+                className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${privacy===p?"border-peak-blue/50 bg-peak-blue/10 text-peak-blue":"border-white/10 text-peak-text-secondary"}`}>
+                {p==="public"?"🌍 Public":"👥 Friends only"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="px-5 pb-5">
+          <button onClick={handleSubmit} disabled={!caption.trim()&&!photoUrl}
+            className="w-full bg-peak-red text-white py-2.5 rounded-xl font-semibold text-sm disabled:opacity-40">
+            Post
           </button>
         </div>
       </div>
@@ -165,436 +260,519 @@ function CommentThread({ post, onAddComment, onTextChange }) {
   );
 }
 
-const PUBLIC_POST_TYPES = ["resort", "sponsored", "challenge", "deal"];
+// ── GPX Upload ────────────────────────────────────────────────────────────────
+function GPXUpload({ user, onUploaded }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [preview, setPreview] = useState(null);
+  const fileRef = useRef();
 
-export default function Community() {
-  const t = useT();
-  const { isLoggedIn } = useAppAuth();
-  const [feed, setFeed] = useState(INITIAL_FEED);
-  const [feedNav, setFeedNav] = useState("For you");
-  const [postText, setPostText] = useState("");
-  const [draftRestored, setDraftRestored] = useState(false);
-  const [logActivityOpen, setLogActivityOpen] = useState(false);
-  const [activity, setActivity] = useState({ sport: "Skiing", resort: "", date: "", duration: "", vertical: "", runs: "", distance: "", maxSpeed: "", conditions: "Groomed", mood: "Great" });
-
-  function toggleLike(id) { setFeed(f => f.map(p => p.id === id ? { ...p, liked: !p.liked } : p)); }
-  function toggleSave(id) { setFeed(f => f.map(p => p.id === id ? { ...p, saved: !p.saved } : p)); }
-  function toggleComments(id) { setFeed(f => f.map(p => p.id === id ? { ...p, commentsOpen: !p.commentsOpen } : p)); }
-  function setCommentText(id, text) { setFeed(f => f.map(p => p.id === id ? { ...p, commentText: text } : p)); }
-  function addComment(id) { setFeed(f => f.map(p => p.id === id ? { ...p, commentList: [...p.commentList, { user: "You", text: p.commentText }], commentText: "", comments: p.comments + 1 } : p)); }
-  function toggleJoinChallenge(id) { setFeed(f => f.map(p => p.id === id ? { ...p, joined: !p.joined } : p)); }
-  function submitActivity() {
-    if (!activity.resort) return;
-    const newPost = {
-      id: "pa" + Date.now(), type: "activity", user: "You", avatar: "YO", time: "Just now",
-      resort: activity.resort, flag: "🏔",
-      activity: { duration: activity.duration, runs: activity.runs, vertical: activity.vertical + "m", distance: activity.distance + "km" },
-      caption: `${activity.mood === "Epic" ? "🤩 " : ""}${activity.conditions} conditions at ${activity.resort}. ${activity.vertical}m vertical, ${activity.runs} runs.`,
-      conditions: activity.conditions, mood: activity.mood === "Great" ? "😊" : activity.mood === "OK" ? "😐" : activity.mood === "Tough" ? "😤" : "🤩",
-      likes: 0, comments: 0, shares: 0, commentsOpen: false, commentText: "", commentList: [], liked: false, saved: false,
-    };
-    setFeed(prev => [newPost, ...prev]);
-    setLogActivityOpen(false);
-    setPostText("");
+  async function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading(true); setError(""); setPreview(null);
+    try {
+      const text = await file.text();
+      const activity = parseGPX(text);
+      setPreview(activity);
+    } catch(err) {
+      setError(err.message);
+    }
+    setLoading(false);
   }
 
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen pt-20 bg-peak-bg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-            <div className="space-y-4 min-w-0">
-              <div className="bg-peak-card border border-white/5 rounded-2xl p-6 text-center mb-2">
-                <h2 className="font-display font-extrabold text-2xl text-peak-text mb-2">Join the PeakXP community</h2>
-                <p className="text-peak-text-secondary text-sm mb-4">Log runs, connect with skiers, join challenges and get resort updates.</p>
-                <div className="flex gap-3 justify-center">
-                  <Link to="/auth" className="px-5 py-2.5 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm font-medium rounded-xl transition-colors">Sign in</Link>
-                  <Link to="/auth" className="px-5 py-2.5 bg-peak-red hover:bg-peak-red-hover text-white text-sm font-bold rounded-xl transition-colors">Create account</Link>
-                </div>
-              </div>
-              {INITIAL_FEED.filter(p => ["resort","sponsored","challenge","deal"].includes(p.type)).map(post => (
-                <div key={post.id} className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden">
-                  <div className="flex items-center gap-3 p-4 pb-3">
-                    <Avatar initials={post.avatar} />
-                    <div><span className="text-peak-text font-semibold text-sm">{post.user}</span><p className="text-peak-text-secondary text-xs">{post.time}</p></div>
-                  </div>
-                  {post.photo && <img src={post.photo} alt="" className="w-full h-52 object-cover" />}
-                  {post.caption && <p className="px-4 py-3 text-sm text-peak-text">{post.caption}</p>}
-                </div>
-              ))}
-            </div>
-            <div className="hidden lg:block">
-              <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
-                <h3 className="font-display font-bold text-peak-text text-sm mb-3">Trending this week</h3>
-                <div className="space-y-2">{TRENDING_RESORTS.map(r => (
-                  <Link key={r.id} to={`/resort/${r.id}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-                    <img src={r.image} alt={r.name} className="w-12 h-9 rounded-lg object-cover" />
-                    <div><p className="text-peak-text font-semibold text-sm">{r.name}</p><p className="text-peak-text-secondary text-xs">{r.country}</p></div>
-                  </Link>
-                ))}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  function handleSave() {
+    if (!preview) return;
+    const saved = saveActivity(user.id, preview);
+    onUploaded(saved);
+    setPreview(null);
+    fileRef.current.value = "";
   }
 
   return (
-    <div className="min-h-screen pt-20 bg-peak-bg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <BackButton to="/" className="mb-4" />
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_300px] gap-6">
+    <div className="bg-peak-surface border border-white/5 rounded-2xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-peak-text text-sm">Import activity</h3>
+        <span className="text-peak-text-secondary text-xs">GPX format</span>
+      </div>
 
-          {/* LEFT COLUMN */}
-          <div className="hidden lg:block space-y-4">
-            {/* Profile snapshot */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar initials="YO" size="lg" />
-                <div>
-                  <p className="font-semibold text-peak-text text-sm">You</p>
-                  <p className="text-peak-text-secondary text-xs">Home resort: Verbier</p>
-                </div>
+      <div
+        onClick={() => fileRef.current.click()}
+        className="border-2 border-dashed border-white/10 hover:border-white/20 rounded-xl p-6 text-center cursor-pointer transition-colors mb-3">
+        <Upload className="h-8 w-8 text-peak-text-secondary mx-auto mb-2"/>
+        <p className="text-peak-text text-sm font-medium">Drop GPX file or click to upload</p>
+        <p className="text-peak-text-secondary text-xs mt-1">From Garmin, Suunto, Apple, Polar, Wahoo</p>
+      </div>
+      <input ref={fileRef} type="file" accept=".gpx" className="hidden" onChange={handleFile}/>
+
+      {loading && <p className="text-peak-text-secondary text-sm text-center">Parsing GPX…</p>}
+      {error && <p className="text-peak-red text-sm">{error}</p>}
+
+      {preview && (
+        <div className="bg-peak-card rounded-xl p-4 space-y-3">
+          <p className="text-peak-text font-semibold text-sm">{preview.name}</p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            {[
+              ["Date", preview.date],
+              ["Vertical", `${(preview.totalDescentM/1000).toFixed(2)}km ↓`],
+              ["Distance", `${preview.distanceKm}km`],
+              ["Duration", `${Math.floor(preview.durationMin/60)}h ${preview.durationMin%60}m`],
+              ["Max speed", `${preview.maxSpeedKmh} km/h`],
+              ["Track points", preview.points],
+            ].map(([l,v]) => (
+              <div key={l} className="flex justify-between">
+                <span className="text-peak-text-secondary">{l}</span>
+                <span className="text-peak-text font-medium">{v}</span>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center mb-4">
-                {[["38", "Days"], ["284", "Runs"], ["42km", "Vertical"]].map(([v, l]) => (
-                  <div key={l} className="bg-peak-surface rounded-xl p-2">
-                    <p className="font-display font-bold text-peak-text text-lg">{v}</p>
-                    <p className="text-peak-text-secondary text-xs">{l}</p>
-                  </div>
-                ))}
-              </div>
-              <button className="text-xs text-peak-blue hover:underline">Edit profile</button>
-            </div>
+            ))}
+          </div>
+          <button onClick={handleSave} className="w-full bg-peak-red text-white py-2 rounded-xl text-sm font-semibold">
+            Save activity ✓
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
-            {/* Feed nav */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-3 space-y-1">
-              {NAV_ITEMS.map(item => (
-                <button key={item} onClick={() => setFeedNav(item)}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-medium rounded-xl transition-colors ${feedNav === item ? "bg-peak-red/10 text-peak-red" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/5"}`}>
-                  {item}
-                </button>
-              ))}
-            </div>
+// ── Challenges panel ──────────────────────────────────────────────────────────
+function ChallengesPanel({ user }) {
+  const [tab, setTab] = useState("active"); // active | create
+  const [showCreate, setShowCreate] = useState(false);
+  const progress = getChallengeProgress(user?.id || "guest");
 
-            {/* Challenges */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-5">
-              <h3 className="font-display font-bold text-peak-text text-base mb-3">Active challenges</h3>
-              <div className="space-y-3">
-                {CHALLENGES.map(c => (
-                  <div key={c.id} className="bg-peak-surface rounded-xl p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xl ${c.unlocked ? "" : "grayscale opacity-50"}`}>{c.badge}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-peak-text text-xs font-semibold truncate">{c.name}</p>
-                        <p className="text-peak-text-secondary text-xs">{c.type}</p>
+  const byDiff = { easy:[], medium:[], hard:[], legendary:[], custom:[] };
+  progress.forEach(c => { (byDiff[c.difficulty]||byDiff.custom).push(c); });
+
+  const DIFF_COLORS = { easy:"#34D399", medium:"#F59E0B", hard:"#FB343D", legendary:"#A855F7", custom:"#3894E3" };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-display font-bold text-xl text-peak-text">Challenges</h2>
+        <button onClick={() => setShowCreate(true)}
+          className="flex items-center gap-1.5 bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold">
+          <Plus className="h-4 w-4"/> Create
+        </button>
+      </div>
+
+      <p className="text-peak-text-secondary text-sm">Progress updates automatically from your imported GPX activities.</p>
+
+      {/* Challenge groups */}
+      {Object.entries(byDiff).map(([diff, chs]) => {
+        if (!chs.length) return null;
+        return (
+          <div key={diff}>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{color:DIFF_COLORS[diff]||"#888"}}>
+              {diff.charAt(0).toUpperCase()+diff.slice(1)}
+            </p>
+            <div className="space-y-2">
+              {chs.map(ch => (
+                <div key={ch.id} className={`bg-peak-surface border rounded-2xl p-4 ${ch.completed?"border-green-400/30":"border-white/5"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl flex-shrink-0">{ch.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-peak-text font-semibold text-sm">{ch.name}</p>
+                        {ch.completed && <span className="text-green-400 text-xs font-bold">✓ Done!</span>}
+                      </div>
+                      <p className="text-peak-text-secondary text-xs mt-0.5">{ch.desc}</p>
+                      {/* Progress bar */}
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs text-peak-text-secondary mb-1">
+                          <span>{ch.progress?.toLocaleString()} / {ch.target?.toLocaleString()}</span>
+                          <span>{ch.pct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all"
+                            style={{
+                              width:`${ch.pct}%`,
+                              background: ch.completed ? "#22c55e" : (DIFF_COLORS[diff]||"#3894E3"),
+                            }}/>
+                        </div>
                       </div>
                     </div>
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-1">
-                      <div className="h-full bg-peak-red rounded-full transition-all" style={{ width: `${Math.min(100, (c.progress / c.target) * 100)}%` }} />
-                    </div>
-                    <p className="text-xs text-peak-text-secondary">{c.progress}/{c.target} · {c.participants.toLocaleString()} skiers</p>
                   </div>
-                ))}
-              </div>
-              <button className="mt-3 text-xs text-peak-blue hover:underline">View all challenges</button>
+                </div>
+              ))}
             </div>
           </div>
+        );
+      })}
 
-          {/* MOBILE NAV */}
-          <div className="lg:hidden flex gap-2 overflow-x-auto hide-scrollbar mb-2">
-            {NAV_ITEMS.map(item => (
-              <button key={item} onClick={() => setFeedNav(item)}
-                className={`px-4 py-2 text-sm font-medium rounded-full border whitespace-nowrap transition-colors flex-shrink-0 ${feedNav === item ? "bg-peak-red/10 border-peak-red/30 text-peak-red" : "border-white/10 text-peak-text-secondary"}`}>
-                {item}
+      {showCreate && <CreateChallengeModal user={user} onClose={() => setShowCreate(false)} />}
+    </div>
+  );
+}
+
+function CreateChallengeModal({ user, onClose }) {
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  const [metric, setMetric] = useState("seasonVertical");
+  const [target, setTarget] = useState("");
+  const [icon, setIcon] = useState("🎿");
+  const [isPublic, setIsPublic] = useState(false);
+
+  const METRIC_OPTIONS = [
+    { id:"seasonVertical",   label:"Season vertical (m)" },
+    { id:"seasonDays",       label:"Season ski days" },
+    { id:"weekVertical",     label:"Weekly vertical (m)" },
+    { id:"lifetimeResorts",  label:"Lifetime resorts" },
+    { id:"maxSpeed",         label:"Max speed (km/h)" },
+  ];
+
+  function handleCreate() {
+    if (!name.trim() || !target) return;
+    createCustomChallenge(user?.id || "guest", { name, desc, metric, target:Number(target), icon, isPublic });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4" onClick={onClose}>
+      <div className="bg-peak-surface border border-white/10 rounded-2xl w-full max-w-md" onClick={e=>e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <p className="text-peak-text font-bold">Create challenge</p>
+          <button onClick={onClose} className="text-peak-text-secondary">×</button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="flex gap-3">
+            <div className="w-14">
+              <input value={icon} onChange={e=>setIcon(e.target.value)} maxLength={2}
+                className="w-full text-center text-2xl bg-peak-card border border-white/10 rounded-xl py-2.5 outline-none"/>
+            </div>
+            <input value={name} onChange={e=>setName(e.target.value)} placeholder="Challenge name"
+              className="flex-1 bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+          </div>
+          <input value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Description (optional)"
+            className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+          <select value={metric} onChange={e=>setMetric(e.target.value)}
+            className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none">
+            {METRIC_OPTIONS.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+          </select>
+          <input type="number" value={target} onChange={e=>setTarget(e.target.value)} placeholder="Target number"
+            className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+          <div className="flex gap-2">
+            {[["public","🌍 Public"],["friends","👥 Friends only"]].map(([v,l]) => (
+              <button key={v} onClick={()=>setIsPublic(v==="public")}
+                className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${(isPublic&&v==="public")||(!isPublic&&v==="friends")?"border-peak-blue/50 bg-peak-blue/10 text-peak-blue":"border-white/10 text-peak-text-secondary"}`}>
+                {l}
               </button>
             ))}
           </div>
-
-          {/* CENTRE COLUMN — FEED */}
-          <div className="space-y-4 min-w-0">
-            {/* Compose */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
-              <div className="flex gap-3 mb-3">
-                <Avatar initials="YO" />
-                <input value={postText} onChange={e => setPostText(e.target.value)}
-                  onFocus={() => {}}
-                  placeholder="Share a run, a view, or a moment..."
-                  className="flex-1 bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {[{ icon: Camera, label: "Photo" }, { icon: Video, label: "Video" }, { icon: Tag, label: "Tag resort" }, { icon: MapPin, label: "Location" }].map(({ icon: Icon, label }) => (
-                  <button key={label} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-peak-text-secondary hover:text-peak-text border border-white/10 rounded-full transition-colors">
-                    <Icon className="h-3.5 w-3.5" />{label}
-                  </button>
-                ))}
-                <button onClick={() => setLogActivityOpen(v => !v)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-peak-blue border border-peak-blue/30 rounded-full hover:bg-peak-blue/10 transition-colors">
-                  <BarChart3 className="h-3.5 w-3.5" />Log activity
-                </button>
-                <button onClick={() => postText && alert("Posted!")} disabled={!postText}
-                  className="ml-auto px-4 py-1.5 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white text-xs font-semibold rounded-full transition-colors">
-                  Post
-                </button>
-              </div>
-              {draftRestored && (
-                <p className="text-peak-text-secondary text-xs mt-1 ml-12">Draft restored · <button onClick={() => { setPostText(""); setDraftRestored(false); }} className="text-peak-blue hover:underline">Clear</button></p>
-              )}
-              {logActivityOpen && (
-                <div className="mt-4 border-t border-white/5 pt-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-peak-text-secondary mb-1">Sport</label>
-                      <select value={activity.sport} onChange={e => setActivity(a => ({ ...a, sport: e.target.value }))}
-                        className="w-full bg-peak-surface border border-white/10 rounded-xl px-3 py-2 text-xs text-peak-text outline-none">
-                        {["Skiing", "Snowboard", "Cross-country", "Freestyle"].map(s => <option key={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-peak-text-secondary mb-1">Resort</label>
-                      <input value={activity.resort} onChange={e => setActivity(a => ({ ...a, resort: e.target.value }))} placeholder="e.g. Verbier"
-                        className="w-full bg-peak-surface border border-white/10 rounded-xl px-3 py-2 text-xs text-peak-text outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-peak-text-secondary mb-1">Date</label>
-                      <input type="date" value={activity.date} onChange={e => setActivity(a => ({ ...a, date: e.target.value }))}
-                        className="w-full bg-peak-surface border border-white/10 rounded-xl px-3 py-2 text-xs text-peak-text outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-peak-text-secondary mb-1">Duration (hh:mm)</label>
-                      <input value={activity.duration} onChange={e => setActivity(a => ({ ...a, duration: e.target.value }))} placeholder="06:40"
-                        className="w-full bg-peak-surface border border-white/10 rounded-xl px-3 py-2 text-xs text-peak-text outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[{ k: "vertical", l: "Vertical (m)" }, { k: "runs", l: "Runs" }, { k: "distance", l: "Distance (km)" }].map(({ k, l }) => (
-                      <div key={k}>
-                        <label className="block text-xs text-peak-text-secondary mb-1">{l}</label>
-                        <input type="number" value={activity[k]} onChange={e => setActivity(a => ({ ...a, [k]: e.target.value }))}
-                          className="w-full bg-peak-surface border border-white/10 rounded-xl px-3 py-2 text-xs text-peak-text outline-none" />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-peak-text-secondary mb-1">Conditions</label>
-                      <select value={activity.conditions} onChange={e => setActivity(a => ({ ...a, conditions: e.target.value }))}
-                        className="w-full bg-peak-surface border border-white/10 rounded-xl px-3 py-2 text-xs text-peak-text outline-none">
-                        {["Powder", "Groomed", "Icy", "Spring snow", "Mixed"].map(c => <option key={c}>{c}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-peak-text-secondary mb-1">Mood</label>
-                      <div className="flex gap-1">
-                        {[["Great", "😊"], ["OK", "😐"], ["Tough", "😤"], ["Epic", "🤩"]].map(([m, emoji]) => (
-                          <button key={m} type="button" onClick={() => setActivity(a => ({ ...a, mood: m }))}
-                            className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${activity.mood === m ? "border-peak-blue/50 bg-peak-blue/10" : "border-white/10"}`}>
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <button onClick={submitActivity} className="w-full py-2 bg-peak-red hover:bg-peak-red-hover text-white text-sm font-semibold rounded-xl transition-colors">
-                    Post activity
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Feed posts */}
-            {feed.map(post => (
-              <div key={post.id} className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center gap-3 p-4 pb-3 relative">
-                  <Avatar initials={post.avatar} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-peak-text font-semibold text-sm">{post.user}</span>
-                      {post.verified && <span className="text-xs text-peak-blue font-medium border border-peak-blue/30 px-1.5 py-0.5 rounded-full">✓ Partner</span>}
-                      {post.resort && <span className="text-peak-text-secondary text-xs">at {post.flag} {post.resort}</span>}
-                    </div>
-                    <p className="text-peak-text-secondary text-xs">{post.time}</p>
-                  </div>
-                  {post.sponsored && <span className="text-xs text-peak-text-secondary">Sponsored</span>}
-                </div>
-
-                {/* Activity post */}
-                {post.type === "activity" && (
-                  <>
-                    {post.activity && (
-                      <div className="mx-4 mb-3 grid grid-cols-4 gap-2">
-                        {Object.entries(post.activity).map(([k, v]) => (
-                          <div key={k} className="bg-peak-surface rounded-xl p-2.5 text-center">
-                            <p className="font-display font-bold text-peak-text text-sm">{v}</p>
-                            <p className="text-peak-text-secondary text-xs capitalize">{k}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {post.photo && <img src={post.photo} alt="" className="w-full h-64 object-cover" />}
-                    {post.caption && <p className="px-4 pt-3 text-sm text-peak-text">{post.caption}</p>}
-                    <div className="px-4 pt-2 pb-1 flex gap-2">
-                      {post.conditions && <span className="text-xs bg-peak-surface text-peak-text-secondary px-2 py-0.5 rounded-full border border-white/10">{post.conditions}</span>}
-                      {post.mood && <span className="text-xs">{post.mood}</span>}
-                    </div>
-                  </>
-                )}
-
-                {/* Photo post */}
-                {post.type === "photo" && (
-                  <>
-                    {post.photo && <img src={post.photo} alt="" className="w-full h-64 object-cover" />}
-                    <div className="px-4 pt-3">
-                      {post.caption && <p className="text-sm text-peak-text mb-2">{post.caption}</p>}
-                      {post.taggedResort && <span className="inline-flex items-center gap-1 text-xs text-peak-blue border border-peak-blue/30 px-2 py-0.5 rounded-full"><Tag className="h-3 w-3" />{post.taggedResort}</span>}
-                    </div>
-                  </>
-                )}
-
-                {/* Resort / sponsored post */}
-                {(post.type === "resort" || post.type === "sponsored") && (
-                  <>
-                    {post.photo && <img src={post.photo} alt="" className="w-full h-64 object-cover" />}
-                    {post.caption && <p className="px-4 pt-3 text-sm text-peak-text">{post.caption}</p>}
-                    {post.cta && (
-                      <div className="px-4 pt-3">
-                        <Link to={post.ctaLink || "#"} className="inline-block px-5 py-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl transition-colors">
-                          {post.cta}
-                        </Link>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Challenge post */}
-                {post.type === "challenge" && (
-                  <div className="px-4 pb-3">
-                    <div className="bg-peak-surface rounded-xl p-4 flex items-center gap-3">
-                      <span className="text-3xl">{post.badge}</span>
-                      <div className="flex-1">
-                        <p className="text-peak-text font-semibold text-sm">{post.user} just unlocked:</p>
-                        <p className="text-peak-blue text-sm font-bold">{post.challengeName}</p>
-                        <p className="text-peak-text-secondary text-xs">{post.challengeDesc}</p>
-                      </div>
-                    </div>
-                    <button onClick={() => toggleJoinChallenge(post.id)}
-                      className={`mt-3 px-5 py-2 text-xs font-semibold rounded-xl transition-colors ${post.joined ? "bg-peak-green/20 text-peak-green border border-peak-green/30" : "bg-peak-blue/10 text-peak-blue border border-peak-blue/30 hover:bg-peak-blue/20"}`}>
-                      {post.joined ? "Joined!" : "Join this challenge"}
-                    </button>
-                  </div>
-                )}
-
-                {/* Deal post */}
-                {post.type === "deal" && (
-                  <>
-                    {post.photo && <img src={post.photo} alt="" className="w-full h-52 object-cover" />}
-                    <div className="px-4 pt-3">
-                      <span className="inline-block bg-peak-green/20 text-peak-green text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2">Deal</span>
-                      <p className="text-peak-text font-semibold text-base mb-1">{post.dealHeadline}</p>
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-peak-red font-bold text-xl">{post.price}</span>
-                        <span className="text-peak-text-secondary text-xs">{post.validity}</span>
-                      </div>
-                      <Link to={post.ctaLink || "#"} className="inline-block px-5 py-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-semibold rounded-xl transition-colors">
-                        {post.cta}
-                      </Link>
-                    </div>
-                  </>
-                )}
-
-                {/* Reaction row */}
-                <div className="px-4 pb-3 mt-3">
-                  <ReactionRow post={post} onLike={() => toggleLike(post.id)} onSave={() => toggleSave(post.id)} onToggleComments={() => toggleComments(post.id)} />
-                  {post.commentsOpen && (
-                    <CommentThread post={post} onAddComment={() => addComment(post.id)} onTextChange={(t) => setCommentText(post.id, t)} />
-                  )}
-                  {!post.commentsOpen && post.commentList.length > 0 && (
-                    <button onClick={() => toggleComments(post.id)} className="mt-2 text-xs text-peak-text-secondary hover:text-peak-text transition-colors">
-                      View all {post.commentList.length} comments
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            <button className="w-full py-3 border border-white/10 text-peak-text-secondary hover:text-peak-text text-sm font-medium rounded-xl transition-colors">
-              Load more
-            </button>
-          </div>
-
-          {/* RIGHT COLUMN */}
-          <div className="hidden lg:block space-y-4">
-            {/* Trending resorts */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
-              <h3 className="font-display font-bold text-peak-text text-sm mb-3">Trending this week</h3>
-              <div className="space-y-2">
-                {TRENDING_RESORTS.map(r => (
-                  <Link key={r.id} to={`/resort/${r.id}`} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors">
-                    <img src={r.image} alt={r.name} className="w-12 h-9 rounded-lg object-cover flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-peak-text font-semibold text-sm truncate">{r.name}</p>
-                      <p className="text-peak-text-secondary text-xs">{r.country} · {r.pisteKm}km</p>
-                    </div>
-                    <span className="text-peak-text text-xs font-bold">{r.rating}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Active friends */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
-              <h3 className="font-display font-bold text-peak-text text-sm mb-3">Active friends</h3>
-              <div className="space-y-2">
-                {ACTIVE_FRIENDS.map(f => (
-                  <div key={f.name} className="flex items-center gap-3">
-                    <Avatar initials={f.avatar} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-peak-text text-xs font-semibold truncate">{f.name}</p>
-                      <p className={`text-xs truncate ${f.time ? "text-peak-text-secondary" : "text-peak-green"}`}>{f.status}</p>
-                    </div>
-                    {!f.time && <div className="w-2 h-2 rounded-full bg-peak-green flex-shrink-0" />}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Resort alerts */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
-              <h3 className="font-display font-bold text-peak-text text-sm mb-3">Resort alerts</h3>
-              <div className="space-y-2">
-                {RESORT_ALERTS.map(a => (
-                  <div key={a.resort} className="bg-peak-surface rounded-xl px-3 py-2.5">
-                    <p className="text-peak-blue text-xs font-semibold mb-0.5">{a.resort}</p>
-                    <p className="text-peak-text-secondary text-xs">{a.alert}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Suggested to follow */}
-            <div className="bg-peak-card border border-white/5 rounded-2xl p-4">
-              <h3 className="font-display font-bold text-peak-text text-sm mb-3">Suggested to follow</h3>
-              <div className="space-y-3">
-                {SUGGESTED_USERS.map(u => (
-                  <div key={u.name} className="flex items-center gap-3">
-                    <Avatar initials={u.avatar} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-peak-text text-xs font-semibold">{u.name}</p>
-                      <p className="text-peak-text-secondary text-xs">{u.mutual} mutual friends</p>
-                    </div>
-                    <button className="text-xs text-peak-blue border border-peak-blue/30 px-3 py-1 rounded-full hover:bg-peak-blue/10 transition-colors">
-                      Follow
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        </div>
+        <div className="px-5 pb-5">
+          <button onClick={handleCreate} disabled={!name.trim()||!target}
+            className="w-full bg-peak-red text-white py-2.5 rounded-xl font-semibold text-sm disabled:opacity-40">
+            Create challenge
+          </button>
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Rankings panel ────────────────────────────────────────────────────────────
+function RankingsPanel({ user }) {
+  const [metric, setMetric] = useState("lifetimeVertical");
+  const [filter, setFilter] = useState("global");
+  const stats = getStats(user?.id || "guest");
+
+  const leaderboard = getLeaderboard({
+    metric,
+    homeCountry: filter === "country" ? (user?.country || "DE") : null,
+  });
+
+  // Inject real user
+  const myEntry = {
+    userId: user?.id || "me",
+    name: user?.name || user?.displayName || "You",
+    homeCountry: user?.country || "—",
+    avatar: (user?.name || "Y")[0].toUpperCase(),
+    lifetimeVertical: stats.lifetimeVertical,
+    lifetimeDays: stats.lifetimeDays,
+    lifetimeResorts: stats.lifetimeResorts,
+    seasonVertical: stats.seasonVertical,
+    seasonDays: stats.seasonDays,
+    isMe: true,
+  };
+  const allEntries = [...leaderboard, myEntry].sort((a,b)=>(b[metric]||0)-(a[metric]||0)).map((e,i)=>({...e,rank:i+1}));
+
+  const METRICS = [
+    { id:"lifetimeVertical", label:"Lifetime vertical" },
+    { id:"seasonVertical",   label:"Season vertical" },
+    { id:"lifetimeDays",     label:"Lifetime days" },
+    { id:"seasonDays",       label:"Season days" },
+    { id:"lifetimeResorts",  label:"Resorts visited" },
+  ];
+  const FILTERS = [
+    { id:"global",  label:"Global" },
+    { id:"country", label:"My country" },
+    { id:"friends", label:"Friends" },
+  ];
+
+  function fmt(val, m) {
+    if (!val) return "—";
+    if (m.includes("Vertical")) return `${(val/1000).toFixed(0)}km`;
+    return val.toLocaleString();
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="font-display font-bold text-xl text-peak-text">Rankings</h2>
+
+      {/* Metric tabs */}
+      <div className="flex gap-1 overflow-x-auto pb-1">
+        {METRICS.map(m => (
+          <button key={m.id} onClick={() => setMetric(m.id)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${metric===m.id?"bg-peak-red text-white":"text-peak-text-secondary hover:text-peak-text"}`}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter */}
+      <div className="flex gap-1">
+        {FILTERS.map(f => (
+          <button key={f.id} onClick={() => setFilter(f.id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${filter===f.id?"border-peak-blue/50 bg-peak-blue/10 text-peak-blue":"border-white/10 text-peak-text-secondary"}`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div className="bg-peak-surface border border-white/5 rounded-2xl overflow-hidden">
+        {allEntries.slice(0,20).map((entry, i) => (
+          <div key={entry.userId} className={`flex items-center gap-3 px-4 py-3 border-b border-white/5 last:border-0 ${entry.isMe?"bg-peak-blue/5":""}`}>
+            <span className={`w-7 text-center font-bold text-sm flex-shrink-0 ${entry.rank<=3?"text-peak-red":"text-peak-text-secondary"}`}>
+              {entry.rank===1?"🥇":entry.rank===2?"🥈":entry.rank===3?"🥉":entry.rank}
+            </span>
+            <div className="w-8 h-8 rounded-full bg-peak-card flex items-center justify-center text-sm font-bold text-peak-text flex-shrink-0">
+              {entry.avatar}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold truncate ${entry.isMe?"text-peak-blue":"text-peak-text"}`}>
+                {entry.name} {entry.isMe && "(you)"}
+              </p>
+              <p className="text-peak-text-secondary text-xs">{entry.homeCountry}</p>
+            </div>
+            <p className="text-peak-text font-bold text-sm flex-shrink-0">{fmt(entry[metric],metric)}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-peak-text-secondary text-xs text-center">Rankings based on verified GPX imports only</p>
+    </div>
+  );
+}
+
+// ── Activities panel ──────────────────────────────────────────────────────────
+function ActivitiesPanel({ user }) {
+  const [activities, setActivities] = useState(() => getActivities(user?.id || "guest"));
+  const stats = getStats(user?.id || "guest");
+  const earnedBadges = getEarnedUserBadges(stats);
+
+  function handleUploaded(activity) {
+    setActivities(getActivities(user?.id || "guest"));
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="font-display font-bold text-xl text-peak-text">My Activities</h2>
+
+      {/* Stats summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label:"Lifetime vertical", value:`${(stats.lifetimeVertical/1000).toFixed(0)}km` },
+          { label:"Ski days", value:stats.lifetimeDays },
+          { label:"This season", value:`${(stats.seasonVertical/1000).toFixed(0)}km` },
+          { label:"Resorts", value:stats.lifetimeResorts },
+        ].map(s => (
+          <div key={s.label} className="bg-peak-surface border border-white/5 rounded-xl p-3 text-center">
+            <p className="text-peak-text font-bold text-xl">{s.value}</p>
+            <p className="text-peak-text-secondary text-xs mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Earned badges */}
+      {earnedBadges.length > 0 && (
+        <div className="bg-peak-surface border border-white/5 rounded-2xl p-4">
+          <p className="text-peak-text font-semibold text-sm mb-3">Earned badges</p>
+          <div className="flex flex-wrap gap-2">
+            {earnedBadges.map(b => (
+              <span key={b.id} style={{
+                display:"inline-flex",alignItems:"center",gap:5,
+                fontSize:12,fontWeight:600,padding:"5px 11px",borderRadius:100,
+                background:`${b.color}18`,border:`1px solid ${b.color}35`,color:b.color,
+              }}>
+                {b.icon} {b.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <GPXUpload user={user} onUploaded={handleUploaded}/>
+
+      {/* Activity list */}
+      {activities.length > 0 ? (
+        <div className="space-y-2">
+          {activities.map(a => (
+            <div key={a.id} className="bg-peak-surface border border-white/5 rounded-xl p-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-peak-text font-semibold text-sm">{a.name}</p>
+                  <p className="text-peak-text-secondary text-xs mt-0.5">{a.date} · {a.source}</p>
+                </div>
+                {a.verified && <span className="text-green-400 text-xs font-semibold">✓ Verified</span>}
+              </div>
+              <div className="flex gap-4 mt-2 text-xs text-peak-text-secondary">
+                <span>↓ {(a.verticalM/1000).toFixed(2)}km</span>
+                <span>↔ {a.distanceKm}km</span>
+                {a.durationMin && <span>⏱ {Math.floor(a.durationMin/60)}h{a.durationMin%60}m</span>}
+                {a.maxSpeedKmh > 0 && <span>⚡ {a.maxSpeedKmh}km/h</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <Mountain className="h-10 w-10 text-peak-text-secondary mx-auto mb-3"/>
+          <p className="text-peak-text-secondary text-sm">No activities yet. Import a GPX to get started.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Community page ───────────────────────────────────────────────────────
+const SEED_FEED = [
+  {
+    id:"p1", type:"activity", user:"Marco R.", avatar:"M", time:"2h ago",
+    resortName:"Ski Welt", privacy:"public",
+    stats:{ verticalM:18400, distanceKm:62, durationMin:390, maxSpeedKmh:72 },
+    caption:"Big day on the Ski Welt. Powder from 9am to 3pm and then the sun came out. 62km done.",
+    photo:"https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=800&q=80",
+    reactionCount:34, topReaction:"🔥", commentCount:5, comments:[
+      { user:"Sophie M.", text:"That vertical is insane!" },
+      { user:"Elena V.", text:"🔥🔥🔥" },
+    ], reactions:{}, badgesReceived:[],
+  },
+  {
+    id:"p2", type:"photo", user:"Sophie M.", avatar:"S", time:"5h ago",
+    resortName:"Zermatt", privacy:"public",
+    caption:"The Matterhorn never gets old. -14°C at the summit, zero wind.",
+    photo:"https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800&q=80",
+    reactionCount:91, topReaction:"❤️", commentCount:12, comments:[
+      { user:"James K.", text:"Stunning 😍" },
+    ], reactions:{}, badgesReceived:[],
+  },
+  {
+    id:"p3", type:"challenge", user:"Elena V.", avatar:"E", time:"Yesterday",
+    challengeName:"50k Season", challengeDesc:"50,000m vertical this season",
+    challengeIcon:"⭐",
+    caption:"Just hit 50,000m for the season. 27 days in. Let's keep going!",
+    reactionCount:58, topReaction:"🏆", commentCount:8, comments:[],
+    reactions:{}, badgesReceived:[],
+  },
+];
+
+export default function Community() {
+  const { user, isLoggedIn } = useAppAuth();
+  const [activeTab, setActiveTab] = useState("feed");
+  const [feed, setFeed] = useState(SEED_FEED);
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [notification, setNotification] = useState("");
+
+  function showNotif(msg) {
+    setNotification(msg);
+    setTimeout(() => setNotification(""), 3000);
+  }
+
+  function handleReact(postId, reactionId) {
+    setFeed(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      const reactions = { ...(p.reactions || {}), [reactionId]: ((p.reactions||{})[reactionId]||0)+1 };
+      const topReaction = REACTIONS.find(r => r.id === Object.entries(reactions).sort((a,b)=>b[1]-a[1])[0]?.[0])?.icon || "❤️";
+      return { ...p, reactions, topReaction, reactionCount: (p.reactionCount||0)+1 };
+    }));
+  }
+
+  function handleComment(postId, text) {
+    if (!isLoggedIn) return;
+    setFeed(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      return { ...p, comments:[...(p.comments||[]),{ user:user?.name||"You", text }], commentCount:(p.commentCount||0)+1 };
+    }));
+  }
+
+  function handleGiveBadge(postId, targetUser, badge) {
+    setFeed(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      const existing = (p.badgesReceived||[]).find(b=>b.id===badge.id);
+      if (existing) return p;
+      return { ...p, badgesReceived:[...(p.badgesReceived||[]), badge] };
+    }));
+    showNotif(`You gave ${targetUser} the "${badge.label}" badge! ${badge.icon}`);
+  }
+
+  function handlePost(post) {
+    setFeed(prev => [post, ...prev]);
+    showNotif("Post shared!");
+  }
+
+  return (
+    <AuthGate>
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Notification toast */}
+        {notification && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-peak-surface border border-white/10 rounded-2xl px-5 py-3 text-peak-text text-sm font-medium shadow-xl">
+            {notification}
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="font-display font-extrabold text-2xl text-peak-text">Community</h1>
+          {activeTab === "feed" && isLoggedIn && (
+            <button onClick={() => setShowCreatePost(true)}
+              className="flex items-center gap-2 bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold">
+              <Plus className="h-4 w-4"/> Post
+            </button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 bg-peak-surface border border-white/5 rounded-xl p-1 mb-6">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-colors ${activeTab===tab.id?"bg-peak-card text-peak-text":"text-peak-text-secondary hover:text-peak-text"}`}>
+                <Icon className="h-3.5 w-3.5"/>
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab content */}
+        {activeTab === "feed" && (
+          <div>
+            {feed.map(post => (
+              <FeedPost key={post.id} post={post} currentUser={user}
+                onReact={handleReact} onComment={handleComment} onGiveBadge={handleGiveBadge}/>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "challenges" && <ChallengesPanel user={user}/>}
+        {activeTab === "ranking" && <RankingsPanel user={user}/>}
+        {activeTab === "activities" && <ActivitiesPanel user={user}/>}
+
+        {showCreatePost && <CreatePostModal user={user} onClose={()=>setShowCreatePost(false)} onPost={handlePost}/>}
+      </div>
+    </AuthGate>
   );
 }
