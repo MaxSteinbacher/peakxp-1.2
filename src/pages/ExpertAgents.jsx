@@ -3,6 +3,15 @@ import { useT } from "../lib/i18n";
 import { Users, Star, DollarSign, TrendingUp, Compass, Sunrise } from "lucide-react";
 import AgentChat from "../components/agents/AgentChat";
 
+const AGENT_EMBLEMS = {
+  family:   { emoji: "👨‍👩‍👧‍👦", label: "Family First" },
+  luxury:   { emoji: "💎",        label: "White Glove" },
+  budget:   { emoji: "🎯",        label: "Smart Pick" },
+  advanced: { emoji: "⚡",        label: "Elite Terrain" },
+  beginner: { emoji: "🌱",        label: "First Tracks" },
+  explorer: { emoji: "🧭",        label: "Off the Map" },
+};
+
 const AGENT_DEFS = [
   {
     key: "family", icon: Users,
@@ -202,21 +211,32 @@ export default function ExpertAgents() {
                     borderRadius:18,
                   }}/>
 
-                  {/* Top row: icon + badge */}
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,position:"relative"}}>
-                    {/* Icon box */}
+                  {/* Top row: premium emblem */}
+                  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18,position:"relative"}}>
+                    {/* Emoji emblem */}
                     <div style={{
-                      width:42,height:42,borderRadius:11,
-                      background:agent.iconBg,
-                      border:`1px solid ${agent.accent}25`,
+                      width:48,height:48,borderRadius:14,
+                      background:`linear-gradient(135deg, ${agent.accent}22 0%, ${agent.accent}08 100%)`,
+                      border:`1px solid ${agent.accent}40`,
                       display:"flex",alignItems:"center",justifyContent:"center",
-                      transition:"box-shadow 0.3s ease",
-                      boxShadow: hovered ? `0 0 16px ${agent.glow}` : "none",
+                      fontSize:24,flexShrink:0,
+                      transition:"box-shadow 0.3s ease, transform 0.3s ease",
+                      boxShadow: hovered ? `0 0 20px ${agent.glow}, inset 0 1px 0 ${agent.accent}30` : `inset 0 1px 0 ${agent.accent}15`,
+                      transform: hovered ? "scale(1.08)" : "scale(1)",
                     }}>
-                      <agent.icon style={{width:20,height:20,color:agent.accent}}/>
+                      {AGENT_EMBLEMS[agent.key]?.emoji}
                     </div>
-
-  
+                    {/* Label pill */}
+                    <div style={{
+                      display:"inline-flex",alignItems:"center",
+                      background:`${agent.accent}12`,
+                      border:`1px solid ${agent.accent}25`,
+                      borderRadius:100,padding:"3px 10px",
+                      fontSize:10,fontWeight:700,letterSpacing:"0.12em",
+                      textTransform:"uppercase",color:agent.accent,opacity:0.85,
+                    }}>
+                      {AGENT_EMBLEMS[agent.key]?.label}
+                    </div>
                   </div>
 
                   {/* Name */}
