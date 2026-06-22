@@ -227,6 +227,9 @@ export const swissResorts = [
     resortTypes: ["Glacier", "Alpine", "Luxury"],
     description: "The Glacier Village of Saas-Fee is surrounded by thirteen four-thousand-metre peaks — including the Dom, the highest peak entirely in Switzerland. Car-free since the road was built in 1951, the village is served by 300 electric vehicles and runs entirely on 100% renewable Valais hydropower. The world's highest revolving restaurant sits at 3,500m on the Mittelallalin, reached by the world's highest underground metro (Metro Alpin). Wham! filmed 'Last Christmas' here in 1984, and the Saastal valley spans four authentic mountain villages: Saas-Fee, Saas-Grund, Saas-Almagell and Saas-Balen. Summer skiing on the Fee Glacier begins as early as late October — six weeks earlier than most resorts.",
     image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/4e72be852_Drehrestaurantklein.jpg",
+    videos: [
+      { url: "https://media.base44.com/videos/public/6a19694d2b38b5e31a976be8/6bf81423a_winterkampagne24-25-EN-15sek-komprimiert.mp4", credits: "© Saas-Fee / Saastal Tourismus" }
+    ],
     images: [
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/4e72be852_Drehrestaurantklein.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ad7581774_Dorf_Saas-Fee.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
