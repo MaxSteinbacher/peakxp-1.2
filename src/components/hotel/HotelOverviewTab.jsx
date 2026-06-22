@@ -49,13 +49,6 @@ export default function HotelOverviewTab({ hotel }) {
             )}
           </div>
 
-          {/* Design philosophy */}
-          <div className="border-l-4 border-peak-red pl-5 py-2">
-            <p className="italic text-peak-text-secondary text-sm leading-relaxed">
-              "The design concept blends generous use of glass and natural daylight with mountain larch wood floors, reclaimed timber panelling, modern furniture upholstered in grey and red loden, open fireplaces, antler decorations and designer lighting — redefining Tyrolean Gemütlichkeit for the contemporary traveller."
-            </p>
-            <p className="text-peak-text-secondary text-xs mt-2">— Ursula Schelle-Müller, Interior Designer</p>
-          </div>
         </div>
 
         {/* Right: quick facts + contact */}
