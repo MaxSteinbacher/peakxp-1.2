@@ -225,9 +225,18 @@ export const swissResorts = [
     seasonDates: "Open year-round",
     seasonPasses: ["magic-pass"],
     resortTypes: ["Glacier", "Alpine", "Luxury"],
-    description: "The Glacier Village surrounded by thirteen four-thousand-metre peaks with year-round glacier skiing. The highest underground funicular in the world reaches 3456m and summer skiing is available on the Fee Glacier. Car-free village.",
-    image: "https://picsum.photos/seed/saas-fee/800/500",
-    images: ["https://picsum.photos/seed/saas-fee-1/1200/700", "https://picsum.photos/seed/saas-fee-2/1200/700", "https://picsum.photos/seed/saas-fee-3/1200/700"],
+    description: "The Glacier Village of Saas-Fee is surrounded by thirteen four-thousand-metre peaks — including the Dom, the highest peak entirely in Switzerland. Car-free since the road was built in 1951, the village is served by 300 electric vehicles and runs entirely on 100% renewable Valais hydropower. The world's highest revolving restaurant sits at 3,500m on the Mittelallalin, reached by the world's highest underground metro (Metro Alpin). Wham! filmed 'Last Christmas' here in 1984, and the Saastal valley spans four authentic mountain villages: Saas-Fee, Saas-Grund, Saas-Almagell and Saas-Balen. Summer skiing on the Fee Glacier begins as early as late October — six weeks earlier than most resorts.",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/4e72be852_Drehrestaurantklein.jpg",
+    images: [
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/4e72be852_Drehrestaurantklein.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ad7581774_Dorf_Saas-Fee.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/d46760aa5_Landschaft_Winter11jpg.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/87cb7455f_FondueGondel-2018-042.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/32794be70_PICT0003.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/881f20d1c_bodenmuellernicolas-MetroAlpin__DSC2691-Verbessert-RR.jpg", credits: "© Nicolas Bodenmüller / Saas-Fee Bergbahnen — Metro Alpin" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/0647a1b62_CS_134648_neu.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1cda1af0a_CS_134757_DXO.jpg", credits: "© Saas-Fee / Saastal Tourismus" },
+    ],
     weather: { temp: -9, snowDepth: 220, condition: "Sunny", forecast: [
       { day: "Today", high: -7, low: -13, condition: "clear" },
       { day: "Tomorrow", high: -8, low: -14, condition: "clear" },
@@ -235,8 +244,8 @@ export const swissResorts = [
     ]},
     snowDepthBase: 100, snowDepthMid: 175, snowDepthTop: 260, snowType: "Powder",
     liftsOpen: 20, liftsTotal: 22, pistesOpen: 52, pistesTotal: 57,
-    ecoRating: 5, ecoRenewable: 88, ecoCertifications: ["ISO 14001", "Green Globe", "Alpine Pearls"],
-    ecoInitiatives: ["88% renewable electricity", "Car-free village since 1968", "Alpine Pearls sustainable mobility", "Electric vehicle network"],
+    ecoRating: 5, ecoRenewable: 100, ecoCertifications: ["ISO 14001", "Green Globe", "Alpine Pearls", "Energiestadt", "UNWTO Best Tourism Villages"],
+    ecoInitiatives: ["100% renewable Valais hydropower for entire resort including lifts", "Car-free village since 1951 — 300 electric vehicles only", "All 250 wood stoves fitted with fine-particle filters", "E-bus network throughout Saastal valley", "UNWTO Best Tourism Villages 2021 award"],
     ecoOffsetProgram: true,
     airports: [
       { airport: "Geneva", iata: "GVA", driveTime: "2h 30m" },
@@ -248,9 +257,11 @@ export const swissResorts = [
     parking: { capacity: 2200, pricePerDay: 14, includedInPass: false },
     facilities: {
       restaurants: [
-        { name: "Allalin Restaurant", zone: "3500m rotating", cuisine: "Swiss Gourmet", price: "€€€" },
-        { name: "Gletscher Grotte", zone: "3456m glacier cave", cuisine: "Alpine", price: "€€€" },
-        { name: "Fletschhorn Restaurant", zone: "Village", cuisine: "Gourmet", price: "€€€€" }
+        { name: "Drehrestaurant Allalin", zone: "3,500m — world's highest revolving restaurant", cuisine: "Swiss Gourmet", price: "€€€" },
+        { name: "Gletscher Grotte", zone: "3,456m glacier cave", cuisine: "Alpine", price: "€€€" },
+        { name: "Fondue Gondola", zone: "Felskin cable car", cuisine: "Walliser Fondue", price: "€€€" },
+        { name: "Fletschhorn Restaurant", zone: "Village", cuisine: "Gourmet", price: "€€€€" },
+        { name: "Weissmieshütte", zone: "Saas-Grund mountain", cuisine: "Alpine", price: "€€" }
       ],
       skiSchools: 2, groupLessonFrom: 62, privateLessonFrom: 165,
       languages: ["🇨🇭", "🇬🇧", "🇩🇪", "🇫🇷"],
@@ -270,9 +281,10 @@ export const swissResorts = [
         { name: "Visp", distance: "30km", desc: "Rhone valley town on the Simplon rail route" },
         { name: "Brig", distance: "36km", desc: "Major railway junction with Simplon tunnel" }
       ],
-      activities: ["Glacier hiking", "Ice skating", "Spa & wellness", "Snowshoeing", "Winter walking", "Glacier cave visits"],
-      touristBoard: "Saas-Fee Tourism",
+      activities: ["Glacier hiking on Fee Glacier with mountain guide", "Aqua Allalin indoor pool & spa (3,500m)", "Ice skating, curling & Eisstockschiessen — 4 ice rinks", "Snowshoeing in Saastal valley", "Winter hiking (60km network)", "Metro Alpin — world's highest underground funicular", "Feeblitz toboggan run", "Gorge Alpine — Feeschlucht canyon crossing", "Ice climbing (World Cup venue since 1999)", "Foxtrail Allalin — family treasure hunt", "Husky sled experiences", "Sunrise skiing at 3,500m", "Kreuzboden by Night — night sledding 11km", "Skitouring in high-alpine terrain", "Mattmark dam winter walk", "VirtuAllalin — interactive glacier VR experience at Mittelallalin"],
+      touristBoard: "Saastal Tourismus AG",
       touristBoardUrl: "https://www.saas-fee.ch",
+      contact: { phone: "+41 27 958 18 58", email: "info@saas-fee.ch" },
       emergency: "112",
       hospital: "Visp hospital (30km)"
     },
@@ -281,7 +293,11 @@ export const swissResorts = [
       { name: "Saas-Fee village", seed: "saas-fee-cam2" }
     ],
     events: [
-      { date: "Aug 2025", name: "Saas-Fee Summer Skiing", type: "Festival", desc: "Summer glacier ski season opener" }
+      { date: "Jan 23–24, 2026", name: "Ice Climbing World Cup", type: "Competition", desc: "Annual FIS Ice Climbing World Cup — Saas-Fee has hosted since 1999. Competitors and fans at Sportplatz Kalbermatten." },
+      { date: "Mar 22–28, 2026", name: "Mentelity Games", type: "Festival", desc: "4-day adaptive ski & snowboard event in Saas-Grund for people with physical disabilities. Coaches, Paralympics athletes, all ability levels." },
+      { date: "Mar 27, 2026", name: "Hohsaas 12-Hour Race", type: "Competition", desc: "Midnight to noon knockout race to raise funds for Mentelity Games. Open to all — ends with après party." },
+      { date: "Apr 5, 2026", name: "Moon Light Fight", type: "Competition", desc: "Parallel slalom event under full moon and floodlights on the Jowang piste. Easter Sunday spectacle." },
+      { date: "Apr 10–11, 2026", name: "Allalin Rennen", type: "Competition", desc: "9km amateur glacier race descending 1,800m vertical. Speeds up to 140 km/h. First held in 1946." },
     ],
     promotions: [],
     liftPasses: [
