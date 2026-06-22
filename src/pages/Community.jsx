@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useAppAuth } from "../context/AppAuthContext";
-import { Heart, Flame, Snowflake, Trophy, Star, Mountain, Camera, Plus, Upload, ChevronRight, X, Check, Users, BarChart3, Award, Target, Filter, Globe, MapPin, Zap } from "lucide-react";
+import { Heart, Flame, Snowflake, Trophy, Star, Mountain, Camera, Plus, Upload, ChevronRight, X, Check, Users, BarChart3, Award, Target, Filter, Globe, MapPin, Zap, ShoppingBag, Search, MessageCircle, ShoppingCart, Tag, ChevronLeft, ChevronDown, Send } from "lucide-react";
 import { parseGPX, saveActivity, getActivities, getStats, getChallengeProgress, SYSTEM_CHALLENGES, createCustomChallenge, getLeaderboard } from "../lib/activityTracking";
 import { USER_BADGES, getEarnedUserBadges } from "../lib/badges";
 
@@ -20,6 +20,7 @@ const TABS = [
   { id:"challenges", label:"Challenges",   icon:Target },
   { id:"ranking",    label:"Rankings",     icon:BarChart3 },
   { id:"activities", label:"My Activities",icon:Mountain },
+  { id:"marketplace", label:"Marketplace",   icon:ShoppingBag },
 ];
 
 // ── Feed Post ─────────────────────────────────────────────────────────────────
@@ -645,6 +646,642 @@ function ActivitiesPanel({ user }) {
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARKETPLACE
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+  { id:"all",        label:"All gear",      icon:"🎿" },
+  { id:"skis",       label:"Skis",          icon:"🎿" },
+  { id:"snowboard",  label:"Snowboards",    icon:"🏂" },
+  { id:"boots",      label:"Boots",         icon:"👢" },
+  { id:"bindings",   label:"Bindings",      icon:"🔩" },
+  { id:"helmet",     label:"Helmets",       icon:"⛑️" },
+  { id:"goggles",    label:"Goggles",       icon:"🥽" },
+  { id:"outerwear",  label:"Outerwear",     icon:"🧥" },
+  { id:"protection", label:"Protection",    icon:"🦺" },
+  { id:"poles",      label:"Poles",         icon:"🪄" },
+  { id:"bags",       label:"Bags & packs",  icon:"🎒" },
+  { id:"other",      label:"Other",         icon:"📦" },
+];
+
+const CONDITIONS = [
+  { id:"new",        label:"Brand new",     color:"#34D399" },
+  { id:"like_new",   label:"Like new",      color:"#60A5FA" },
+  { id:"good",       label:"Good",          color:"#FBBF24" },
+  { id:"fair",       label:"Fair",          color:"#FB923C" },
+  { id:"worn",       label:"Well loved",    color:"#94A3B8" },
+];
+
+const SEED_LISTINGS = [
+  {
+    id:"l1", sellerId:"u1", sellerName:"Marco R.", sellerAvatar:"M", sellerRating:4.9, sellerSales:23,
+    title:"Atomic Redster X9 RS — 175cm", category:"skis", condition:"like_new",
+    price:420, originalPrice:980, currency:"EUR",
+    size:"175cm", brand:"Atomic", color:"Red/White",
+    desc:"Used for one full season (40 days). No edge damage, base in perfect condition. Bindings not included. Stored professionally.",
+    photos:["https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=600&q=80","https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&q=80"],
+    location:"Munich, DE", postedAt:"2 days ago", views:87, saved:12,
+    tags:["Race","Carving","Men's"],
+  },
+  {
+    id:"l2", sellerId:"u2", sellerName:"Sophie M.", sellerAvatar:"S", sellerRating:5.0, sellerSales:7,
+    title:"Salomon QST Lumen 99 — 161cm Women's", category:"skis", condition:"good",
+    price:280, originalPrice:750, currency:"EUR",
+    size:"161cm", brand:"Salomon", color:"Teal/Purple",
+    desc:"2 seasons of use, mostly groomed runs. Some light scratches on topsheet, base waxed and edges sharp. Great all-mountain ski.",
+    photos:["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80"],
+    location:"Zürich, CH", postedAt:"5 days ago", views:54, saved:8,
+    tags:["All-mountain","Women's","Intermediate"],
+  },
+  {
+    id:"l3", sellerId:"u3", sellerName:"James K.", sellerAvatar:"J", sellerRating:4.7, sellerSales:3,
+    title:"Burton Custom X Snowboard — 158cm", category:"snowboard", condition:"good",
+    price:350, originalPrice:800, currency:"EUR",
+    size:"158cm", brand:"Burton", color:"Black/Grey",
+    desc:"Three seasons, mainly park use. Twin tip in great shape. Bindings included (Burton Cartel). Perfect for intermediate to advanced.",
+    photos:["https://images.unsplash.com/photo-1488591216982-c8f8b8435672?w=600&q=80","https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=600&q=80"],
+    location:"London, UK", postedAt:"1 week ago", views:121, saved:19,
+    tags:["Park","Freeride","Burton Cartel included"],
+  },
+  {
+    id:"l4", sellerId:"u4", sellerName:"Elena V.", sellerAvatar:"E", sellerRating:4.8, sellerSales:14,
+    title:"Lange RX 130 LV Ski Boots — 26.0", category:"boots", condition:"like_new",
+    price:290, originalPrice:580, currency:"EUR",
+    size:"26.0 (EU 41)", brand:"Lange", color:"White/Blue",
+    desc:"Worn 15 days. Narrow last (96mm). Stiff flex for expert skiers. Heat moulded once. Come with original bag and box.",
+    photos:["https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&q=80"],
+    location:"Vienna, AT", postedAt:"3 days ago", views:43, saved:6,
+    tags:["Expert","Narrow","Race performance"],
+  },
+  {
+    id:"l5", sellerId:"u5", sellerName:"Thomas S.", sellerAvatar:"T", sellerRating:4.6, sellerSales:5,
+    title:"Oakley Flight Tracker XL Goggles", category:"goggles", condition:"new",
+    price:95, originalPrice:190, currency:"EUR",
+    size:"One size", brand:"Oakley", color:"Matte Black / Prizm Snow Sapphire",
+    desc:"Brand new, never used. Bought two pairs by mistake. Comes with original box, microfiber bag, and spare lens.",
+    photos:["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80"],
+    location:"Salzburg, AT", postedAt:"1 day ago", views:31, saved:4,
+    tags:["New","Oakley","Prizm lens"],
+  },
+  {
+    id:"l6", sellerId:"u6", sellerName:"Anna L.", sellerAvatar:"A", sellerRating:4.9, sellerSales:31,
+    title:"Arc'teryx Sentinel AR Jacket — L", category:"outerwear", condition:"good",
+    price:380, originalPrice:900, currency:"EUR",
+    size:"Large", brand:"Arc'teryx", color:"Black",
+    desc:"Two seasons, well-maintained. GORE-TEX still performing, DWR re-applied last season. No tears or stains. Zips all perfect.",
+    photos:["https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=600&q=80","https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=600&q=80"],
+    location:"Paris, FR", postedAt:"4 days ago", views:198, saved:34,
+    tags:["GORE-TEX","Premium","Waterproof"],
+  },
+];
+
+const SORT_OPTIONS = [
+  { id:"newest",    label:"Newest first" },
+  { id:"price_asc", label:"Price: low to high" },
+  { id:"price_desc",label:"Price: high to low" },
+  { id:"popular",   label:"Most viewed" },
+];
+
+// ── Listing card (grid) ───────────────────────────────────────────────────────
+function ListingCard({ listing, onClick }) {
+  const cond = CONDITIONS.find(c => c.id === listing.condition);
+  const saving = Math.round((1 - listing.price / listing.originalPrice) * 100);
+  return (
+    <div onClick={() => onClick(listing)} style={{cursor:"pointer"}}
+      className="bg-peak-surface border border-white/5 rounded-2xl overflow-hidden hover:border-white/12 transition-all group">
+      {/* Photo */}
+      <div className="relative overflow-hidden" style={{aspectRatio:"4/3"}}>
+        <img src={listing.photos[0]} alt={listing.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+        {/* Condition badge */}
+        <div className="absolute top-2.5 left-2.5">
+          <span style={{
+            background:`${cond.color}22`, border:`1px solid ${cond.color}60`,
+            color:cond.color, fontSize:10, fontWeight:700,
+            padding:"3px 8px", borderRadius:100,
+          }}>
+            {cond.label}
+          </span>
+        </div>
+        {/* Saving badge */}
+        {saving >= 20 && (
+          <div className="absolute top-2.5 right-2.5">
+            <span className="bg-peak-red text-white text-xs font-bold px-2 py-0.5 rounded-full">-{saving}%</span>
+          </div>
+        )}
+        {/* Photo count */}
+        {listing.photos.length > 1 && (
+          <div className="absolute bottom-2 right-2 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-0.5 rounded-full">
+            {listing.photos.length} photos
+          </div>
+        )}
+      </div>
+      {/* Info */}
+      <div className="p-3">
+        <p className="text-peak-text font-semibold text-sm leading-tight line-clamp-2 mb-1.5">{listing.title}</p>
+        <div className="flex items-baseline gap-1.5 mb-2">
+          <span className="text-peak-text font-bold text-base">€{listing.price}</span>
+          <span className="text-peak-text-secondary text-xs line-through">€{listing.originalPrice}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-4 rounded-full bg-peak-red/20 flex items-center justify-center text-xs font-bold text-peak-red">{listing.sellerAvatar}</div>
+            <span className="text-peak-text-secondary text-xs truncate max-w-[80px]">{listing.sellerName}</span>
+          </div>
+          <span className="text-peak-text-secondary text-xs">{listing.location.split(",")[1]?.trim() || listing.location}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Listing detail modal ──────────────────────────────────────────────────────
+function ListingDetail({ listing, user, onClose, onMessage }) {
+  const [photoIdx, setPhotoIdx] = useState(0);
+  const [showOffer, setShowOffer] = useState(false);
+  const [offerAmount, setOfferAmount] = useState("");
+  const [offerSent, setOfferSent] = useState(false);
+  const [msgText, setMsgText] = useState("");
+  const [msgSent, setMsgSent] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const cond = CONDITIONS.find(c => c.id === listing.condition);
+  const saving = Math.round((1 - listing.price / listing.originalPrice) * 100);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-peak-bg overflow-y-auto" style={{top:64}}>
+      {/* Back bar */}
+      <div className="sticky top-0 z-10 bg-peak-bg/95 backdrop-blur-sm border-b border-white/5 flex items-center gap-3 px-4 py-3">
+        <button onClick={onClose} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm transition-colors">
+          <ChevronLeft className="h-4 w-4"/>Back to marketplace
+        </button>
+        <span className="text-peak-text-secondary text-sm mx-2">·</span>
+        <span className="text-peak-text text-sm font-medium truncate flex-1">{listing.title}</span>
+        <button onClick={() => setSaved(!saved)}
+          className={`text-sm transition-colors ${saved ? "text-peak-red" : "text-peak-text-secondary hover:text-peak-red"}`}>
+          {saved ? "❤️ Saved" : "🤍 Save"}
+        </button>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left: photos */}
+        <div>
+          {/* Main photo */}
+          <div className="relative rounded-2xl overflow-hidden mb-3" style={{aspectRatio:"1/1"}}>
+            <img src={listing.photos[photoIdx]} alt={listing.title} className="w-full h-full object-cover"/>
+            {listing.photos.length > 1 && (
+              <>
+                <button onClick={() => setPhotoIdx(i => Math.max(0, i-1))}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors">
+                  <ChevronLeft className="h-4 w-4"/>
+                </button>
+                <button onClick={() => setPhotoIdx(i => Math.min(listing.photos.length-1, i+1))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors">
+                  <ChevronRight className="h-4 w-4"/>
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {listing.photos.map((_,i) => (
+                    <button key={i} onClick={() => setPhotoIdx(i)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all ${i===photoIdx?"bg-white w-4":"bg-white/40"}`}/>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          {/* Thumbnail strip */}
+          {listing.photos.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {listing.photos.map((p,i) => (
+                <button key={i} onClick={() => setPhotoIdx(i)}
+                  className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors ${i===photoIdx?"border-peak-blue":"border-transparent"}`}>
+                  <img src={p} alt="" className="w-full h-full object-cover"/>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: info + actions */}
+        <div className="space-y-5">
+          {/* Title + price */}
+          <div>
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h2 className="font-display font-bold text-xl text-peak-text leading-tight">{listing.title}</h2>
+              <div style={{
+                background:`${cond.color}18`, border:`1px solid ${cond.color}40`,
+                color:cond.color, fontSize:11, fontWeight:700,
+                padding:"4px 10px", borderRadius:100, whiteSpace:"nowrap", flexShrink:0,
+              }}>{cond.label}</div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-peak-text font-extrabold text-2xl">€{listing.price}</span>
+              <span className="text-peak-text-secondary text-sm line-through">€{listing.originalPrice}</span>
+              {saving >= 10 && <span className="text-green-400 text-sm font-semibold">-{saving}% off RRP</span>}
+            </div>
+          </div>
+
+          {/* Details grid */}
+          <div className="bg-peak-surface border border-white/5 rounded-xl p-4 grid grid-cols-2 gap-3">
+            {[
+              { label:"Brand",    value:listing.brand },
+              { label:"Size",     value:listing.size },
+              { label:"Color",    value:listing.color },
+              { label:"Location", value:listing.location },
+              { label:"Posted",   value:listing.postedAt },
+              { label:"Views",    value:listing.views },
+            ].map(row => (
+              <div key={row.label}>
+                <p className="text-peak-text-secondary text-xs mb-0.5">{row.label}</p>
+                <p className="text-peak-text text-sm font-semibold">{row.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap gap-1.5">
+            {listing.tags.map(tag => (
+              <span key={tag} className="bg-white/5 border border-white/8 text-peak-text-secondary text-xs px-2.5 py-1 rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Description */}
+          <div>
+            <p className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Description</p>
+            <p className="text-peak-text text-sm leading-relaxed">{listing.desc}</p>
+          </div>
+
+          {/* CTA buttons */}
+          <div className="space-y-2">
+            <button className="w-full bg-peak-red hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+              <ShoppingCart className="h-4 w-4"/> Add to basket
+            </button>
+            <button onClick={() => setShowOffer(!showOffer)}
+              className="w-full border border-white/15 hover:border-white/25 text-peak-text py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors">
+              <Tag className="h-4 w-4"/> Make an offer
+            </button>
+            {showOffer && !offerSent && (
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-peak-text-secondary text-sm">€</span>
+                  <input type="number" value={offerAmount} onChange={e=>setOfferAmount(e.target.value)}
+                    placeholder="Your offer"
+                    className="w-full bg-peak-card border border-white/10 rounded-xl pl-7 pr-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/25"/>
+                </div>
+                <button onClick={() => { if(offerAmount) setOfferSent(true); }}
+                  disabled={!offerAmount}
+                  className="bg-peak-blue text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-40">
+                  Send
+                </button>
+              </div>
+            )}
+            {offerSent && (
+              <div className="flex items-center gap-2 text-green-400 text-sm bg-green-400/10 border border-green-400/20 rounded-xl px-4 py-2.5">
+                <Check className="h-4 w-4"/> Offer of €{offerAmount} sent to {listing.sellerName}
+              </div>
+            )}
+          </div>
+
+          {/* Seller card */}
+          <div className="bg-peak-surface border border-white/5 rounded-xl p-4">
+            <p className="text-peak-text-secondary text-xs font-semibold uppercase tracking-wider mb-3">Seller</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-peak-red/20 border border-peak-red/20 flex items-center justify-center font-bold text-peak-red">
+                {listing.sellerAvatar}
+              </div>
+              <div className="flex-1">
+                <p className="text-peak-text font-semibold text-sm">{listing.sellerName}</p>
+                <div className="flex items-center gap-2 text-xs text-peak-text-secondary">
+                  <span>⭐ {listing.sellerRating}</span>
+                  <span>·</span>
+                  <span>{listing.sellerSales} sales</span>
+                </div>
+              </div>
+            </div>
+            {/* Message seller */}
+            {!msgSent ? (
+              <div className="space-y-2">
+                <textarea value={msgText} onChange={e=>setMsgText(e.target.value)} rows={2}
+                  placeholder={`Ask ${listing.sellerName} a question…`}
+                  className="w-full bg-peak-card border border-white/10 rounded-xl px-3 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 resize-none placeholder:text-peak-text-secondary/50"/>
+                <button onClick={() => { if(msgText.trim()) setMsgSent(true); }}
+                  disabled={!msgText.trim()}
+                  className="w-full border border-white/15 hover:border-white/25 text-peak-text py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-40">
+                  <Send className="h-3.5 w-3.5"/> Message seller
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-green-400 text-sm bg-green-400/10 border border-green-400/20 rounded-xl px-3 py-2.5">
+                <Check className="h-4 w-4"/> Message sent to {listing.sellerName}
+              </div>
+            )}
+          </div>
+
+          {/* Safety notice */}
+          <p className="text-peak-text-secondary text-xs leading-relaxed">
+            🔒 All transactions are between community members. PeakXP facilitates the connection but does not process payments or handle disputes. Meet safely and verify gear before purchase.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Create listing modal ──────────────────────────────────────────────────────
+function CreateListingModal({ user, onClose, onPost }) {
+  const [step, setStep] = useState(1); // 1=details, 2=photos+price
+  const [form, setForm] = useState({
+    title:"", category:"skis", condition:"good", brand:"", size:"", color:"",
+    price:"", originalPrice:"", desc:"", location:"", photoUrl:"",
+  });
+  const [photos, setPhotos] = useState([]);
+
+  function set(k,v) { setForm(prev => ({...prev,[k]:v})); }
+
+  function addPhoto() {
+    if (form.photoUrl.trim() && photos.length < 6) {
+      setPhotos(prev => [...prev, form.photoUrl.trim()]);
+      set("photoUrl","");
+    }
+  }
+
+  function handleSubmit() {
+    if (!form.title || !form.price) return;
+    onPost({
+      id:`listing_${Date.now()}`,
+      sellerId: user?.id || "me",
+      sellerName: user?.name || user?.displayName || "You",
+      sellerAvatar: (user?.name||"Y")[0].toUpperCase(),
+      sellerRating: 5.0, sellerSales: 0,
+      title: form.title, category: form.category, condition: form.condition,
+      brand: form.brand, size: form.size, color: form.color,
+      price: Number(form.price), originalPrice: Number(form.originalPrice)||Number(form.price),
+      desc: form.desc, location: form.location || "—",
+      photos: photos.length > 0 ? photos : ["https://images.unsplash.com/photo-1605540436563-5bca919ae766?w=600&q=80"],
+      postedAt: "Just now", views: 0, saved: 0, tags:[],
+    });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-4" onClick={onClose}>
+      <div className="bg-peak-surface border border-white/10 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col" onClick={e=>e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 flex-shrink-0">
+          <div>
+            <p className="text-peak-text font-bold">Sell gear</p>
+            <p className="text-peak-text-secondary text-xs mt-0.5">Step {step} of 2</p>
+          </div>
+          <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text text-xl">×</button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          {step === 1 && (
+            <>
+              <input value={form.title} onChange={e=>set("title",e.target.value)}
+                placeholder="Title — e.g. Atomic Redster X9 175cm"
+                className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-peak-text-secondary text-xs mb-1.5">Category</p>
+                  <select value={form.category} onChange={e=>set("category",e.target.value)}
+                    className="w-full bg-peak-card border border-white/10 rounded-xl px-3 py-2.5 text-sm text-peak-text outline-none">
+                    {CATEGORIES.filter(c=>c.id!=="all").map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-peak-text-secondary text-xs mb-1.5">Condition</p>
+                  <select value={form.condition} onChange={e=>set("condition",e.target.value)}
+                    className="w-full bg-peak-card border border-white/10 rounded-xl px-3 py-2.5 text-sm text-peak-text outline-none">
+                    {CONDITIONS.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <input value={form.brand} onChange={e=>set("brand",e.target.value)} placeholder="Brand"
+                  className="bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+                <input value={form.size} onChange={e=>set("size",e.target.value)} placeholder="Size / length"
+                  className="bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <input value={form.color} onChange={e=>set("color",e.target.value)} placeholder="Color"
+                  className="bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+                <input value={form.location} onChange={e=>set("location",e.target.value)} placeholder="Your location"
+                  className="bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+              </div>
+
+              <textarea value={form.desc} onChange={e=>set("desc",e.target.value)} rows={3}
+                placeholder="Describe the gear — usage, condition details, what's included…"
+                className="w-full bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 resize-none placeholder:text-peak-text-secondary/40"/>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-peak-text-secondary text-xs mb-1.5">Your price (€)</p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-peak-text-secondary text-sm">€</span>
+                    <input type="number" value={form.price} onChange={e=>set("price",e.target.value)} placeholder="0"
+                      className="w-full bg-peak-card border border-white/10 rounded-xl pl-7 pr-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20"/>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-peak-text-secondary text-xs mb-1.5">Original RRP (€)</p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-peak-text-secondary text-sm">€</span>
+                    <input type="number" value={form.originalPrice} onChange={e=>set("originalPrice",e.target.value)} placeholder="0"
+                      className="w-full bg-peak-card border border-white/10 rounded-xl pl-7 pr-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20"/>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-peak-text-secondary text-xs mb-1.5">Photos (paste URL, up to 6)</p>
+                <div className="flex gap-2 mb-2">
+                  <input value={form.photoUrl} onChange={e=>set("photoUrl",e.target.value)}
+                    onKeyDown={e=>{ if(e.key==="Enter") addPhoto(); }}
+                    placeholder="https://…"
+                    className="flex-1 bg-peak-card border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/40"/>
+                  <button onClick={addPhoto} disabled={!form.photoUrl.trim()||photos.length>=6}
+                    className="bg-peak-blue text-white px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-40">
+                    Add
+                  </button>
+                </div>
+                {photos.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {photos.map((p,i) => (
+                      <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 group">
+                        <img src={p} alt="" className="w-full h-full object-cover"/>
+                        <button onClick={()=>setPhotos(prev=>prev.filter((_,idx)=>idx!==i))}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-lg">
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="px-5 py-4 border-t border-white/5 flex-shrink-0">
+          {step === 1 ? (
+            <button onClick={()=>setStep(2)} disabled={!form.title}
+              className="w-full bg-peak-red text-white py-2.5 rounded-xl font-semibold text-sm disabled:opacity-40">
+              Next — Add photos & price
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={()=>setStep(1)}
+                className="flex-shrink-0 border border-white/10 text-peak-text-secondary px-5 py-2.5 rounded-xl text-sm font-medium hover:text-peak-text transition-colors">
+                Back
+              </button>
+              <button onClick={handleSubmit} disabled={!form.price}
+                className="flex-1 bg-peak-red text-white py-2.5 rounded-xl font-bold text-sm disabled:opacity-40">
+                Publish listing
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Marketplace panel ────────────────────────────────────────────────────
+function MarketplacePanel({ user }) {
+  const [listings, setListings] = useState(SEED_LISTINGS);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState("newest");
+  const [selectedListing, setSelectedListing] = useState(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [priceMax, setPriceMax] = useState("");
+  const [conditionFilter, setConditionFilter] = useState("all");
+
+  // Filter + sort
+  let filtered = listings.filter(l => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || l.title.toLowerCase().includes(q) || l.brand.toLowerCase().includes(q) || l.tags.some(t=>t.toLowerCase().includes(q));
+    const matchCat = category === "all" || l.category === category;
+    const matchPrice = !priceMax || l.price <= Number(priceMax);
+    const matchCond = conditionFilter === "all" || l.condition === conditionFilter;
+    return matchSearch && matchCat && matchPrice && matchCond;
+  });
+
+  if (sort === "price_asc")  filtered = [...filtered].sort((a,b) => a.price - b.price);
+  if (sort === "price_desc") filtered = [...filtered].sort((a,b) => b.price - a.price);
+  if (sort === "popular")    filtered = [...filtered].sort((a,b) => b.views - a.views);
+
+  function handlePost(listing) { setListings(prev => [listing, ...prev]); }
+
+  if (selectedListing) {
+    return <ListingDetail listing={selectedListing} user={user}
+      onClose={() => setSelectedListing(null)}
+      onMessage={() => {}}/>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display font-bold text-xl text-peak-text">Gear Marketplace</h2>
+          <p className="text-peak-text-secondary text-sm mt-0.5">Buy and sell used ski & snowboard equipment</p>
+        </div>
+        <button onClick={() => setShowCreate(true)}
+          className="flex items-center gap-1.5 bg-peak-red text-white px-4 py-2 rounded-xl text-sm font-semibold flex-shrink-0">
+          <Plus className="h-4 w-4"/> Sell gear
+        </button>
+      </div>
+
+      {/* Search bar */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-peak-text-secondary"/>
+        <input value={search} onChange={e=>setSearch(e.target.value)}
+          placeholder="Search skis, boots, jackets, brands…"
+          className="w-full bg-peak-surface border border-white/8 rounded-xl pl-10 pr-12 py-3 text-sm text-peak-text outline-none focus:border-white/20 placeholder:text-peak-text-secondary/50"/>
+        <button onClick={()=>setShowFilters(!showFilters)}
+          className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${showFilters?"text-peak-blue":"text-peak-text-secondary hover:text-peak-text"}`}>
+          <Filter className="h-4 w-4"/>
+        </button>
+      </div>
+
+      {/* Extended filters */}
+      {showFilters && (
+        <div className="bg-peak-surface border border-white/8 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div>
+            <p className="text-peak-text-secondary text-xs mb-1.5">Max price (€)</p>
+            <input type="number" value={priceMax} onChange={e=>setPriceMax(e.target.value)} placeholder="Any"
+              className="w-full bg-peak-card border border-white/10 rounded-lg px-3 py-2 text-sm text-peak-text outline-none"/>
+          </div>
+          <div>
+            <p className="text-peak-text-secondary text-xs mb-1.5">Condition</p>
+            <select value={conditionFilter} onChange={e=>setConditionFilter(e.target.value)}
+              className="w-full bg-peak-card border border-white/10 rounded-lg px-3 py-2 text-sm text-peak-text outline-none">
+              <option value="all">Any condition</option>
+              {CONDITIONS.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <p className="text-peak-text-secondary text-xs mb-1.5">Sort by</p>
+            <select value={sort} onChange={e=>setSort(e.target.value)}
+              className="w-full bg-peak-card border border-white/10 rounded-lg px-3 py-2 text-sm text-peak-text outline-none">
+              {SORT_OPTIONS.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Category pills */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+        {CATEGORIES.map(cat => (
+          <button key={cat.id} onClick={() => setCategory(cat.id)}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${category===cat.id?"bg-peak-red/15 border-peak-red/40 text-peak-red":"border-white/8 text-peak-text-secondary hover:text-peak-text hover:border-white/15"}`}>
+            <span>{cat.icon}</span>{cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Results count + sort */}
+      <div className="flex items-center justify-between">
+        <p className="text-peak-text-secondary text-xs">{filtered.length} listing{filtered.length!==1?"s":""}</p>
+        {!showFilters && (
+          <select value={sort} onChange={e=>setSort(e.target.value)}
+            className="bg-transparent border-none text-peak-text-secondary text-xs outline-none cursor-pointer">
+            {SORT_OPTIONS.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+        )}
+      </div>
+
+      {/* Grid */}
+      {filtered.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {filtered.map(l => <ListingCard key={l.id} listing={l} onClick={setSelectedListing}/>)}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <ShoppingBag className="h-10 w-10 text-peak-text-secondary mx-auto mb-3"/>
+          <p className="text-peak-text font-semibold mb-1">No listings found</p>
+          <p className="text-peak-text-secondary text-sm">Try a different search or category</p>
+        </div>
+      )}
+
+      {showCreate && <CreateListingModal user={user} onClose={()=>setShowCreate(false)} onPost={handlePost}/>}
+    </div>
+  );
+}
+
+
 // ── Main Community page ───────────────────────────────────────────────────────
 const SEED_FEED = [
   {
@@ -768,6 +1405,7 @@ export default function Community() {
         {activeTab === "challenges" && <ChallengesPanel user={user}/>}
         {activeTab === "ranking" && <RankingsPanel user={user}/>}
         {activeTab === "activities" && <ActivitiesPanel user={user}/>}
+        {activeTab === "marketplace" && <MarketplacePanel user={user}/>}
 
         {showCreatePost && <CreatePostModal user={user} onClose={()=>setShowCreatePost(false)} onPost={handlePost}/>}
       </div>
