@@ -371,10 +371,10 @@ export const swissResorts2 = [
       { id: "les-diablerets", name: "Les Diablerets", skiAreas: ["les-diablerets"], carFree: false, trainAccess: true },
     ],
     description: "One destination, three entry points. Villars-Gryon-Les Diablerets spans 104 km of pistes and 31 lifts across three distinct sectors of the Vaud Alps. Villars sits on a sunny plateau at 1,300 m — elegant yet welcoming, it has attracted mountain lovers for over a century, from the Grand Chamossaire to Bretaye. Gryon is the authentic, peaceful counterpart: a traditional mountain village directly linked to Villars, surrounded by forests and wooden chalets. Les Diablerets embodies the true Alpine spirit, with access to high-altitude terrain and the spectacular Glacier 3000 (reached by cable car from Col du Pillon), where the Peak Walk by Tissot — the world's first suspension bridge linking two peaks — sits at 2,971 m. The Alpes Vaudoises pass extends coverage to Glacier 3000 and Leysin, creating one of the largest ski domains in western Switzerland. The Magic Pass provides unlimited access to the entire area.",
-    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1efa84726_grand-chamossaire-hiver-ski-av_2000.jpg",
+    image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7275411b5_6db6e9ed-27ae-493c-ae2a-3585854520a5.webp",
     images: [
-      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1efa84726_grand-chamossaire-hiver-ski-av_2000.jpg", credits: "© Télé Villars-Gryon-Diablerets — Grand Chamossaire at twilight" },
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/7275411b5_6db6e9ed-27ae-493c-ae2a-3585854520a5.webp", credits: "© Télé Villars-Gryon-Diablerets — aerial panorama of the ski domain" },
+      { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/1efa84726_grand-chamossaire-hiver-ski-av_2000.jpg", credits: "© Télé Villars-Gryon-Diablerets — Grand Chamossaire at twilight" },
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/97e333be5_75cm-de-neige-tombes-juste-avant-les-vacances-de-paques-c-tele-villars-gryon-diablerets-scaled.jpg", credits: "© Télé Villars-Gryon-Diablerets — 75cm of fresh snow before Easter holidays" },
       { src: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ed0a7a3be_villars-gryon.jpg", credits: "© Télé Villars-Gryon-Diablerets — chairlift with mountain panorama" },
     ],
