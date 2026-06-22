@@ -2,12 +2,35 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 // Play kept for potential future video support
 
-export default function PhotoSlideshow({ images, videos }) {
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([\w-]{11})/,
+    /(?:youtu\.be\/)([\w-]{11})/,
+    /(?:youtube\.com\/embed\/)([\w-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+export default function PhotoSlideshow({ images, videos, youtubeId }) {
   const [idx, setIdx] = useState(0);
 
   // Build unified slides: videos first, then photos
+  const ytId = youtubeId || (videos || []).find(v => v.youtubeId)?.youtubeId;
+  const videoSlides = [
+    ...(ytId ? [{ type: "youtube", youtubeId: ytId }] : []),
+    ...(videos || []).filter(v => v.url).map(v => {
+      const yt = extractYouTubeId(v.url);
+      if (yt || v.type === "youtube") return { type: "youtube", youtubeId: yt || v.youtubeId, credits: v.credits };
+      return { type: "video", src: v.url, credits: v.credits };
+    }),
+  ];
   const slides = [
-    ...(videos || []).filter(v => v.url).map(v => ({ type: "video", src: v.url, credits: v.credits })),
+    ...videoSlides,
     ...(images || []).map(i => typeof i === "string" ? { type: "image", src: i } : { type: "image", src: i.src, credits: i.credits }),
   ];
 
@@ -20,7 +43,16 @@ export default function PhotoSlideshow({ images, videos }) {
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl mb-8 group" style={{ height: '70vh', maxHeight: '600px' }}>
-      {current.type === "video" ? (
+      {current.type === "youtube" ? (
+        <iframe
+          key={current.youtubeId}
+          src={`https://www.youtube.com/embed/${current.youtubeId}?autoplay=1&mute=1&loop=1&playlist=${current.youtubeId}&rel=0`}
+          className="w-full h-full"
+          frameBorder="0"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+        />
+      ) : current.type === "video" ? (
         <video
           key={current.src}
           src={current.src}
@@ -28,6 +60,7 @@ export default function PhotoSlideshow({ images, videos }) {
           loop
           muted
           playsInline
+          preload="auto"
           className="w-full h-full object-cover"
         />
       ) : (

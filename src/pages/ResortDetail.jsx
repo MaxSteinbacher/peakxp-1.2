@@ -51,7 +51,7 @@ export default function ResortDetail() {
 
       {/* Unified Video + Photo Slideshow */}
       <div className="relative mb-8">
-        <PhotoSlideshow images={resort.images} videos={resort.videos} />
+        <PhotoSlideshow images={resort.images} videos={resort.videos} youtubeId={resort.youtubeId} />
         <div className="absolute top-4 left-16 flex gap-2 z-10">
           <button onClick={() => setSaved(!saved)} className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
             <Heart className={`h-5 w-5 ${saved ? "fill-peak-red text-peak-red" : ""}`} />
