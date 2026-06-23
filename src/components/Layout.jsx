@@ -16,7 +16,7 @@ export default function Layout() {
       <style>{`
         :root { scrollbar-width: thin; scrollbar-color: rgba(56,148,227,0.18) transparent; }
         ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-track { background: #070B1E; }
         ::-webkit-scrollbar-thumb {
           background: rgba(56,148,227,0.18);
           border-radius: 3px;
