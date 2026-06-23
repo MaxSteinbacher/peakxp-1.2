@@ -463,6 +463,10 @@ export const hotels = [
     description: "The Mühlpointhof is a family-run Familien- & Vitalhotel in the Salzburger Saalachtal, nestled in the mighty mountain world around Lofer. With its cosy rooms, suites and apartments it is the ideal holiday destination for those seeking nature, relaxation and adventure. Mornings begin with the scent of fresh pastries from the hotel's own master bakery (Meisterbackstube). The Thermal-Wasserwelt (indoor pool), Wohlfühl-Saunawelt, garden with natural swimming ponds, restaurant, café-konditorei and a children's programme make it a complete year-round destination. In winter, the Almenwelt Lofer ski area is just a 5-minute walk away, with a free ski bus to the base station. New from December 2025: the Lodges in der alten Säge — 100 m² chalets with 3 bedrooms, wood sauna and panorama terrace, bookable for 2–6 persons with self-catering, breakfast or all-inclusive light. Centrally located between Berchtesgadener Land, Salzburg, Kaprun/Zell am See and the Tyrolean Unterland (Wilder Kaiser, Kitzbühel) — all within ~40 minutes.",
     shortDescription: "Family-run wellness hotel in Lofer, Salzburger Saalachtal — 5 min walk to Almenwelt Lofer ski area, natural swimming ponds, Thermal-Wasserwelt & master bakery.",
     images: [
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/52af658db_Winter1FrbingerMhlpointhofKG.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/adab6233a_Winter3FrbingerMhlpointhofKG.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/bd851e4a5_Winter2FrbingerMhlpointhofKG.jpg",
+      "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/eaedf09f4_Winter4FrbingerMhlpointhofKG.jpg",
       "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ed813cc1a_MuehlpointhofFrbingerMhlpointhofKG.jpg",
       "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/a3452b332_WasserweltMhlpointhofFrbingerMhlpointhofKG.jpg",
       "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ebd1dc376_NaturbadeteichFrbingerMhlpointhofKG.jpg",
