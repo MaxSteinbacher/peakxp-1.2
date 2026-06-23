@@ -14,15 +14,25 @@ export default function Layout() {
     <>
       {/* Premium custom scrollbar — invisible until hover near right edge */}
       <style>{`
-        :root { scrollbar-width: thin; scrollbar-color: #070B1E; transparent; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #070B1E; }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(56,148,227,0.18);
-          border-radius: 3px;
-          transition: background 0.3s ease;
+        /* Firefox */
+        :root { scrollbar-width: thin; scrollbar-color: rgba(100,160,220,0.25) #0D1226; }
+        /* Chrome / Safari / Edge */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track {
+          background: #0D1226;
+          border-left: none;
         }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(56,148,227,0.45); }
+        ::-webkit-scrollbar-button {
+          background: #0D1226;
+          height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(100,160,220,0.22);
+          border-radius: 3px;
+          transition: background 0.25s ease;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100,180,255,0.65); }
+        ::-webkit-scrollbar-track:hover { background: #111827; }
         html { scroll-behavior: smooth; }
       `}</style>
 
