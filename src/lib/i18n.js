@@ -776,7 +776,7 @@ export const TRANSLATIONS = {
     by_plane: "fly + transfer",
     car_or_train: "car / train",
     detecting_resorts: "Finding resorts near you…",
-    day_trips_no_location: "Showing resorts near",,
+    day_trips_no_location: "Showing resorts near",
 
     rating_excellent: "Excellent",
     rating_very_good: "Very Good",
@@ -1512,7 +1512,7 @@ export const TRANSLATIONS = {
     by_plane: "Flug + Transfer",
     car_or_train: "Auto / Zug",
     detecting_resorts: "Suche Skigebiete in Ihrer Nähe…",
-    day_trips_no_location: "Skigebiete in der Nähe von",,
+    day_trips_no_location: "Skigebiete in der Nähe von",
 
     accom_all_inclusive: "All inclusive",
     accom_any: "Beliebig",
@@ -2278,7 +2278,7 @@ export const TRANSLATIONS = {
     by_plane: "vol + transfert",
     car_or_train: "voiture / train",
     detecting_resorts: "Recherche de stations près de vous…",
-    day_trips_no_location: "Stations près de",,
+    day_trips_no_location: "Stations près de",
 
     accom_all_inclusive: "Tout compris",
     accom_any: "Indifférent",
@@ -3044,7 +3044,7 @@ export const TRANSLATIONS = {
     by_plane: "volo + transfer",
     car_or_train: "auto / treno",
     detecting_resorts: "Ricerca resort vicino a te…",
-    day_trips_no_location: "Resort vicino a",,
+    day_trips_no_location: "Resort vicino a",
 
     accom_all_inclusive: "Tutto incluso",
     accom_any: "Qualsiasi",
