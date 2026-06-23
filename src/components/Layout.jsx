@@ -14,7 +14,7 @@ export default function Layout() {
     <>
       {/* Premium custom scrollbar — invisible until hover near right edge */}
       <style>{`
-        :root { scrollbar-width: thin; scrollbar-color: rgba(56,148,227,0.18) transparent; }
+        :root { scrollbar-width: thin; scrollbar-color: #070B1E; transparent; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #070B1E; }
         ::-webkit-scrollbar-thumb {
