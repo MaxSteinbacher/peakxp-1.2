@@ -14,16 +14,15 @@ export default function Layout() {
     <>
       {/* Premium custom scrollbar — invisible until hover near right edge */}
       <style>{`
-        :root { scrollbar-width: thin; scrollbar-color: transparent transparent; }
-        ::-webkit-scrollbar { width: 6px; }
+        :root { scrollbar-width: thin; scrollbar-color: rgba(56,148,227,0.18) transparent; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
-          background: transparent;
+          background: rgba(56,148,227,0.18);
           border-radius: 3px;
           transition: background 0.3s ease;
         }
-        body:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
-        body:hover::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(56,148,227,0.45); }
         html { scroll-behavior: smooth; }
       `}</style>
 
