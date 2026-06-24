@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Mountain, ArrowLeft, Heart, Share2, MapPin, Snowflake, Thermometer, Car, ExternalLink } from "lucide-react";
+import { Heart, Share2, MapPin, Snowflake, Thermometer, Car } from "lucide-react";
 import { useT } from "../lib/i18n";
-import BackButton from "../components/shared/BackButton";
+import UnifiedNav from "../components/shared/UnifiedNav";
 import { getResortById, SEASON_PASSES } from "../lib/data";
 import ResortBadgesPanel from "../components/badges/ResortBadges";
 import { getRealRating } from "../lib/externalRatings";
@@ -16,13 +16,14 @@ import FacilitiesTab from "../components/resort/FacilitiesTab";
 import SkiSchoolTab from "../components/resort/SkiSchoolTab";
 import SurroundingsTab from "../components/resort/SurroundingsTab";
 import EventsTab from "../components/resort/EventsTab";
+import { Check, ExternalLink } from "lucide-react";
 
 const TAB_KEYS = ["overview", "conditions", "lift_passes", "facilities", "surroundings", "events", "ski_school_tab", "reviews"];
 
 const OPEN_STATUS = {
-  "Open": "bg-peak-green/20 text-peak-green border-peak-green/30",
+  "Open":           "bg-peak-green/20 text-peak-green border-peak-green/30",
   "Partially open": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "Closed": "bg-red-900/20 text-peak-red border-peak-red/30",
+  "Closed":         "bg-red-900/20 text-peak-red border-peak-red/30",
 };
 
 export default function ResortDetail() {
@@ -31,6 +32,18 @@ export default function ResortDetail() {
   const resort = getResortById(id);
   const [activeTab, setActiveTab] = useState("overview");
   const [saved, setSaved] = useState(false);
+
+  // Ref to the tab bar row — used to scroll into view when switching tabs
+  const tabBarRef = useRef(null);
+
+  function handleTabChange(key) {
+    setActiveTab(key);
+    // Scroll to just above the tab bar so the sticky navbar clears it
+    if (tabBarRef.current) {
+      const top = tabBarRef.current.getBoundingClientRect().top + window.scrollY - 72; // 72px = navbar height
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+  }
 
   if (!resort) {
     return (
@@ -47,12 +60,19 @@ export default function ResortDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
-      <BackButton className="mb-6" />
+      {/* Unified nav: breadcrumb + back button */}
+      <UnifiedNav
+        customCrumbs={[
+          { label: "Resort", to: "/search" },
+          { label: resort.name, to: `/resort/${resort.id}` },
+        ]}
+        showBack={true}
+      />
 
-      {/* Unified Video + Photo Slideshow */}
-      <div className="relative mb-8">
+      {/* Photo Slideshow */}
+      <div className="relative mb-8 mt-2">
         <PhotoSlideshow images={resort.images} videos={resort.videos} youtubeId={resort.youtubeId} />
-        <div className="absolute top-4 left-16 flex gap-2 z-10">
+        <div className="absolute top-4 left-4 flex gap-2 z-10">
           <button onClick={() => setSaved(!saved)} className="p-2.5 rounded-full bg-peak-bg/60 backdrop-blur-sm text-white hover:bg-peak-bg/80 transition-colors">
             <Heart className={`h-5 w-5 ${saved ? "fill-peak-red text-peak-red" : ""}`} />
           </button>
@@ -64,17 +84,13 @@ export default function ResortDetail() {
 
       {/* Resort header */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
-        {/* Left: name, country, status */}
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap mb-2">
             {(resort.logo || resort.logoImage) && (
               <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center flex-shrink-0 overflow-hidden p-1 border border-white/10">
-                <img
-                  src={resort.logo || resort.logoImage}
-                  alt={resort.name}
+                <img src={resort.logo || resort.logoImage} alt={resort.name}
                   className="w-full h-full object-contain"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
+                  onError={e => { e.target.style.display = "none"; }} />
               </div>
             )}
             <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-peak-text">{resort.name}</h1>
@@ -83,7 +99,8 @@ export default function ResortDetail() {
               return ext ? (
                 <div className="flex flex-col items-start">
                   <span className="bg-peak-blue text-white text-sm font-bold px-3 py-1 rounded-lg">{ext.overall}</span>
-                  <a href={ext.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-peak-text-secondary text-xs hover:text-peak-blue mt-0.5">Source: skiresort.de ↗</a>
+                  <a href={ext.sourceUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-peak-text-secondary text-xs hover:text-peak-blue mt-0.5">Source: skiresort.de ↗</a>
                 </div>
               ) : (
                 <span className="text-peak-text-secondary text-sm">No verified rating yet</span>
@@ -110,7 +127,6 @@ export default function ResortDetail() {
           </div>
         </div>
 
-        {/* Right: status chips + season passes */}
         <div className="flex flex-col gap-3">
           <div className="flex gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 bg-peak-blue/10 text-peak-blue px-3 py-1.5 rounded-lg text-xs font-semibold">
@@ -121,12 +137,15 @@ export default function ResortDetail() {
               <Thermometer className="h-3.5 w-3.5" />
               {resort.weather?.temp || -3}°C
             </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${resort.roadStatus === "clear" ? "bg-peak-green/10 text-peak-green" : resort.roadStatus === "chains" ? "bg-yellow-500/10 text-yellow-400" : "bg-peak-red/10 text-peak-red"}`}>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold ${
+              resort.roadStatus === "clear" ? "bg-peak-green/10 text-peak-green"
+              : resort.roadStatus === "chains" ? "bg-yellow-500/10 text-yellow-400"
+              : "bg-peak-red/10 text-peak-red"
+            }`}>
               <Car className="h-3.5 w-3.5" />
               {resort.roadStatus === "clear" ? "Roads clear" : resort.roadStatus === "chains" ? "Chains recommended" : "Road closed"}
             </div>
           </div>
-          {/* Season pass badges */}
           {validPasses.length > 0 && (
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">
               {validPasses.map(p => (
@@ -146,14 +165,14 @@ export default function ResortDetail() {
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
         {[
-          { label: t('altitude'), value: `${resort.minAltitude}–${resort.maxAltitude}m` },
-          { label: t('runs'), value: resort.runs },
-          { label: t('pistes'), value: `${resort.pisteKm}km` },
-          { label: t('lifts'), value: resort.lifts, sub: resort.gondolas ? `${resort.gondolas}G / ${resort.chairlifts}C / ${resort.dragLifts}D` : null },
-          { label: t('vertical'), value: `${resort.verticalDrop || resort.maxAltitude - resort.minAltitude}m` },
-          { label: t('longest_run'), value: `${resort.longestRun || "—"}km` },
-          { label: t('snow_guns'), value: resort.snowCannons || "—" },
-          { label: t('difficulty'), value: null, special: "diff" },
+          { label: t("altitude"),    value: `${resort.minAltitude}–${resort.maxAltitude}m` },
+          { label: t("runs"),        value: resort.runs },
+          { label: t("pistes"),      value: `${resort.pisteKm}km` },
+          { label: t("lifts"),       value: resort.lifts, sub: resort.gondolas ? `${resort.gondolas}G / ${resort.chairlifts}C / ${resort.dragLifts}D` : null },
+          { label: t("vertical"),    value: `${resort.verticalDrop || resort.maxAltitude - resort.minAltitude}m` },
+          { label: t("longest_run"), value: `${resort.longestRun || "—"}km` },
+          { label: t("snow_guns"),   value: resort.snowCannons || "—" },
+          { label: t("difficulty"),  value: null, special: "diff" },
         ].map(stat => (
           <div key={stat.label} className="bg-peak-card border border-white/5 rounded-xl p-3 text-center">
             <p className="text-peak-blue text-xs font-semibold uppercase tracking-wider mb-1">{stat.label}</p>
@@ -181,27 +200,31 @@ export default function ResortDetail() {
         <ResortBadgesPanel resort={resort} />
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto hide-scrollbar border-b border-white/5 mb-8">
+      {/* Tab bar — ref'd so we can scroll to it on tab change */}
+      <div
+        ref={tabBarRef}
+        className="flex gap-1 overflow-x-auto hide-scrollbar border-b border-white/5 mb-8"
+      >
         {TAB_KEYS.map(key => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${activeTab === key ? "border-peak-red text-peak-text" : "border-transparent text-peak-text-secondary hover:text-peak-text"}`}>
+          <button key={key} onClick={() => handleTabChange(key)}
+            className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              activeTab === key
+                ? "border-peak-red text-peak-text"
+                : "border-transparent text-peak-text-secondary hover:text-peak-text"
+            }`}>
             {t(key)}
           </button>
         ))}
       </div>
 
       {/* Tab content */}
-      {activeTab === "overview" && <OverviewTab resort={resort} />}
-      {activeTab === "conditions" && <ConditionsTab resort={resort} />}
-      {activeTab === "lift_passes" && <LiftPassesTab resort={resort} />}
-      {activeTab === "facilities" && <FacilitiesTab resort={resort} />}
+      {activeTab === "overview"     && <OverviewTab resort={resort} />}
+      {activeTab === "conditions"   && <ConditionsTab resort={resort} />}
+      {activeTab === "lift_passes"  && <LiftPassesTab resort={resort} />}
+      {activeTab === "facilities"   && <FacilitiesTab resort={resort} />}
       {activeTab === "surroundings" && <SurroundingsTab resort={resort} />}
-      {activeTab === "events" && <EventsTab resort={resort} />}
-
-      {activeTab === "ski_school_tab" && (
-        <SkiSchoolTab resort={resort} />
-      )}
+      {activeTab === "events"       && <EventsTab resort={resort} />}
+      {activeTab === "ski_school_tab" && <SkiSchoolTab resort={resort} />}
 
       {activeTab === "reviews" && (
         <div>
@@ -218,7 +241,7 @@ export default function ResortDetail() {
             <div className="flex-1 space-y-2">
               {Object.entries(resort.reviews.breakdown).map(([key, val]) => (
                 <div key={key} className="flex items-center gap-3">
-                  <span className="text-peak-text-secondary text-xs w-24 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                  <span className="text-peak-text-secondary text-xs w-24 capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
                   <div className="flex-1 h-2 bg-peak-surface rounded-full overflow-hidden">
                     <div className="h-full bg-peak-blue rounded-full" style={{ width: `${val * 10}%` }} />
                   </div>
