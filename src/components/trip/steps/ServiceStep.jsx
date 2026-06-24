@@ -9,58 +9,94 @@ import DiningTab from "../DiningTab";
 import { useTripPlanner } from "../../../context/TripPlannerContext";
 import { getResortById } from "../../../lib/data";
 import { toast } from "sonner";
-import { Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car, Plus, ArrowRight } from "lucide-react";
+import { Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car, Plus, ArrowRight, Info } from "lucide-react";
 
 const SERVICE_CONFIG = {
-  "ski-pass": { icon: Ticket, title: "Select your lift pass", skip: "Skip this step" },
-  accommodation: { icon: Hotel, title: "Choose your accommodation", skip: "Skip accommodation" },
-  equipment: { icon: Wrench, title: "Rent equipment", skip: "Skip equipment" },
-  "ski-school": { icon: GraduationCap, title: "Book ski school", skip: "Skip ski school" },
-  dining: { icon: Utensils, title: "Reserve dining", skip: "Continue", multi: true },
-  storage: { icon: Lock, title: "Book storage & lockers", skip: "Skip storage" },
-  activities: { icon: Snowflake, title: "Add activities", skip: "Continue", multi: true },
-  childcare: { icon: Baby, title: "Book childcare", skip: "Skip childcare" },
-  flights: { icon: Plane, title: "Book flights", skip: "Skip flights", global: true },
-  train: { icon: Train, title: "Book train travel", skip: "Skip train", global: true },
-  car: { icon: Car, title: "Book car rental", skip: "Skip car rental", global: true },
+  "ski-pass":    { icon: Ticket,        title: "Select your lift pass",     skip: "Skip this step" },
+  accommodation: { icon: Hotel,         title: "Choose your accommodation",  skip: "Skip accommodation" },
+  equipment:     { icon: Wrench,        title: "Rent equipment",             skip: "Skip equipment" },
+  "ski-school":  { icon: GraduationCap, title: "Book ski school",            skip: "Skip ski school" },
+  dining:        { icon: Utensils,      title: "Reserve dining",             skip: "Continue",      multi: true },
+  storage:       { icon: Lock,          title: "Book storage & lockers",     skip: "Skip storage" },
+  activities:    { icon: Snowflake,     title: "Add activities",             skip: "Continue",      multi: true },
+  childcare:     { icon: Baby,          title: "Book childcare",             skip: "Skip childcare" },
+  flights:       { icon: Plane,         title: "Book flights",               skip: "Skip flights",  global: true },
+  train:         { icon: Train,         title: "Book train travel",          skip: "Skip train",    global: true },
+  car:           { icon: Car,           title: "Book car rental",            skip: "Skip car rental", global: true },
 };
 
 const ACTIVITIES = [
-  { name: "Snowshoeing tour", price: 45, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/0cdb43cb0_image.png" },
-  { name: "Spa day", price: 85, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e3bff5a32_image.png" },
-  { name: "Sledging", price: 25, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e6f8b9ad5_image.png" },
-  { name: "Guided off-piste", price: 120, image: null },
-  { name: "Ice skating", price: 15, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ee9b48b50_image.png" },
-  { name: "Snow tubing", price: 20, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/df536a0be_image.png" },
-  { name: "Horse-drawn sleigh", price: 60, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/9c9ea53ce_image.png" },
-  { name: "Helicopter tour", price: 250, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/92c72e7cb_image.png" },
+  { name: "Snowshoeing tour",   price: 45,  image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/0cdb43cb0_image.png" },
+  { name: "Spa day",            price: 85,  image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e3bff5a32_image.png" },
+  { name: "Sledging",           price: 25,  image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/e6f8b9ad5_image.png" },
+  { name: "Guided off-piste",   price: 120, image: null },
+  { name: "Ice skating",        price: 15,  image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/ee9b48b50_image.png" },
+  { name: "Snow tubing",        price: 20,  image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/df536a0be_image.png" },
+  { name: "Horse-drawn sleigh", price: 60,  image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/9c9ea53ce_image.png" },
+  { name: "Helicopter tour",    price: 250, image: "https://media.base44.com/images/public/6a19694d2b38b5e31a976be8/92c72e7cb_image.png" },
 ];
 
+/**
+ * Parse the numeric day count from a lift-pass type string.
+ * Handles: "1-day", "1 day", "3-day", "6-day", "6 days", etc.
+ * Returns null for "Season" / non-numeric.
+ */
+function parseDays(typeStr = "") {
+  const m = typeStr.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+/**
+ * Compute suggested ski days for THIS resort given the trip session.
+ * - Single resort: nights = ski days.
+ * - Multi-resort: equal split (rounded, first resort absorbs remainder).
+ */
+function computeSuggestedDays(session, resortId) {
+  const nights = session?.dates?.nights;
+  if (!nights || nights <= 0) return null;
+  const resorts = session?.resorts || [];
+  if (resorts.length <= 1) return nights;
+  const base = Math.floor(nights / resorts.length);
+  const remainder = nights % resorts.length;
+  const idx = resorts.findIndex(r => r.resortId === resortId);
+  return base + (idx >= 0 && idx < remainder ? 1 : 0);
+}
+
+/**
+ * Find the index of the best-matching pass for targetDays.
+ * Prefers the smallest overshoot (≥ target), then falls back to closest undershoot.
+ */
+function findBestPassIndex(passes, targetDays) {
+  if (!passes?.length || !targetDays) return 0;
+  let bestIdx = 0;
+  let bestOvershoot = Infinity;
+  let bestUndershoot = Infinity;
+  let hasOvershoot = false;
+
+  passes.forEach((p, i) => {
+    const d = parseDays(p.type);
+    if (d === null) return; // Skip Season
+    const diff = d - targetDays;
+    if (diff >= 0) {
+      if (diff < bestOvershoot) { bestOvershoot = diff; bestIdx = i; hasOvershoot = true; }
+    } else {
+      if (Math.abs(diff) < bestUndershoot) { bestUndershoot = Math.abs(diff); if (!hasOvershoot) bestIdx = i; }
+    }
+  });
+  return bestIdx;
+}
+
 export default function ServiceStep({ serviceKey, resortId, agentServiceDetails = {} }) {
-  const { session, addToBasket, markStepComplete, markStepSkipped, completeAndAdvance, setCurrentStep, getNextStep } = useTripPlanner();
+  const { session, addToBasket, completeAndAdvance } = useTripPlanner();
   const config = SERVICE_CONFIG[serviceKey] || { icon: Ticket, title: serviceKey, skip: "Skip" };
   const Icon = config.icon;
   const resort = resortId ? getResortById(resortId) : null;
   const resortEntry = session?.resorts?.find(r => r.resortId === resortId);
-  // Auto-select pass based on trip nights (nights + 1 = ski days, find closest pass)
-  const skiDays = (session?.dates?.nights || session?.dates?.skiDays || 3) + 
-    (session?.dates?.nights ? 1 : 0); // nights -> ski days
+
+  // ── Ski pass: compute suggested days & index ──────────────────────────────
+  const suggestedDays = computeSuggestedDays(session, resortId);
   const passes_for_auto = resort?.liftPasses || [];
-  const autoPassIndex = (() => {
-    if (!passes_for_auto.length) return 1;
-    // Map pass type to days
-    const dayMap = { "1-day": 1, "2-day": 2, "3-day": 3, "4-day": 4, "5-day": 5, "6-day": 6, "7-day": 7 };
-    let best = 0;
-    let bestDiff = Infinity;
-    passes_for_auto.forEach((p, i) => {
-      const d = dayMap[p.type];
-      if (d !== undefined) {
-        const diff = Math.abs(d - skiDays);
-        if (diff < bestDiff) { bestDiff = diff; best = i; }
-      }
-    });
-    return best;
-  })();
+  const autoPassIndex = findBestPassIndex(passes_for_auto, suggestedDays);
   const [selectedPass, setSelectedPass] = useState(autoPassIndex);
   const [addedCount, setAddedCount] = useState(0);
 
@@ -95,8 +131,9 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
   }
 
   const resortLabel = resort ? `— ${resort.flag} ${resort.name}` : "";
+  const multiResort = (session?.resorts?.length ?? 0) > 1;
 
-  // ── SKI PASS ──
+  // ── SKI PASS ──────────────────────────────────────────────────────────────
   if (serviceKey === "ski-pass" && resort) {
     const passes = resort.liftPasses || [];
     const g = session.guests;
@@ -105,15 +142,22 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
 
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-4">
           <Icon className="h-6 w-6 text-peak-blue" />
           <h2 className="font-display font-extrabold text-2xl text-peak-text">Lift passes {resortLabel}</h2>
         </div>
 
-        {skiDays > 0 && (
-          <p className="text-peak-text-secondary text-sm mb-4">
-            Based on your <span className="text-peak-text font-medium">{session.dates.nights}-night trip</span>, we suggest the <span className="text-peak-text font-medium">{passes[selectedPass]?.type} pass</span>. You can change below.
-          </p>
+        {/* Smart suggestion banner */}
+        {suggestedDays && (
+          <div className="flex items-start gap-3 bg-peak-blue/8 border border-peak-blue/20 rounded-xl px-4 py-3 mb-5">
+            <Info className="h-4 w-4 text-peak-blue mt-0.5 flex-shrink-0" />
+            <p className="text-peak-blue text-xs leading-relaxed">
+              {multiResort
+                ? <>Based on your <strong>{session.dates.nights}-night trip</strong> across <strong>{session.resorts.length} resorts</strong>, we suggest a <strong>{suggestedDays}-day pass</strong> for {resort.name} (equal split).</>
+                : <>Based on your <strong>{suggestedDays}-night stay</strong>, we suggest the <strong>{passes[autoPassIndex]?.type} pass</strong>.</>
+              }{" "}You can change below.
+            </p>
+          </div>
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -122,8 +166,12 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
               className={`p-4 rounded-xl border text-center transition-colors ${i === selectedPass ? "border-peak-red bg-peak-red/10" : "border-white/10 hover:border-white/20"}`}>
               <p className="text-peak-text font-bold text-sm">{p.type}</p>
               <p className="text-peak-text-secondary text-xs mt-1">From €{p.adult}</p>
-              {i === autoPassIndex && <span className="inline-block mt-1 bg-peak-blue/20 text-peak-blue text-xs px-2 py-0.5 rounded-full">Suggested</span>}
-              {p.badge && <span className="inline-block mt-1 bg-peak-green/20 text-peak-green text-xs px-2 py-0.5 rounded-full">{p.badge}</span>}
+              {i === autoPassIndex && (
+                <span className="inline-block mt-1 bg-peak-blue/20 text-peak-blue text-xs px-2 py-0.5 rounded-full">Suggested</span>
+              )}
+              {p.badge && (
+                <span className="inline-block mt-1 bg-peak-green/20 text-peak-green text-xs px-2 py-0.5 rounded-full">{p.badge}</span>
+              )}
             </button>
           ))}
         </div>
@@ -151,7 +199,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     );
   }
 
-  // ── ACCOMMODATION ──
+  // ── ACCOMMODATION ─────────────────────────────────────────────────────────
   if (serviceKey === "accommodation") {
     const nights = session.dates.nights || session.dates.skiDays || 3;
     const seed = resort?.name || "resort";
@@ -191,7 +239,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     );
   }
 
-  // ── ACTIVITIES ──
+  // ── ACTIVITIES ────────────────────────────────────────────────────────────
   if (serviceKey === "activities") {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
@@ -222,15 +270,50 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     );
   }
 
-  // ── DEDICATED TAB ROUTES ──
+  // ── DEDICATED TABS ────────────────────────────────────────────────────────
   if (serviceKey === "ski-school") return <SkiSchoolTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "ski-school", details)} />;
   if (serviceKey === "equipment") return <EquipmentRentalTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "equipment", details)} />;
   if (serviceKey === "car") return <CarRentalTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "car", details)} />;
   if (serviceKey === "train") return <TrainTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "train", details)} />;
   if (serviceKey === "flights") return <FlightsTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "flights", details)} />;
-  if (serviceKey === "storage") return <StorageTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "storage", details)} />;
-  if (serviceKey === "dining") return <DiningTab agentServiceDetails={agentServiceDetails} onBook={(label, price, details) => handleAdd(label, price, "dining", details)} />;
 
+  // Storage: onBook also auto-advances (reserve = proceed) — fix #7
+  if (serviceKey === "storage") return (
+    <StorageTab
+      agentServiceDetails={agentServiceDetails}
+      onBook={(label, price, details) => {
+        handleAdd(label, price, "storage", details);
+        // handleAdd calls completeAndAdvance when !config.multi, so nothing extra needed
+      }}
+    />
+  );
+
+  // Dining: onContinue wires to completeAndAdvance — fix #4
+  if (serviceKey === "dining") return (
+    <DiningTab
+      agentServiceDetails={agentServiceDetails}
+      onBook={(label, price, details) => {
+        addToBasket({
+          sessionId: session.id,
+          resortId: resortId || null,
+          resortName: resortEntry?.resortName || null,
+          serviceKey: "dining",
+          type: "dining-reservation",
+          label,
+          details,
+          priceEUR: price,
+          quantity: 1,
+          addedAt: new Date().toISOString(),
+          status: "pending",
+        });
+        toast.success(`Reservation added 🍽️`);
+        setAddedCount(c => c + 1);
+      }}
+      onContinue={() => completeAndAdvance("dining", resortId, addedCount === 0)}
+    />
+  );
+
+  // ── GENERIC FALLBACK ──────────────────────────────────────────────────────
   const priceMap = { equipment: 35, dining: 45, storage: 15, childcare: 65, flights: 180, train: 95, car: 55 };
   const unitPrice = priceMap[serviceKey] || 50;
   const isPerDay = ["equipment", "storage", "childcare", "car"].includes(serviceKey);
