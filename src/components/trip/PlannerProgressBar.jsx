@@ -16,14 +16,24 @@ const SERVICE_LABELS = {
   car:                "Car rental",
 };
 
-const GLOBAL_SERVICES = ["flights", "train", "car"];
+// Exact set of valid service keys that have real UI behind them.
+// Anything an agent returns outside this set is silently dropped.
+const VALID_SERVICES = new Set([
+  "ski-pass", "accommodation", "equipment", "ski-school",
+  "dining", "storage", "activities", "childcare",
+  "flights", "train", "car",
+]);
+
+const GLOBAL_SERVICES = new Set(["flights", "train", "car"]);
 
 export default function PlannerProgressBar() {
   const { session, isStepComplete, setCurrentStep } = useTripPlanner();
   if (!session) return null;
 
-  const resortServices = session.selectedServices.filter(s => !GLOBAL_SERVICES.includes(s));
-  const globalServices = session.selectedServices.filter(s => GLOBAL_SERVICES.includes(s));
+  // Filter to only known, implemented services
+  const validSelected = session.selectedServices.filter(s => VALID_SERVICES.has(s));
+  const resortServices = validSelected.filter(s => !GLOBAL_SERVICES.has(s));
+  const globalServices = validSelected.filter(s => GLOBAL_SERVICES.has(s));
 
   const steps = [];
 
@@ -48,17 +58,13 @@ export default function PlannerProgressBar() {
       {steps.map((step, i) => {
         const done = isStepComplete(step.key, step.resortId);
         const isCurrent = currentStep?.serviceKey === step.key && currentStep?.resortId === step.resortId;
-        // Completed steps AND currently-active step are clickable.
-        // Also allow clicking completed steps even when the CompletionPanel is showing
-        // (session.currentStep may not match anything — allDone state).
+        // Completed steps are always clickable — even from CompletionPanel
         const isClickable = done || isCurrent;
 
         return (
           <div key={`${step.key}-${step.resortId || "g"}-${i}`} className="flex items-center gap-1.5 flex-shrink-0">
             <button
-              onClick={() => {
-                if (isClickable) setCurrentStep(step.key, step.resortId);
-              }}
+              onClick={() => isClickable && setCurrentStep(step.key, step.resortId)}
               disabled={!isClickable}
               title={isClickable ? `Go to: ${SERVICE_LABELS[step.key] || step.key}` : SERVICE_LABELS[step.key] || step.key}
               className={[
@@ -71,8 +77,8 @@ export default function PlannerProgressBar() {
               ].join(" ")}
             >
               {done && <Check className="h-3 w-3" />}
-              {step.resortName && !GLOBAL_SERVICES.includes(step.key) && (
-                <span className="opacity-60 mr-0.5">{step.resortName} ·</span>
+              {step.resortName && !GLOBAL_SERVICES.has(step.key) && (
+                <span className="opacity-60 mr-0.5 hidden sm:inline">{step.resortName} ·</span>
               )}
               {SERVICE_LABELS[step.key] || step.key}
             </button>
