@@ -88,7 +88,7 @@ function findBestPassIndex(passes, targetDays) {
 }
 
 export default function ServiceStep({ serviceKey, resortId, agentServiceDetails = {} }) {
-  const { session, addToBasket, completeAndAdvance } = useTripPlanner();
+  const { session, addToBasket, completeAndAdvance, markStepSkipped } = useTripPlanner();
   const config = SERVICE_CONFIG[serviceKey] || { icon: Ticket, title: serviceKey, skip: "Skip" };
   const Icon = config.icon;
   const resort = resortId ? getResortById(resortId) : null;
@@ -202,6 +202,10 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
 
   // ── ACCOMMODATION ─────────────────────────────────────────────────────────
   if (serviceKey === "accommodation") {
+    // completeAndAdvanceAll: used by one-base mode to auto-skip other resorts
+    function completeAndAdvanceAll(sKey, rId, skipped) {
+      markStepSkipped(sKey, rId);
+    }
     return (
       <AccommodationBooking
         resort={resort}
@@ -209,6 +213,7 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
         session={session}
         handleAdd={handleAdd}
         handleSkip={handleSkip}
+        completeAndAdvanceAll={completeAndAdvanceAll}
       />
     );
   }
