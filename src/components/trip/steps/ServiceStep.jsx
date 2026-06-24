@@ -213,11 +213,6 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
     );
   }
 
-        <button onClick={handleSkip} className="w-full text-center text-peak-text-secondary text-sm hover:text-peak-text transition-colors py-2">{config.skip}</button>
-      </div>
-    );
-  }
-
   // ── ACTIVITIES ────────────────────────────────────────────────────────────
   if (serviceKey === "activities") {
     return (
