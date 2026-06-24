@@ -611,15 +611,13 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
         </div>
       </div>
 
-      {/* Equipment profile panel */}
-      {/* Wizard overlay */}
+      {/* Wizard — rendered inline, header stays visible */}
       {wizardActive && (
-        <div className="fixed inset-0 z-50 bg-peak-bg overflow-y-auto" style={{ top: 64 }}>
-          <div className="max-w-4xl mx-auto px-4 py-8">
-            <button onClick={() => setWizardActive(false)} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-              Back to browse
-            </button>
+        <div className="mt-6">
+          <button onClick={() => setWizardActive(false)} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors group">
+            <svg className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Back to browse
+          </button>
             {wizardStep === 0 && (
               <Step0
                 selectedEquipment={wizardEquipment}
@@ -663,7 +661,6 @@ export default function EquipmentRentalTab({ agentServiceDetails = {}, onBook })
                 onBack={() => preselectedShop ? setWizardStep(1) : setWizardStep(2)}
               />
             )}
-          </div>
         </div>
       )}
     </div>
