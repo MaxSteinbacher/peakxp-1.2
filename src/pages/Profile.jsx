@@ -756,13 +756,18 @@ export default function Profile() {
       </div>
 
       {/* Tabs */}
-      <div ref={tabBarRef} className="flex gap-1 overflow-x-auto pb-1 mb-6 -mx-4 px-4">
+      <div ref={tabBarRef} className="flex gap-1.5 overflow-x-auto hide-scrollbar pb-2 mb-6">
         {TABS.map(tab => {
           const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button key={tab.id} onClick={()=>handleTabChange(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ${activeTab===tab.id?"bg-white/10 text-peak-text":"text-peak-text-secondary hover:text-peak-text"}`}>
-              <Icon className="h-3.5 w-3.5"/>{tab.label}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full border whitespace-nowrap transition-all flex-shrink-0 ${
+                isActive
+                  ? "bg-peak-red/15 border-peak-red/50 text-peak-red shadow-[0_0_0_1px_rgba(251,52,61,0.15)]"
+                  : "border-white/10 text-peak-text-secondary hover:text-peak-text hover:border-white/25"
+              }`}>
+              <Icon className="h-3 w-3"/>{tab.label}
             </button>
           );
         })}
