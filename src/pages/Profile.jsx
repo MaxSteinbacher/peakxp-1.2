@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import BackButton from "../components/shared/BackButton";
+import UnifiedNav from "../components/shared/UnifiedNav";
 import { useAppAuth } from "../context/AppAuthContext";
 import { useProfile } from "../context/ProfileContext";
 import { getActivities } from "../lib/activityTracking";
@@ -687,6 +687,15 @@ export default function Profile() {
   const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const tabBarRef = useRef(null);
+
+  function handleTabChange(id) {
+    setActiveTab(id);
+    if (tabBarRef.current) {
+      const top = tabBarRef.current.getBoundingClientRect().top + window.scrollY - 72;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+  }
   const [deleteEmail, setDeleteEmail] = useState("");
   const [showDelete, setShowDelete] = useState(false);
   const [measurements, setMeasurements] = useState({ ...profile });
@@ -714,7 +723,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <BackButton to="/" className="mb-6"/>
+      <UnifiedNav customCrumbs={[{ label: "Profile", to: "/profile" }]} showBack={true} />
 
       {/* Profile header */}
       <div className="bg-peak-card border border-white/5 rounded-2xl p-6 mb-6">
@@ -747,11 +756,11 @@ export default function Profile() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1 mb-6 -mx-4 px-4">
+      <div ref={tabBarRef} className="flex gap-1 overflow-x-auto pb-1 mb-6 -mx-4 px-4">
         {TABS.map(tab => {
           const Icon = tab.icon;
           return (
-            <button key={tab.id} onClick={()=>setActiveTab(tab.id)}
+            <button key={tab.id} onClick={()=>handleTabChange(tab.id)}
               className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors flex-shrink-0 ${activeTab===tab.id?"bg-white/10 text-peak-text":"text-peak-text-secondary hover:text-peak-text"}`}>
               <Icon className="h-3.5 w-3.5"/>{tab.label}
             </button>
