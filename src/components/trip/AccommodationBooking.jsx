@@ -364,14 +364,25 @@ function FilterBar({ filters, setFilters }) {
 
 // ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
 
-export default function AccommodationBooking({ resort, resortEntry, session, handleAdd, handleSkip }) {
+export default function AccommodationBooking({ resort, resortEntry, session, handleAdd, handleSkip, completeAndAdvanceAll }) {
   const isMultiResort = (session?.resorts?.length || 0) > 1;
   const totalNights = session?.dates?.nights || 3;
   const sessionStart = session?.dates?.start ? session.dates.start.split("T")[0] : null;
   const sessionEnd = session?.dates?.end ? session.dates.end.split("T")[0] : null;
 
-  // ── Step 1: For multi-resort, ask base vs. split ──────────────────────────
-  const [accomMode, setAccomMode] = useState(null); // null | "one-base" | "per-resort"
+  // ── Strategy persisted in sessionStorage across all resort accommodation steps ──
+  const STRATEGY_KEY = `accomMode_${session?.id || "trip"}`;
+  const [accomMode, setAccomModeState] = useState(() => {
+    try { return sessionStorage.getItem(STRATEGY_KEY) || null; }
+    catch { return null; }
+  });
+  function setAccomMode(mode) {
+    setAccomModeState(mode);
+    try {
+      if (mode) sessionStorage.setItem(STRATEGY_KEY, mode);
+      else sessionStorage.removeItem(STRATEGY_KEY);
+    } catch {}
+  }
 
   // ── Compute nights for this resort if per-resort mode ──────────────────────
   const resortNights = useMemo(() => {
@@ -450,6 +461,11 @@ export default function AccommodationBooking({ resort, resortEntry, session, han
       startDate: checkIn || sessionStart,
       endDate: checkOut || sessionEnd,
     });
+    // One-base: auto-skip accommodation for every other resort so it never re-appears
+    if (accomMode === "one-base" && typeof completeAndAdvanceAll === "function") {
+      const otherResorts = (session?.resorts || []).filter(r => r.resortId !== resort?.id);
+      otherResorts.forEach(r => completeAndAdvanceAll("accommodation", r.resortId, true));
+    }
   }
 
   // ── Step 1: Multi-resort base question ────────────────────────────────────
@@ -534,7 +550,7 @@ export default function AccommodationBooking({ resort, resortEntry, session, han
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           {isMultiResort && (
-            <button onClick={() => setAccomMode(null)}
+            <button onClick={() => { setAccomMode(null); }}
               className="flex items-center gap-1 text-peak-text-secondary hover:text-peak-text text-xs transition-colors">
               <ChevronLeft className="h-3.5 w-3.5" /> Change strategy
             </button>
