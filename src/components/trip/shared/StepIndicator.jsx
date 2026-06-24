@@ -1,17 +1,16 @@
 import { Check } from "lucide-react";
 
 /**
- * StepIndicator — premium pill-style step tracker used inside booking flows.
+ * StepIndicator — premium pill-style step tracker inside booking flows.
  *
  * Props:
  *   steps       string[]             — step labels
  *   current     number               — 0-based active step index
- *   onStepClick (i: number) => void  — if provided, completed steps become clickable
+ *   onStepClick (i: number) => void  — completed steps become clickable if provided
  */
 export default function StepIndicator({ steps, current, onStepClick }) {
   return (
     <div className="mb-6">
-      {/* Pills row */}
       <div className="flex items-center gap-2 flex-wrap">
         {steps.map((label, i) => {
           const isDone = i < current;
@@ -36,31 +35,26 @@ export default function StepIndicator({ steps, current, onStepClick }) {
                 {isDone ? (
                   <Check className="h-3 w-3 flex-shrink-0" />
                 ) : (
-                  <span
-                    className={[
-                      "w-1.5 h-1.5 rounded-full flex-shrink-0",
-                      isActive ? "bg-peak-red" : "bg-white/20",
-                    ].join(" ")}
-                  />
+                  <span className={[
+                    "w-1.5 h-1.5 rounded-full flex-shrink-0",
+                    isActive ? "bg-peak-red" : "bg-white/20",
+                  ].join(" ")} />
                 )}
                 {label}
               </button>
 
-              {/* Connector line */}
               {i < steps.length - 1 && (
-                <div
-                  className={[
-                    "h-px w-5 flex-shrink-0 transition-colors",
-                    isDone ? "bg-peak-green/25" : "bg-white/8",
-                  ].join(" ")}
-                />
+                <div className={[
+                  "h-px w-5 flex-shrink-0 transition-colors",
+                  isDone ? "bg-peak-green/25" : "bg-white/8",
+                ].join(" ")} />
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Step count label — e.g. "Step 1 of 3" */}
+      {/* "Step N of M" — no extra label */}
       <p className="text-peak-text-secondary text-xs mt-2">
         Step {current + 1} of {steps.length}
       </p>
