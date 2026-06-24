@@ -1,17 +1,34 @@
-import { ChevronLeft } from "lucide-react";
-import { useT } from "../../../lib/i18n";
 import StepIndicator from "./StepIndicator";
 
-export default function BookingShell({ steps, current, onBack, children }) {
-  const t = useT();
+/**
+ * BookingShell — wraps every booking sub-flow (Storage, Equipment, etc.)
+ * with a consistent pill step tracker and back navigation.
+ *
+ * Props:
+ *   steps      string[]        — step labels (e.g. ["Location", "Specs", "Choose Shop", "Checkout"])
+ *   current    number          — 0-based active step index
+ *   onBack     () => void      — called when user presses back (also wired to step click)
+ *   onGoToStep (i) => void     — optional: jump directly to a completed step
+ *   children   ReactNode
+ */
+export default function BookingShell({ steps, current, onBack, onGoToStep, children }) {
+  function handleStepClick(i) {
+    if (typeof onGoToStep === "function") {
+      onGoToStep(i);
+    } else if (typeof onBack === "function") {
+      // Fallback: call onBack once per step difference
+      const diff = current - i;
+      if (diff > 0) onBack();
+    }
+  }
+
   return (
     <div>
-      <StepIndicator steps={steps} current={current} />
-      {current > 0 && (
-        <button onClick={onBack} className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors">
-          <ChevronLeft className="h-4 w-4" /> {t("back")}
-        </button>
-      )}
+      <StepIndicator
+        steps={steps}
+        current={current}
+        onStepClick={current > 0 ? handleStepClick : undefined}
+      />
       {children}
     </div>
   );
