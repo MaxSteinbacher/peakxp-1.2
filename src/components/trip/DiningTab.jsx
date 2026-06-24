@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { Star, ChevronDown, ChevronUp, X, ExternalLink, MapPin,
-  Calendar, Search, SlidersHorizontal, Check } from "lucide-react";
+  Calendar, Search, SlidersHorizontal, Check, ArrowRight } from "lucide-react";
 import { useTripPlanner } from "../../context/TripPlannerContext";
 import { useT } from "../../lib/i18n";
 import { toast } from "sonner";
 
-// ─── Static data (keys only — labels via t()) ───────────────────────────────
+// ─── Static data ─────────────────────────────────────────────────────────────
+
 const MEAL_KEYS = ["breakfast", "lunch_slopes", "apres_ski", "dinner", "late_night"];
 const MEAL_EMOJI = {
   breakfast: "☀️", lunch_slopes: "⛷️", apres_ski: "🍹", dinner: "🌙", late_night: "🎶",
@@ -16,7 +17,6 @@ const MEAL_I18N = {
 };
 
 const PRICE_LEVELS = ["€", "€€", "€€€", "€€€€"];
-
 const CUISINE_TYPES = ["Alpine", "Swiss", "French", "Italian", "International"];
 
 const RESTAURANTS = [
@@ -103,7 +103,7 @@ const FULL_MENU = {
   Drinks: [{ name: "Vin chaud", price: 7 }, { name: "Bière locale", price: 8 }],
 };
 
-// ─── Shared sub-components ──────────────────────────────────────────────────
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
 function PriceSymbol({ level }) {
   const idx = PRICE_LEVELS.indexOf(level);
@@ -129,13 +129,13 @@ function StatusBadge({ status, t }) {
   );
 }
 
-function HighlightLabel({ key: hk, t }) {
+function HighlightLabel({ hKey, t }) {
   const map = {
     panoramic: "filter_panoramic", terrace: "filter_terrace", kid_friendly: "filter_kid_friendly",
     fireplace: "fireplace", live_music: "live_music", gluten_free: "gluten_free",
     private_dining: "private_dining", apres_ski: "filter_apres_ski",
   };
-  return <span className="text-xs bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{t(map[hk] || hk)}</span>;
+  return <span className="text-xs bg-peak-blue/10 text-peak-blue px-2 py-0.5 rounded-full">{t(map[hKey] || hKey)}</span>;
 }
 
 function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tripStart, onClose, onConfirm }) {
@@ -146,7 +146,7 @@ function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tri
   const [confirmed, setConfirmed] = useState(false);
 
   const dateStr = (() => {
-    if (!tripStart || !day) return day ? `${t("day_label_numbered")} ${day}` : "";
+    if (!tripStart || !day) return day ? `Day ${day}` : "";
     const d = new Date(tripStart);
     d.setDate(d.getDate() + (day - 1));
     return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
@@ -174,13 +174,13 @@ function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tri
       <div className="bg-peak-surface rounded-xl p-4 text-sm space-y-1.5 mb-4 text-left">
         <div className="flex justify-between"><span className="text-peak-text-secondary">Restaurant</span><span className="text-peak-text font-medium">{restaurant.name}</span></div>
         {dateStr && <div className="flex justify-between"><span className="text-peak-text-secondary">Date</span><span className="text-peak-text">{dateStr}</span></div>}
-        <div className="flex justify-between"><span className="text-peak-text-secondary">{t("select_time")}</span><span className="text-peak-text">{selectedTime}</span></div>
-        <div className="flex justify-between"><span className="text-peak-text-secondary">{t("guests")}</span><span className="text-peak-text">{partySize}</span></div>
-        {momentLabel && <div className="flex justify-between"><span className="text-peak-text-secondary">{t("meal")}</span><span className="text-peak-text">{momentLabel}</span></div>}
+        <div className="flex justify-between"><span className="text-peak-text-secondary">Time</span><span className="text-peak-text">{selectedTime}</span></div>
+        <div className="flex justify-between"><span className="text-peak-text-secondary">Guests</span><span className="text-peak-text">{partySize}</span></div>
+        {momentLabel && <div className="flex justify-between"><span className="text-peak-text-secondary">Meal</span><span className="text-peak-text">{momentLabel}</span></div>}
       </div>
       <button onClick={() => { onConfirm?.(); onClose(); }}
         className="w-full py-2.5 bg-peak-red hover:bg-peak-red-hover text-white text-sm font-semibold rounded-xl transition-colors">
-        {t("confirm")}
+        Done
       </button>
     </div>
   );
@@ -191,7 +191,7 @@ function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tri
         <div>
           <h3 className="font-display font-bold text-lg text-peak-text leading-tight">{restaurant.name}</h3>
           <p className="text-peak-text-secondary text-xs mt-0.5">
-            {dateStr && `${dateStr} · `}{momentLabel && `${momentLabel} · `}{partySize} {t("guests")}
+            {dateStr && `${dateStr} · `}{momentLabel && `${momentLabel} · `}{partySize} guests
           </p>
         </div>
         <button onClick={onClose} className="text-peak-text-secondary hover:text-peak-text ml-3 flex-shrink-0">
@@ -200,7 +200,7 @@ function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tri
       </div>
       <div className="space-y-4">
         <div>
-          <label className="block text-xs text-peak-text-secondary mb-2">{t("select_time")}</label>
+          <label className="block text-xs text-peak-text-secondary mb-2">Select time</label>
           <div className="flex flex-wrap gap-2">
             {timeSlots.map(t2 => {
               const unavail = unavailable.includes(t2);
@@ -218,7 +218,7 @@ function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tri
           </div>
         </div>
         <div>
-          <label className="block text-xs text-peak-text-secondary mb-2">{t("seating_preference")}</label>
+          <label className="block text-xs text-peak-text-secondary mb-2">Seating preference</label>
           <div className="flex flex-wrap gap-2">
             {["seating_inside", "seating_terrace", "seating_bar", "seating_private"].map(sk => (
               <button key={sk} onClick={() => setSeating(seating === sk ? null : sk)}
@@ -229,23 +229,21 @@ function ReservationModal({ restaurant, day, moment, momentLabel, partySize, tri
           </div>
         </div>
         <div>
-          <label className="block text-xs text-peak-text-secondary mb-1">{t("special_requests")}</label>
+          <label className="block text-xs text-peak-text-secondary mb-1">Special requests (optional)</label>
           <input value={requests} onChange={e => setRequests(e.target.value)}
-            placeholder={t("special_requests_placeholder")}
+            placeholder="e.g. window table, high chair, allergies"
             className="w-full bg-peak-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-peak-text outline-none focus:border-peak-blue" />
         </div>
         <button onClick={() => setConfirmed(true)} disabled={!selectedTime}
           className="w-full py-3 bg-peak-red hover:bg-peak-red-hover disabled:opacity-40 text-white font-semibold text-sm rounded-xl transition-colors">
-          {t("reserve_table")}
+          Reserve table
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Restaurant card used in both modes ─────────────────────────────────────
-
-function RestaurantCard({ restaurant, onReserve, onAddToTrip, showAddToTrip, t }) {
+function RestaurantCard({ restaurant, onReserve, t }) {
   const [expanded, setExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -276,7 +274,7 @@ function RestaurantCard({ restaurant, onReserve, onAddToTrip, showAddToTrip, t }
         </div>
         <p className="text-xs text-peak-text-secondary mb-0.5">{restaurant.locationLabel} · {restaurant.distLift}</p>
         <p className={`text-xs font-medium mb-3 ${restaurant.openNow ? "text-peak-green" : "text-peak-text-secondary"}`}>
-          {restaurant.openNow ? `${t("open_closes")} ${restaurant.closesAt}` : t("closed")}
+          {restaurant.openNow ? `Open · closes ${restaurant.closesAt}` : "Closed"}
         </p>
         <div className="flex flex-wrap gap-1 mb-3">
           {restaurant.highlights.map(h => <HighlightLabel key={h} hKey={h} t={t} />)}
@@ -288,19 +286,13 @@ function RestaurantCard({ restaurant, onReserve, onAddToTrip, showAddToTrip, t }
                 ? "opacity-40 cursor-not-allowed bg-peak-surface text-peak-text-secondary"
                 : "bg-peak-red hover:bg-peak-red-hover text-white"
             }`}>
-            {t("make_reservation")}
+            Reserve
           </button>
           <button onClick={() => setMenuOpen(m => !m)}
             className="flex-1 py-2.5 text-sm font-medium rounded-xl border border-white/10 text-peak-text-secondary hover:text-peak-text transition-colors">
-            {t("view_menu")}
+            View menu
           </button>
         </div>
-        {showAddToTrip && (
-          <button onClick={onAddToTrip}
-            className="mt-2 w-full py-2 text-xs font-medium rounded-xl border border-peak-blue/30 text-peak-blue hover:bg-peak-blue/10 transition-colors">
-            + {t("add_to_trip")}
-          </button>
-        )}
         {menuOpen && (
           <div className="mt-3 border-t border-white/5 pt-3">
             {Object.entries(FULL_MENU).map(([section, items]) => (
@@ -319,17 +311,17 @@ function RestaurantCard({ restaurant, onReserve, onAddToTrip, showAddToTrip, t }
         <button onClick={() => setExpanded(e => !e)}
           className="w-full flex items-center justify-center gap-1 mt-3 text-xs text-peak-text-secondary hover:text-peak-text transition-colors">
           {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-          {expanded ? t("hide_full_details") : t("show_full_details")}
+          {expanded ? "Hide details" : "Show details"}
         </button>
         {expanded && (
           <div className="mt-3 border-t border-white/5 pt-3 space-y-2 text-xs text-peak-text-secondary">
-            <p>Seasonal alpine cuisine using fresh valley ingredients, with spectacular panoramic views and warm hospitality.</p>
+            <p>Seasonal alpine cuisine using fresh valley ingredients, with spectacular panoramic views.</p>
             <div className="flex gap-3">
               <button className="flex items-center gap-1 text-peak-blue hover:underline">
-                <MapPin className="h-3 w-3" /> {t("directions")}
+                <MapPin className="h-3 w-3" /> Directions
               </button>
               <button className="flex items-center gap-1 text-peak-blue hover:underline">
-                <ExternalLink className="h-3 w-3" /> {t("website")}
+                <ExternalLink className="h-3 w-3" /> Website
               </button>
             </div>
           </div>
@@ -339,7 +331,7 @@ function RestaurantCard({ restaurant, onReserve, onAddToTrip, showAddToTrip, t }
   );
 }
 
-// ─── BROWSE MODE — standalone planning tab ──────────────────────────────────
+// ─── BROWSE MODE ─────────────────────────────────────────────────────────────
 
 function BrowseMode({ resortName }) {
   const t = useT();
@@ -410,13 +402,11 @@ function BrowseMode({ resortName }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
-      {/* Header */}
       <div className="mb-6">
         <h2 className="font-display font-extrabold text-3xl text-peak-text mb-1">{t("dining_browse_title")}</h2>
         <p className="text-peak-text-secondary text-sm">{t("dining_browse_subline")}</p>
       </div>
 
-      {/* Search + sort bar */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-peak-text-secondary" />
@@ -427,7 +417,7 @@ function BrowseMode({ resortName }) {
         <button onClick={() => setSidebarOpen(o => !o)}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-colors ${sidebarOpen ? "bg-peak-blue/10 border-peak-blue/40 text-peak-blue" : "border-white/10 text-peak-text-secondary hover:text-peak-text"}`}>
           <SlidersHorizontal className="h-4 w-4" />
-          {t("filters")}
+          Filters
           {hasActiveFilters ? <span className="bg-peak-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">{(filterCuisines.length + filterPrice.length + filterMoments.length + filterFeatures.length + (filterLocation ? 1 : 0) + (filterOpenNow ? 1 : 0))}</span> : null}
         </button>
         <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
@@ -441,31 +431,24 @@ function BrowseMode({ resortName }) {
       </div>
 
       <div className="flex gap-6">
-        {/* Sidebar filters */}
         {sidebarOpen && (
           <div className="w-64 flex-shrink-0">
             <div className="bg-peak-card border border-white/5 rounded-2xl p-5 sticky top-4">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-peak-text font-semibold text-sm">{t("filters")}</span>
+                <span className="text-peak-text font-semibold text-sm">Filters</span>
                 {hasActiveFilters && (
-                  <button onClick={clearAll} className="text-xs text-peak-blue hover:underline">{t("clear_filters")}</button>
+                  <button onClick={clearAll} className="text-xs text-peak-blue hover:underline">Clear all</button>
                 )}
               </div>
-
-              <FilterSection title={t("filter_location_type")}>
-                {[
-                  { val: null, label: t("all_filters") },
-                  { val: "slope_side", label: t("on_mountain") },
-                  { val: "valley", label: t("in_valley") },
-                ].map(({ val, label }) => (
+              <FilterSection title="Location">
+                {[{ val: null, label: "All" }, { val: "slope_side", label: "On mountain" }, { val: "valley", label: "In valley" }].map(({ val, label }) => (
                   <button key={String(val)} onClick={() => setFilterLocation(val)}
                     className={`w-full text-left text-xs px-3 py-2 rounded-lg mb-1 transition-colors ${filterLocation === val ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
                     {label}
                   </button>
                 ))}
               </FilterSection>
-
-              <FilterSection title={t("filter_meal_moment")}>
+              <FilterSection title="Meal moment">
                 {MEAL_KEYS.map(k => (
                   <button key={k} onClick={() => toggleArr(filterMoments, setFilterMoments, k)}
                     className={`flex items-center gap-2 w-full text-left text-xs px-3 py-2 rounded-lg mb-1 transition-colors ${filterMoments.includes(k) ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
@@ -474,8 +457,7 @@ function BrowseMode({ resortName }) {
                   </button>
                 ))}
               </FilterSection>
-
-              <FilterSection title={t("filter_cuisine")}>
+              <FilterSection title="Cuisine">
                 {CUISINE_TYPES.map(c => (
                   <button key={c} onClick={() => toggleArr(filterCuisines, setFilterCuisines, c)}
                     className={`w-full text-left text-xs px-3 py-2 rounded-lg mb-1 transition-colors ${filterCuisines.includes(c) ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
@@ -483,8 +465,7 @@ function BrowseMode({ resortName }) {
                   </button>
                 ))}
               </FilterSection>
-
-              <FilterSection title={t("filter_price_range")}>
+              <FilterSection title="Price range">
                 <div className="flex gap-2 flex-wrap">
                   {PRICE_LEVELS.map(p => (
                     <button key={p} onClick={() => toggleArr(filterPrice, setFilterPrice, p)}
@@ -494,8 +475,7 @@ function BrowseMode({ resortName }) {
                   ))}
                 </div>
               </FilterSection>
-
-              <FilterSection title={t("filter_features")}>
+              <FilterSection title="Features">
                 {FEATURE_KEYS.map(f => (
                   <button key={f} onClick={() => toggleArr(filterFeatures, setFilterFeatures, f)}
                     className={`flex items-center gap-2 w-full text-left text-xs px-3 py-2 rounded-lg mb-1 transition-colors ${filterFeatures.includes(f) ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
@@ -504,22 +484,20 @@ function BrowseMode({ resortName }) {
                   </button>
                 ))}
               </FilterSection>
-
               <div className="border-t border-white/5 pt-4">
                 <button onClick={() => setFilterOpenNow(o => !o)}
                   className={`flex items-center gap-2 w-full text-left text-xs px-3 py-2 rounded-lg transition-colors ${filterOpenNow ? "bg-peak-blue/15 text-peak-blue" : "text-peak-text-secondary hover:text-peak-text hover:bg-white/4"}`}>
                   {filterOpenNow && <Check className="h-3 w-3" />}
-                  {t("filter_open_now")}
+                  Open now only
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Restaurant grid */}
         <div className="flex-1 min-w-0">
           <p className="text-peak-text-secondary text-sm mb-4">
-            {filtered.length} {t("restaurants_found")} {resortName && `· ${resortName}`}
+            {filtered.length} restaurants found {resortName && `· ${resortName}`}
           </p>
           {reservingRestaurant && (
             <div className="mb-6">
@@ -535,15 +513,13 @@ function BrowseMode({ resortName }) {
           {filtered.length === 0 ? (
             <div className="text-center py-16 text-peak-text-secondary">
               <p className="text-lg mb-2">No restaurants match your filters</p>
-              <button onClick={clearAll} className="text-peak-blue text-sm hover:underline">{t("clear_filters")}</button>
+              <button onClick={clearAll} className="text-peak-blue text-sm hover:underline">Clear filters</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.map(r => (
                 <RestaurantCard key={r.id} restaurant={r} t={t}
-                  showAddToTrip={false}
-                  onReserve={() => setReservingRestaurant(r)}
-                  onAddToTrip={() => toast.success(`${r.name} added to trip`)} />
+                  onReserve={() => setReservingRestaurant(r)} />
               ))}
             </div>
           )}
@@ -553,31 +529,25 @@ function BrowseMode({ resortName }) {
   );
 }
 
-// ─── BOOKING MODE — AI / trip flow day-by-day ───────────────────────────────
+// ─── BOOKING MODE — fixed: no skip buttons, Continue always available ─────────
 
-function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
+function BookingMode({ onBook, onContinue, resortName, nights, partySize, tripStart }) {
   const t = useT();
-  // slotState: { [day_moment]: "empty" | "skipped" | {restaurant} }
+
+  // slotState: { [day_moment]: { restaurant } } — only filled if user reserved
   const [slotState, setSlotState] = useState({});
   // Which slot is currently being picked
-  const [pickingSlot, setPickingSlot] = useState(null); // { day, momentKey }
+  const [pickingSlot, setPickingSlot] = useState(null);
   // Reservation modal
-  const [reservingFor, setReservingFor] = useState(null); // { restaurant, day, momentKey }
-  // Filter for restaurant picker
-  const [momentFilter, setMomentFilter] = useState([]);
+  const [reservingFor, setReservingFor] = useState(null);
 
   const days = Array.from({ length: nights }, (_, i) => i + 1);
 
   function slotKey(day, mk) { return `${day}_${mk}`; }
-  function getSlot(day, mk) { return slotState[slotKey(day, mk)] || "empty"; }
+  function getSlot(day, mk) { return slotState[slotKey(day, mk)] || null; }
 
   function handlePickSlot(day, mk) {
     setPickingSlot({ day, momentKey: mk });
-    setMomentFilter([mk]);
-  }
-
-  function handleSkipSlot(day, mk) {
-    setSlotState(prev => ({ ...prev, [slotKey(day, mk)]: "skipped" }));
   }
 
   function handleUndoSlot(day, mk) {
@@ -597,47 +567,50 @@ function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
     if (!reservingFor) return;
     const { restaurant, day, momentKey } = reservingFor;
     setSlotState(prev => ({ ...prev, [slotKey(day, momentKey)]: restaurant }));
-    onBook?.(`${restaurant.name} — ${t("day_label_numbered")} ${day} ${t(MEAL_I18N[momentKey])}`, 0, {
+    onBook?.(`${restaurant.name} — Day ${day} ${t(MEAL_I18N[momentKey])}`, 0, {
       restaurant: restaurant.name, day, moment: momentKey, partySize,
     });
-    toast.success(`${restaurant.name} — ${t("day_label_numbered")} ${day}, ${t(MEAL_I18N[momentKey])}`);
+    toast.success(`${restaurant.name} reserved — Day ${day}, ${t(MEAL_I18N[momentKey])}`);
     setReservingFor(null);
     setPickingSlot(null);
-    setMomentFilter([]);
   }
 
-  const filteredRestaurants = useMemo(() => {
-    if (!momentFilter.length) return RESTAURANTS;
-    return RESTAURANTS.filter(r => momentFilter.some(m => r.mealKeys.includes(m)));
-  }, [momentFilter]);
+  const filteredForSlot = useMemo(() => {
+    if (!pickingSlot) return RESTAURANTS;
+    return RESTAURANTS.filter(r => r.mealKeys.includes(pickingSlot.momentKey));
+  }, [pickingSlot]);
 
-  const bookedCount = Object.values(slotState).filter(v => v && v !== "skipped" && typeof v === "object").length;
+  const bookedCount = Object.values(slotState).filter(v => v && typeof v === "object").length;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 w-full">
       <div className="mb-6">
-        <h2 className="font-display font-extrabold text-2xl text-peak-text mb-1">{t("booking_mode_title")} — {resortName}</h2>
-        <p className="text-peak-text-secondary text-sm">{t("booking_mode_subline")}</p>
-        <p className="text-peak-text-secondary text-xs mt-1">{nights} {t("nights")} · {partySize} {partySize === 1 ? t("guest") : t("guests")}</p>
+        <h2 className="font-display font-extrabold text-2xl text-peak-text mb-1">
+          Dining reservations — {resortName}
+        </h2>
+        <p className="text-peak-text-secondary text-sm">
+          Tap <strong>+</strong> on any meal slot to add a reservation. Slots without a reservation will be left open — no booking needed.
+        </p>
+        <p className="text-peak-text-secondary text-xs mt-1">{nights} nights · {partySize} guest{partySize !== 1 ? "s" : ""}</p>
       </div>
 
       {/* Day-by-day grid */}
       <div className="bg-peak-surface border border-white/8 rounded-2xl overflow-hidden mb-6">
         <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
           <Calendar className="h-4 w-4 text-peak-blue" />
-          <p className="text-peak-text font-semibold text-sm">{t("choose_dining_slot")}</p>
+          <p className="text-peak-text font-semibold text-sm">Choose reservations</p>
           <span className="text-peak-text-secondary text-xs ml-auto">
-            {partySize} {partySize === 1 ? t("guest") : t("guests")} · {resortName}
+            {partySize} guest{partySize !== 1 ? "s" : ""} · {resortName}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="px-4 py-3 text-left text-xs text-peak-text-secondary font-medium w-36">{t("meal")}</th>
+                <th className="px-4 py-3 text-left text-xs text-peak-text-secondary font-medium w-36">Meal</th>
                 {days.map(d => (
                   <th key={d} className="px-3 py-3 text-center text-xs text-peak-text-secondary font-medium min-w-[110px]">
-                    {t("day_label_numbered")} {d}
+                    Day {d}
                   </th>
                 ))}
               </tr>
@@ -649,38 +622,24 @@ function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
                     {MEAL_EMOJI[mk]} {t(MEAL_I18N[mk])}
                   </td>
                   {days.map(d => {
-                    const slot = getSlot(d, mk);
-                    const isSkipped = slot === "skipped";
-                    const isBooked = slot && slot !== "empty" && slot !== "skipped";
+                    const booked = getSlot(d, mk);
                     const isPicking = pickingSlot?.day === d && pickingSlot?.momentKey === mk;
 
                     return (
                       <td key={d} className="px-2 py-2 text-center">
-                        {isBooked ? (
+                        {booked ? (
                           <div className="flex flex-col items-center gap-1">
                             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-peak-green/20 text-peak-green text-xs">✓</div>
-                            <span className="text-peak-green text-[10px] leading-tight max-w-[90px] truncate">{slot.name.split("—")[0].trim()}</span>
-                            <button onClick={() => handleUndoSlot(d, mk)} className="text-[10px] text-peak-text-secondary/50 hover:text-peak-text-secondary transition-colors">{t("cancel_slot")}</button>
-                          </div>
-                        ) : isSkipped ? (
-                          <div className="flex flex-col items-center gap-1">
-                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/5 text-peak-text-secondary text-xs">—</div>
-                            <span className="text-peak-text-secondary/50 text-[10px]">{t("slot_skipped")}</span>
-                            <button onClick={() => handleUndoSlot(d, mk)} className="text-[10px] text-peak-blue hover:underline">{t("cancel_slot")}</button>
+                            <span className="text-peak-green text-[10px] leading-tight max-w-[90px] truncate">{booked.name.split("—")[0].trim()}</span>
+                            <button onClick={() => handleUndoSlot(d, mk)} className="text-[10px] text-peak-text-secondary/50 hover:text-peak-red transition-colors">Remove</button>
                           </div>
                         ) : isPicking ? (
                           <div className="flex items-center justify-center w-7 h-7 rounded-full bg-peak-red/20 border border-peak-red/40 text-peak-red text-xs mx-auto animate-pulse">+</div>
                         ) : (
-                          <div className="flex flex-col items-center gap-1">
-                            <button onClick={() => handlePickSlot(d, mk)}
-                              className="w-7 h-7 rounded-full border border-white/15 text-peak-text-secondary hover:border-peak-blue hover:text-peak-blue transition-colors text-xs mx-auto flex items-center justify-center">
-                              +
-                            </button>
-                            <button onClick={() => handleSkipSlot(d, mk)}
-                              className="text-[10px] text-peak-text-secondary/40 hover:text-peak-text-secondary transition-colors leading-tight">
-                              {t("skip")}
-                            </button>
-                          </div>
+                          <button onClick={() => handlePickSlot(d, mk)}
+                            className="w-7 h-7 rounded-full border border-white/15 text-peak-text-secondary hover:border-peak-blue hover:text-peak-blue transition-colors text-xs mx-auto flex items-center justify-center">
+                            +
+                          </button>
                         )}
                       </td>
                     );
@@ -691,20 +650,20 @@ function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
           </table>
         </div>
         <p className="text-peak-text-secondary text-xs px-5 py-3 border-t border-white/5">
-          {t("tap_to_pick")} · {t("skip")} {t("skip_question").toLowerCase()}
+          Tap <strong>+</strong> to add a restaurant for that slot. Slots left empty = no reservation needed.
         </p>
       </div>
 
-      {/* Restaurant picker — shown when slot is being picked */}
+      {/* Restaurant picker */}
       {pickingSlot && (
-        <div>
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display font-bold text-lg text-peak-text">
-              {t("choose_restaurant_for")} {t("day_label_numbered")} {pickingSlot.day} — {t(MEAL_I18N[pickingSlot.momentKey])}
+              Day {pickingSlot.day} — {t(MEAL_I18N[pickingSlot.momentKey])}
             </h3>
-            <button onClick={() => { setPickingSlot(null); setMomentFilter([]); }}
+            <button onClick={() => { setPickingSlot(null); setReservingFor(null); }}
               className="text-peak-text-secondary hover:text-peak-text text-sm flex items-center gap-1">
-              <X className="h-4 w-4" /> {t("cancel")}
+              <X className="h-4 w-4" /> Cancel
             </button>
           </div>
 
@@ -724,11 +683,9 @@ function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredRestaurants.map(r => (
+            {filteredForSlot.map(r => (
               <RestaurantCard key={r.id} restaurant={r} t={t}
-                showAddToTrip={false}
-                onReserve={() => handleSelectRestaurant(r)}
-                onAddToTrip={() => {}} />
+                onReserve={() => handleSelectRestaurant(r)} />
             ))}
           </div>
         </div>
@@ -736,15 +693,15 @@ function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
 
       {/* Summary of booked slots */}
       {bookedCount > 0 && !pickingSlot && (
-        <div className="mt-4 bg-peak-card border border-white/5 rounded-2xl p-5">
-          <p className="text-peak-text font-semibold text-sm mb-3">{t("your_dining_plan")}</p>
+        <div className="mb-4 bg-peak-card border border-white/5 rounded-2xl p-5">
+          <p className="text-peak-text font-semibold text-sm mb-3">Your dining plan ({bookedCount} reservation{bookedCount !== 1 ? "s" : ""})</p>
           <div className="space-y-2">
-            {Object.entries(slotState).filter(([, v]) => v && v !== "skipped" && typeof v === "object").map(([key, restaurant]) => {
+            {Object.entries(slotState).filter(([, v]) => v && typeof v === "object").map(([key, restaurant]) => {
               const [day, ...mkParts] = key.split("_");
               const mk = mkParts.join("_");
               return (
                 <div key={key} className="flex items-center justify-between text-sm">
-                  <span className="text-peak-text-secondary">{t("day_label_numbered")} {day} · {t(MEAL_I18N[mk])}</span>
+                  <span className="text-peak-text-secondary">Day {day} · {t(MEAL_I18N[mk])}</span>
                   <span className="text-peak-text font-medium">{restaurant.name}</span>
                 </div>
               );
@@ -752,13 +709,24 @@ function BookingMode({ onBook, resortName, nights, partySize, tripStart }) {
           </div>
         </div>
       )}
+
+      {/* Continue button — always available */}
+      {!pickingSlot && (
+        <button
+          onClick={onContinue}
+          className="w-full py-3 bg-peak-red hover:bg-peak-red-hover text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          {bookedCount > 0 ? `Continue with ${bookedCount} reservation${bookedCount !== 1 ? "s" : ""}` : "Continue without reservations"}
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
 
-// ─── Main export — auto-detects mode ────────────────────────────────────────
+// ─── Main export ─────────────────────────────────────────────────────────────
 
-export default function DiningTab({ agentServiceDetails = {}, onBook }) {
+export default function DiningTab({ agentServiceDetails = {}, onBook, onContinue }) {
   const { session } = useTripPlanner();
   const t = useT();
 
@@ -767,15 +735,14 @@ export default function DiningTab({ agentServiceDetails = {}, onBook }) {
   const partySize = (session?.guests?.adults || 1) + (session?.guests?.children || 0);
   const tripStart = session?.dates?.start || null;
 
-  // Browse mode when opened from the standalone planning tab (no onBook prop)
   if (!onBook) {
     return <BrowseMode resortName={resortName} />;
   }
 
-  // Booking mode when opened from the AI / trip flow (has onBook prop)
   return (
     <BookingMode
       onBook={onBook}
+      onContinue={onContinue}
       resortName={resortName}
       nights={nights}
       partySize={partySize}
