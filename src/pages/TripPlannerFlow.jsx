@@ -8,8 +8,7 @@ import LeaveWarningModal from "../components/trip/LeaveWarningModal";
 import ResortSelectionStep from "../components/trip/steps/ResortSelectionStep";
 import ServiceStep from "../components/trip/steps/ServiceStep";
 import CompletionPanel from "../components/trip/CompletionPanel";
-import { MapPin, ArrowRight, Bot, X, CheckCircle, ShoppingBag, Clock } from "lucide-react";
-import { Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car } from "lucide-react";
+import { MapPin, Bot, X, Clock } from "lucide-react";
 
 export default function TripPlannerFlow() {
   const { session, setCurrentStep, getNextStep, draftRestored, setDraftRestored, clearTrip } = useTripPlanner();
@@ -17,24 +16,15 @@ export default function TripPlannerFlow() {
   const navigate = useNavigate();
   const [basketOpen, setBasketOpen] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoadingTimeout(true), 2500);
-    return () => clearTimeout(t);
-  }, []);
   const [showLeaveWarning, setShowLeaveWarning] = useState(false);
-  const [agentBanner, setAgentBanner] = useState(() => {
-    try {
-      const raw = sessionStorage.getItem("peakxp_agent_option");
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-  });
 
+  const [agentBanner, setAgentBanner] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem("peakxp_agent_option") || "null"); }
+    catch { return null; }
+  });
   const [agentServiceDetails] = useState(() => {
-    try {
-      const raw = sessionStorage.getItem("peakxp_agent_service_details");
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
+    try { return JSON.parse(sessionStorage.getItem("peakxp_agent_service_details") || "{}"); }
+    catch { return {}; }
   });
 
   function dismissAgentBanner() {
@@ -44,20 +34,22 @@ export default function TripPlannerFlow() {
 
   useUnsavedTripWarning();
 
+  useEffect(() => {
+    const t = setTimeout(() => setLoadingTimeout(true), 2500);
+    return () => clearTimeout(t);
+  }, []);
+
   // Check for ?edit=itemId
   useEffect(() => {
     if (!session) return;
-    const params = new URLSearchParams(window.location.search);
-    const editId = params.get("edit");
+    const editId = new URLSearchParams(window.location.search).get("edit");
     if (editId) {
       const item = session.basket.find(b => b.itemId === editId);
-      if (item) {
-        setCurrentStep(item.serviceKey, item.resortId);
-      }
+      if (item) setCurrentStep(item.serviceKey, item.resortId);
     }
   }, []);
 
-  // On mount: always reset to the first step (important for fresh agent sessions)
+  // On mount: always start at the first incomplete step
   useEffect(() => {
     if (!session || session.status !== "in-progress") return;
     const next = getNextStep();
@@ -65,11 +57,8 @@ export default function TripPlannerFlow() {
   }, []);
 
   function handleLogoClick() {
-    if (session && session.basket.length > 0) {
-      setShowLeaveWarning(true);
-    } else {
-      navigate("/");
-    }
+    if (session && session.basket.length > 0) setShowLeaveWarning(true);
+    else navigate("/");
   }
 
   if (!session || session.status !== "in-progress") {
@@ -88,7 +77,14 @@ export default function TripPlannerFlow() {
   }
 
   const current = session.currentStep;
-  const allDone = getNextStep() === null && session.completedSteps.length > 0;
+
+  // ── allDone: no more steps AND user hasn't clicked back to a step ──────────
+  // If currentStep matches a completed step, we're in "edit" mode — show ServiceStep, not CompletionPanel
+  const nextStep = getNextStep();
+  const isEditingCompletedStep = current?.serviceKey && session.completedSteps.some(
+    s => s.serviceKey === current.serviceKey && s.resortId === current.resortId
+  );
+  const allDone = nextStep === null && session.completedSteps.length > 0 && !isEditingCompletedStep;
 
   return (
     <div className="min-h-screen bg-peak-bg">
@@ -98,8 +94,13 @@ export default function TripPlannerFlow() {
         <div className="bg-peak-blue/10 border-b border-peak-blue/20 px-6 py-2 flex items-center gap-3">
           <Clock className="h-4 w-4 text-peak-blue flex-shrink-0" />
           <p className="text-peak-blue text-xs font-medium flex-1">We restored your trip plan from your last session</p>
-          <button onClick={() => { clearTrip(); window.location.reload(); }} className="text-xs text-peak-blue border border-peak-blue/30 rounded-full px-3 py-1 hover:bg-peak-blue/10 transition-colors mr-2">Start fresh</button>
-          <button onClick={() => setDraftRestored(false)} className="text-peak-text-secondary hover:text-peak-text"><X className="h-3.5 w-3.5" /></button>
+          <button onClick={() => { clearTrip(); window.location.reload(); }}
+            className="text-xs text-peak-blue border border-peak-blue/30 rounded-full px-3 py-1 hover:bg-peak-blue/10 transition-colors mr-2">
+            Start fresh
+          </button>
+          <button onClick={() => setDraftRestored(false)} className="text-peak-text-secondary hover:text-peak-text">
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
@@ -118,6 +119,7 @@ export default function TripPlannerFlow() {
           </button>
         </div>
       )}
+
       <BasketPanel open={basketOpen} onClose={() => setBasketOpen(false)} />
 
       {showLeaveWarning && (
@@ -129,7 +131,18 @@ export default function TripPlannerFlow() {
       )}
 
       {allDone ? (
-        <CompletionPanel basket={session.basket} total={session.basket.reduce((s, i) => s + (i.priceEUR || 0) * (i.quantity || 1), 0)} onCheckout={() => navigate("/plan/summary")} onAddMore={() => { const next = getNextStep(); if (next) { setCurrentStep(next.serviceKey, next.resortId); } else { setCurrentStep(session.selectedServices[0], session.resorts[0]?.resortId || null); } }} />
+        <CompletionPanel
+          basket={session.basket}
+          total={session.basket.reduce((s, i) => s + (i.priceEUR || 0) * (i.quantity || 1), 0)}
+          onCheckout={() => navigate("/plan/summary")}
+          onAddMore={() => {
+            // Re-enter the first completed step so the flow renders ServiceStep
+            const first = session.resorts[0];
+            const firstService = session.selectedServices[0];
+            if (firstService && first) setCurrentStep(firstService, first.resortId);
+            else if (firstService) setCurrentStep(firstService, null);
+          }}
+        />
       ) : current?.serviceKey === "resort-selection" ? (
         <ResortSelectionStep />
       ) : current?.serviceKey ? (
