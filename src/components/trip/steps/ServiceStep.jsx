@@ -10,6 +10,7 @@ import { useTripPlanner } from "../../../context/TripPlannerContext";
 import { getResortById } from "../../../lib/data";
 import { toast } from "sonner";
 import { Ticket, Hotel, Wrench, GraduationCap, Utensils, Lock, Snowflake, Baby, Plane, Train, Car, Plus, ArrowRight, Info } from "lucide-react";
+import AccommodationBooking from "../AccommodationBooking";
 
 const SERVICE_CONFIG = {
   "ski-pass":    { icon: Ticket,        title: "Select your lift pass",     skip: "Skip this step" },
@@ -201,39 +202,17 @@ export default function ServiceStep({ serviceKey, resortId, agentServiceDetails 
 
   // ── ACCOMMODATION ─────────────────────────────────────────────────────────
   if (serviceKey === "accommodation") {
-    const nights = session.dates.nights || session.dates.skiDays || 3;
-    const seed = resort?.name || "resort";
-    const hotels = [
-      { name: `Hotel Alpin ${resort?.name || "Resort"}`, stars: 4, price: 180 + ((seed.charCodeAt(0) || 0) % 80) },
-      { name: `Chalet ${resort?.name || "Mountain"}`, stars: 5, price: 320 + ((seed.charCodeAt(1) || 0) % 60) },
-      { name: `Pension ${resort?.name || "Valley"}`, stars: 3, price: 95 + ((seed.charCodeAt(2) || 0) % 50) },
-      { name: `Aparthotel ${resort?.name || "Alpine"}`, stars: 4, price: 150 + ((seed.charCodeAt(0) || 0) % 40) },
-    ];
-
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 w-full">
-        <div className="flex items-center gap-3 mb-6">
-          <Icon className="h-6 w-6 text-peak-blue" />
-          <h2 className="font-display font-extrabold text-2xl text-peak-text">{config.title} {resortLabel}</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {hotels.map((h, i) => (
-            <div key={i} className="bg-peak-card border border-white/5 rounded-2xl overflow-hidden">
-              <img src={`https://picsum.photos/seed/${h.name.replace(/\s/g, "")}/600/300`} alt={h.name} className="w-full h-40 object-cover" />
-              <div className="p-4">
-                <div className="flex items-center gap-0.5 mb-1">
-                  {Array.from({ length: h.stars }, (_, j) => <span key={j} className="text-yellow-400 text-xs">★</span>)}
-                </div>
-                <h4 className="text-peak-text font-semibold text-sm mb-1">{h.name}</h4>
-                <p className="text-peak-text-secondary text-xs mb-3">From €{h.price}/night · {nights} nights = €{h.price * nights}</p>
-                <button onClick={() => handleAdd(`${h.name} — ${nights} nights`, h.price * nights, "hotel-room", { hotel: h.name, nights, pricePerNight: h.price })}
-                  className="w-full py-2 bg-peak-red hover:bg-peak-red-hover text-white text-xs font-bold rounded-lg transition-colors">
-                  Select — €{(h.price * nights).toLocaleString()}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+      <AccommodationBooking
+        resort={resort}
+        resortEntry={resortEntry}
+        session={session}
+        handleAdd={handleAdd}
+        handleSkip={handleSkip}
+      />
+    );
+  }
+
         <button onClick={handleSkip} className="w-full text-center text-peak-text-secondary text-sm hover:text-peak-text transition-colors py-2">{config.skip}</button>
       </div>
     );
