@@ -43,11 +43,22 @@ export function TripPlannerProvider({ children }) {
       skischool: "ski-school", skiSchool: "ski-school", ski_school: "ski-school",
       carrental: "car", carRental: "car", car_rental: "car",
       hotelaccommodation: "accommodation", hotel: "accommodation",
+      "heli-skiing": "activities", "heli skiing": "activities", heliSkiing: "activities",
+      "guided-tours": "activities", guidedTours: "activities",
+      "off-piste": "activities", offPiste: "activities",
+      "private-guide": "ski-school", privateGuide: "ski-school",
     };
-    return arr.map(k => {
+    // Only allow keys that have real UI behind them
+    const VALID = new Set([
+      "ski-pass", "accommodation", "equipment", "ski-school",
+      "dining", "storage", "activities", "childcare",
+      "flights", "train", "car",
+    ]);
+    const result = arr.map(k => {
       const lower = k.replace(/_/g, "-").replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
       return MAP[k] || MAP[k.toLowerCase()] || lower;
-    });
+    }).filter(k => VALID.has(k));
+    return result.length > 0 ? result : ["ski-pass"];
   }
 
   function computeFirstStep(services, resortsArray) {
