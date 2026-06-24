@@ -3,6 +3,7 @@ import { useT } from "../lib/i18n";
 import { useNavigate } from "react-router-dom";
 import { useTripPlanner, useUnsavedTripWarning } from "../context/TripPlannerContext";
 import { useAppAuth } from "../context/AppAuthContext";
+import PlannerHeader from "../components/trip/PlannerHeader";
 import {
   ChevronDown, ChevronUp, Ticket, Hotel, Wrench, GraduationCap,
   Utensils, Lock, Snowflake, Baby, Plane, Train, Car, X, Pencil,
@@ -259,8 +260,9 @@ export default function TripSummary() {
   if (showCheckout) {
     return (
       <div className="min-h-screen bg-peak-bg">
+        <PlannerHeader onOpenBasket={() => {}} onLogoClick={() => navigate("/plan")} />
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* Back button — goes back to summary, not "Continue planning" */}
+          {/* Back button */}
           <button
             onClick={() => checkoutStep > 0 ? setCheckoutStep(c => c - 1) : setShowCheckout(false)}
             className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors group"
@@ -362,8 +364,9 @@ export default function TripSummary() {
   // ── SUMMARY VIEW ──────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-peak-bg">
+      <PlannerHeader onOpenBasket={() => {}} onLogoClick={() => navigate("/plan")} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Back button — goes to /plan, not labelled "Continue planning" */}
+        {/* Back button — goes to /plan */}
         <button
           onClick={() => navigate("/plan")}
           className="flex items-center gap-1.5 text-peak-text-secondary hover:text-peak-text text-sm mb-6 transition-colors group"
