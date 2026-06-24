@@ -1,15 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 /**
- * RouteScrollReset — scrolls the window to the top on every route change.
- * Rendered once at the Layout level.
+ * Scrolls to the top of the page on every route change (instant, no jank).
+ * Place this inside <Router> in App.jsx — it renders nothing.
+ *
+ * For in-page tab switches (e.g. ResortDetail), tabs scroll to the tab bar
+ * position rather than the very top, so the header stays visible.
  */
 export default function RouteScrollReset() {
   const { pathname } = useLocation();
+  const prevPath = useRef(pathname);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (prevPath.current !== pathname) {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      prevPath.current = pathname;
+    }
   }, [pathname]);
 
   return null;
