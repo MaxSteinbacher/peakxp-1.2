@@ -3,17 +3,17 @@ import { useTripPlanner } from "../../context/TripPlannerContext";
 
 const SERVICE_LABELS = {
   "resort-selection": "Choose resort",
-  "ski-pass": "Lift pass",
-  accommodation: "Hotel",
-  equipment: "Equipment",
-  "ski-school": "Ski school",
-  dining: "Dining",
-  storage: "Storage",
-  activities: "Activities",
-  childcare: "Childcare",
-  flights: "Flights",
-  train: "Train",
-  car: "Car rental",
+  "ski-pass":         "Lift pass",
+  accommodation:      "Hotel",
+  equipment:          "Equipment",
+  "ski-school":       "Ski school",
+  dining:             "Dining",
+  storage:            "Storage",
+  activities:         "Activities",
+  childcare:          "Childcare",
+  flights:            "Flights",
+  train:              "Train",
+  car:                "Car rental",
 };
 
 const GLOBAL_SERVICES = ["flights", "train", "car"];
@@ -37,38 +37,38 @@ export default function PlannerProgressBar() {
       steps.push({ key: svc, resortId: resort.resortId, resortName: resort.resortName });
     }
   }
-
   for (const svc of globalServices) {
     steps.push({ key: svc, resortId: null, resortName: null });
   }
 
   const currentStep = session.currentStep;
 
-  // Find index of current step to know which ones are reachable
-  const currentIdx = steps.findIndex(
-    s => s.key === currentStep?.serviceKey && s.resortId === currentStep?.resortId
-  );
-
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar py-1">
       {steps.map((step, i) => {
         const done = isStepComplete(step.key, step.resortId);
         const isCurrent = currentStep?.serviceKey === step.key && currentStep?.resortId === step.resortId;
-        // Allow jumping to completed steps or the current step only
+        // Completed steps AND currently-active step are clickable.
+        // Also allow clicking completed steps even when the CompletionPanel is showing
+        // (session.currentStep may not match anything — allDone state).
         const isClickable = done || isCurrent;
 
         return (
           <div key={`${step.key}-${step.resortId || "g"}-${i}`} className="flex items-center gap-1.5 flex-shrink-0">
             <button
-              onClick={() => isClickable && setCurrentStep(step.key, step.resortId)}
+              onClick={() => {
+                if (isClickable) setCurrentStep(step.key, step.resortId);
+              }}
               disabled={!isClickable}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-all ${
+              title={isClickable ? `Go to: ${SERVICE_LABELS[step.key] || step.key}` : SERVICE_LABELS[step.key] || step.key}
+              className={[
+                "px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 whitespace-nowrap transition-all",
                 done
                   ? "bg-peak-green/20 text-peak-green hover:bg-peak-green/30 cursor-pointer"
                   : isCurrent
-                    ? "bg-peak-red text-white cursor-default"
-                    : "bg-peak-surface border border-white/10 text-peak-text-secondary cursor-default opacity-60"
-              }`}
+                  ? "bg-peak-red text-white cursor-default"
+                  : "bg-peak-surface border border-white/10 text-peak-text-secondary cursor-default opacity-60",
+              ].join(" ")}
             >
               {done && <Check className="h-3 w-3" />}
               {step.resortName && !GLOBAL_SERVICES.includes(step.key) && (
